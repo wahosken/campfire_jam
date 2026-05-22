@@ -1,0 +1,81 @@
+[gd_scene format=3 uid="uid://drljdqynpdq6y"]
+
+[ext_resource type="Script" uid="uid://c16ocfwrqw4ub" path="res://scripts/campfire_prototype.gd" id="1_6fcrh"]
+[ext_resource type="Script" uid="uid://87uocdpralsf" path="res://scripts/music_system.gd" id="1_c477n"]
+[ext_resource type="PackedScene" uid="uid://b7kv8w757b315" path="res://scenes/jamspot.tscn" id="1_ok0m3"]
+[ext_resource type="PackedScene" uid="uid://bbw87s2fkl5ng" path="res://scenes/player.tscn" id="2_jx074"]
+[ext_resource type="AudioStream" uid="uid://bwix87b5wuy3m" path="res://songs/campfire_jam_audio-001 guitar.wav" id="4_gcsp2"]
+[ext_resource type="AudioStream" uid="uid://fl7idifbduy" path="res://songs/campfire_jam_audio-002 bass.wav" id="5_6fcrh"]
+[ext_resource type="AudioStream" uid="uid://bgr2sagy1dsus" path="res://songs/campfire_jam_audio-003 harmonica.wav" id="6_i35og"]
+
+[node name="campfire_jam_prototype" type="Node2D" unique_id=163281152]
+script = ExtResource("1_6fcrh")
+
+[node name="World" type="Node2D" parent="." unique_id=803798301]
+
+[node name="Ground" type="ColorRect" parent="World" unique_id=53549327]
+offset_right = 640.0
+offset_bottom = 360.0
+color = Color(0, 0.19558403, 0.10315802, 1)
+
+[node name="Campfire" type="ColorRect" parent="World" unique_id=1534413690]
+offset_left = 285.0
+offset_top = 248.0
+offset_right = 345.0
+offset_bottom = 308.0
+color = Color(1, 0.14509805, 0, 1)
+
+[node name="GuitarSpot" parent="World" unique_id=1855593358 instance=ExtResource("1_ok0m3")]
+position = Vector2(199, 265)
+
+[node name="BassSpot" parent="World" unique_id=917016430 instance=ExtResource("1_ok0m3")]
+position = Vector2(318, 187)
+instrument_name = "Bass"
+stem_name = "bass"
+
+[node name="HarmonicaSpot" parent="World" unique_id=1052623856 instance=ExtResource("1_ok0m3")]
+position = Vector2(427, 271)
+instrument_name = "Harmonica"
+stem_name = "harmonica"
+
+[node name="player" parent="." unique_id=685309387 instance=ExtResource("2_jx074")]
+position = Vector2(556, 80)
+
+[node name="MusicSystem" type="Node" parent="." unique_id=476369026 groups=["music_system"]]
+script = ExtResource("1_c477n")
+guitar_stem = ExtResource("4_gcsp2")
+bass_stem = ExtResource("5_6fcrh")
+harmonica_stem = ExtResource("6_i35og")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=759509068]
+
+[node name="UI" type="Control" parent="CanvasLayer" unique_id=1799125354]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="HBoxContainer" type="VBoxContainer" parent="CanvasLayer/UI" unique_id=183968562]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 131.0
+
+[node name="CurrentInstrumentLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=640857474]
+layout_mode = 2
+text = "Current Instrument:"
+
+[node name="CurrentBeatLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=792164699]
+layout_mode = 2
+text = "Current Beat:"
+
+[node name="CurrentMeasureLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=1258679210]
+layout_mode = 2
+text = "Current Measure:"
+
+[node name="CurrentLoopPositionLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=1712837836]
+layout_mode = 2
+text = "Current Loop Position:"
+
+[node name="InteractionPrompt" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=530178011]
+layout_mode = 2
+text = "Interact"

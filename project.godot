@@ -10,8 +10,8 @@ config_version=5
 
 [application]
 
-config/name="campfire_jam_prototype"
-run/main_scene="uid://dsexe6o1agwgt"
+config/name="campfire_jam_prototype2"
+run/main_scene="uid://drljdqynpdq6y"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 
