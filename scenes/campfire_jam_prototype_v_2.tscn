@@ -1,0 +1,74 @@
+[gd_scene format=3 uid="uid://caabunylbva7i"]
+
+[ext_resource type="Script" uid="uid://bjhdxj07mhdxx" path="res://scripts/campfire_jam_prototype_v_2.gd" id="1_qtvd6"]
+[ext_resource type="PackedScene" uid="uid://pkdwl144phc3" path="res://scenes/npc.tscn" id="2_qtvd6"]
+[ext_resource type="PackedScene" uid="uid://blfnmt5xbykgs" path="res://scenes/player2.tscn" id="3_hiehu"]
+[ext_resource type="Script" uid="uid://yh6chcyp3ch2" path="res://scripts/music_system2.gd" id="4_qtvd6"]
+[ext_resource type="AudioStream" uid="uid://bwix87b5wuy3m" path="res://songs/campfire_jam_audio-001 guitar.wav" id="5_8wr2o"]
+[ext_resource type="AudioStream" uid="uid://fl7idifbduy" path="res://songs/campfire_jam_audio-002 bass.wav" id="6_43e8y"]
+[ext_resource type="AudioStream" uid="uid://bgr2sagy1dsus" path="res://songs/campfire_jam_audio-003 harmonica.wav" id="7_g7rjq"]
+
+[node name="campfire_jam_prototypeV2" type="Node2D" unique_id=163281152]
+script = ExtResource("1_qtvd6")
+
+[node name="World" type="Node2D" parent="." unique_id=803798301]
+
+[node name="Ground" type="ColorRect" parent="World" unique_id=53549327]
+offset_right = 640.0
+offset_bottom = 360.0
+color = Color(0, 0.19558403, 0.10315802, 1)
+
+[node name="Campfire" type="ColorRect" parent="World" unique_id=1534413690]
+offset_left = 285.0
+offset_top = 248.0
+offset_right = 345.0
+offset_bottom = 308.0
+color = Color(1, 0.14509805, 0, 1)
+
+[node name="NPC" parent="World" unique_id=1855593358 instance=ExtResource("2_qtvd6")]
+position = Vector2(192, 259)
+
+[node name="NPC2" parent="World" unique_id=584033593 instance=ExtResource("2_qtvd6")]
+position = Vector2(318, 178)
+
+[node name="player2" parent="." unique_id=685309387 instance=ExtResource("3_hiehu")]
+position = Vector2(549, 75)
+
+[node name="MusicSystem" type="Node" parent="." unique_id=476369026 groups=["music_system"]]
+script = ExtResource("4_qtvd6")
+guitar_stem = ExtResource("5_8wr2o")
+bass_stem = ExtResource("6_43e8y")
+harmonica_stem = ExtResource("7_g7rjq")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=759509068]
+
+[node name="UI" type="Control" parent="CanvasLayer" unique_id=1799125354]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="HBoxContainer" type="VBoxContainer" parent="CanvasLayer/UI" unique_id=183968562]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 131.0
+
+[node name="CurrentInstrumentLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=640857474]
+layout_mode = 2
+text = "Current Instrument:"
+
+[node name="CurrentBeatLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=792164699]
+layout_mode = 2
+text = "Current Beat:"
+
+[node name="CurrentMeasureLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=1258679210]
+layout_mode = 2
+text = "Current Measure:"
+
+[node name="CurrentLoopPositionLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=1712837836]
+layout_mode = 2
+text = "Current Loop Position:"
+
+[node name="InteractionPrompt" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=530178011]
+layout_mode = 2
+text = "Interact"
