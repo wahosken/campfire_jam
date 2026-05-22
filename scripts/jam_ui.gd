@@ -42,6 +42,6 @@ func _update_interaction_prompt() -> void:
 	var closest_npc: Node = player.get_closest_npc()
 
 	if closest_npc != null:
-		interaction_prompt.text = "Press E to interact"
+		interaction_prompt.text = "Press to Interact"
 	else:
 		interaction_prompt.text = ""

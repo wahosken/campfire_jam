@@ -20,40 +20,40 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -1179.5
-offset_top = -795.0
-offset_right = 1179.5
-offset_bottom = 795.0
+offset_left = -986.0
+offset_top = -1627.0
+offset_right = 1373.0
+offset_bottom = -37.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0.19558403, 0.10315802, 1)
 
 [node name="Campfire" type="ColorRect" parent="World" unique_id=1534413690]
-offset_left = 332.0
-offset_top = 258.0
-offset_right = 392.0
-offset_bottom = 318.0
+offset_left = 442.0
+offset_top = -406.0
+offset_right = 502.0
+offset_bottom = -346.0
 color = Color(1, 0.14509805, 0, 1)
 
 [node name="NPC_Guitar" parent="World" unique_id=718845583 instance=ExtResource("2_q2hrs")]
-position = Vector2(193, 259)
+position = Vector2(303, -405)
 display_name = "Guitar"
 
 [node name="NPC_Bass" parent="World" unique_id=1855593358 instance=ExtResource("3_mcuth")]
-position = Vector2(357, 153)
+position = Vector2(467, -511)
 instrument_id = "bass"
 display_name = "Bass"
 
 [node name="NPC_Harmonica" parent="World" unique_id=185486004 instance=ExtResource("4_65sn3")]
-position = Vector2(536, 255)
+position = Vector2(646, -409)
 instrument_id = "harmonica"
 display_name = "Harmonica"
 
 [node name="House" parent="World" unique_id=1834173392 instance=ExtResource("4_mcuth")]
-position = Vector2(417, -250)
+position = Vector2(527, -914)
 
 [node name="player" parent="." unique_id=685309387 instance=ExtResource("3_hiehu")]
-position = Vector2(502, 71)
+position = Vector2(612, -593)
 
 [node name="Camera2D" type="Camera2D" parent="player" unique_id=1166826738]
 position_smoothing_enabled = true
@@ -78,10 +78,6 @@ offset_bottom = 131.0
 [node name="CurrentInstrumentLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=640857474]
 layout_mode = 2
 text = "Current Instrument:"
-
-[node name="Label" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=1253937901]
-layout_mode = 2
-text = "Click or Space Bar to Jam"
 
 [node name="InteractionPrompt" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=530178011]
 layout_mode = 2
