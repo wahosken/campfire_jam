@@ -1,122 +1,125 @@
 extends Node
 
-@export var bpm: float = 100.0
-@export var beats_per_measure: int = 4
-@export var loop_measures: int = 8
+@export var bpm := 100.0
+@export var beats_per_measure := 4
+@export var total_measures := 8
 
-@export var guitar_stem: AudioStream
-@export var bass_stem: AudioStream
-@export var harmonica_stem: AudioStream
+@onready var guitar_stem: AudioStreamPlayer = $GuitarStem
+@onready var bass_stem: AudioStreamPlayer = $BassStem
+@onready var harmonica_stem: AudioStreamPlayer = $HarmonicaStem
 
 var song_playing := false
-var song_time := 0.0
-
-var seconds_per_beat := 0.0
-var seconds_per_measure := 0.0
-var loop_length_seconds := 0.0
 
 var current_beat := 1
 var current_measure := 1
+var current_loop_position := 0.0
 
-var stem_players := {}
 var active_stems := {
 	"guitar": false,
-	"bass": true,
-	"harmonica": true
+	"bass": false,
+	"harmonica": false
 }
 
 
 func _ready() -> void:
-	seconds_per_beat = 60.0 / bpm
-	seconds_per_measure = seconds_per_beat * beats_per_measure
-	loop_length_seconds = seconds_per_measure * loop_measures
+	add_to_group("music_system")
 
-	_create_audio_players()
+	set_stem_active("guitar", false)
+	set_stem_active("bass", false)
+	set_stem_active("harmonica", false)
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if not song_playing:
 		return
 
-	song_time += delta
-
-	if song_time >= loop_length_seconds:
-		song_time = fmod(song_time, loop_length_seconds)
-		_restart_active_stems()
-
-	_update_timing_values()
-
-
-func _create_audio_players() -> void:
-	var guitar_player := AudioStreamPlayer.new()
-	var bass_player := AudioStreamPlayer.new()
-	var harmonica_player := AudioStreamPlayer.new()
-
-	guitar_player.name = "GuitarPlayer"
-	bass_player.name = "BassPlayer"
-	harmonica_player.name = "HarmonicaPlayer"
-
-	add_child(guitar_player)
-	add_child(bass_player)
-	add_child(harmonica_player)
-
-	guitar_player.stream = guitar_stem
-	bass_player.stream = bass_stem
-	harmonica_player.stream = harmonica_stem
-
-	stem_players["guitar"] = guitar_player
-	stem_players["bass"] = bass_player
-	stem_players["harmonica"] = harmonica_player
+	_update_timing()
+	_check_if_all_players_stopped()
 
 
 func start_song() -> void:
+	if song_playing:
+		return
+
 	song_playing = true
-	song_time = 0.0
 	current_beat = 1
 	current_measure = 1
+	current_loop_position = 0.0
 
-	_restart_active_stems()
+	if guitar_stem != null:
+		guitar_stem.play(0.0)
+
+	if bass_stem != null:
+		bass_stem.play(0.0)
+
+	if harmonica_stem != null:
+		harmonica_stem.play(0.0)
+
+	_apply_all_stem_volumes()
 
 
 func stop_song() -> void:
 	song_playing = false
-	song_time = 0.0
+
+	if guitar_stem != null:
+		guitar_stem.stop()
+
+	if bass_stem != null:
+		bass_stem.stop()
+
+	if harmonica_stem != null:
+		harmonica_stem.stop()
+
 	current_beat = 1
 	current_measure = 1
-
-	for stem_name in stem_players.keys():
-		stem_players[stem_name].stop()
+	current_loop_position = 0.0
 
 
-func toggle_stem(stem_name: String) -> void:
+func start_jam_from_user_input() -> void:
+	start_song()
+
+
+func set_stem_active(stem_name: String, active: bool) -> void:
 	if not active_stems.has(stem_name):
-		print("Unknown stem: ", stem_name)
+		push_warning("Unknown stem name: " + stem_name)
 		return
 
-	var new_state: bool = not active_stems[stem_name]
-	set_stem_active(stem_name, new_state)
+	active_stems[stem_name] = active
+
+	if active and not song_playing:
+		start_song()
+
+	match stem_name:
+		"guitar":
+			_set_player_muted(guitar_stem, not active)
+		"bass":
+			_set_player_muted(bass_stem, not active)
+		"harmonica":
+			_set_player_muted(harmonica_stem, not active)
 
 
-func set_stem_active(stem_name: String, enabled: bool) -> void:
-	if not stem_players.has(stem_name):
-		print("No player for stem: ", stem_name)
+func _apply_all_stem_volumes() -> void:
+	_set_player_muted(guitar_stem, not active_stems["guitar"])
+	_set_player_muted(bass_stem, not active_stems["bass"])
+	_set_player_muted(harmonica_stem, not active_stems["harmonica"])
+
+
+func _set_player_muted(player: AudioStreamPlayer, muted: bool) -> void:
+	if player == null:
 		return
 
-	var player: AudioStreamPlayer = stem_players[stem_name]
-
-	if player.stream == null:
-		print(stem_name, " has no audio stream assigned.")
-		return
-
-	active_stems[stem_name] = enabled
-
-	if not song_playing:
-		return
-
-	if enabled:
-		player.play(song_time)
+	if muted:
+		player.volume_db = -80.0
 	else:
-		player.stop()
+		player.volume_db = 0.0
+
+
+func _check_if_all_players_stopped() -> void:
+	for stem_name in active_stems.keys():
+		if active_stems[stem_name]:
+			return
+
+	stop_song()
 
 
 func is_stem_active(stem_name: String) -> bool:
@@ -126,28 +129,35 @@ func is_stem_active(stem_name: String) -> bool:
 	return active_stems[stem_name]
 
 
-func _restart_active_stems() -> void:
-	for stem_name in active_stems.keys():
-		if active_stems[stem_name]:
-			var player: AudioStreamPlayer = stem_players[stem_name]
-			if player.stream != null:
-				player.stop()
-				player.play(0.0)
+func _update_timing() -> void:
+	if guitar_stem == null:
+		return
 
+	var playback_position := guitar_stem.get_playback_position()
 
-func _update_timing_values() -> void:
-	var total_beats := int(song_time / seconds_per_beat)
+	var seconds_per_beat := 60.0 / bpm
+	var total_beats := beats_per_measure * total_measures
+	var loop_length_seconds := seconds_per_beat * total_beats
 
-	current_beat = total_beats % beats_per_measure + 1
-	current_measure = int(song_time / seconds_per_measure) + 1
+	current_loop_position = fmod(playback_position, loop_length_seconds)
+
+	var beat_index := int(current_loop_position / seconds_per_beat)
+
+	current_beat = beat_index % beats_per_measure + 1
+	current_measure = int(float(beat_index) / float(beats_per_measure)) + 1
 
 
 func get_loop_position_text() -> String:
-	return str(snapped(song_time, 0.01)) + "s / " + str(snapped(loop_length_seconds, 0.01)) + "s"
+	return "Measure %d / Beat %d" % [current_measure, current_beat]
 
 
-func start_jam_from_user_input() -> void:
-	if song_playing:
-		return
+func get_current_measure_text() -> String:
+	return "Measure: %d" % current_measure
 
-	start_song()
+
+func get_current_beat_text() -> String:
+	return "Beat: %d" % current_beat
+
+
+func get_current_loop_position_text() -> String:
+	return "Loop: %.2f" % current_loop_position

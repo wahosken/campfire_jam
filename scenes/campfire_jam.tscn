@@ -1,8 +1,9 @@
 [gd_scene format=3 uid="uid://caabunylbva7i"]
 
 [ext_resource type="Script" uid="uid://bjhdxj07mhdxx" path="res://scripts/campfire_jam.gd" id="1_qtvd6"]
-[ext_resource type="PackedScene" uid="uid://pkdwl144phc3" path="res://scenes/npc.tscn" id="2_qtvd6"]
 [ext_resource type="PackedScene" uid="uid://blfnmt5xbykgs" path="res://scenes/player.tscn" id="3_hiehu"]
+[ext_resource type="PackedScene" uid="uid://dgi3bcdtv1vab" path="res://scenes/npc_bass.tscn" id="3_mcuth"]
+[ext_resource type="PackedScene" uid="uid://drl7f1y3s7a6x" path="res://scenes/npc_harmonica.tscn" id="4_65sn3"]
 [ext_resource type="Script" uid="uid://yh6chcyp3ch2" path="res://scripts/music_system.gd" id="4_qtvd6"]
 [ext_resource type="AudioStream" uid="uid://bwix87b5wuy3m" path="res://songs/campfire_jam_audio-001 guitar.wav" id="5_8wr2o"]
 [ext_resource type="AudioStream" uid="uid://fl7idifbduy" path="res://songs/campfire_jam_audio-002 bass.wav" id="6_43e8y"]
@@ -25,20 +26,26 @@ offset_right = 345.0
 offset_bottom = 308.0
 color = Color(1, 0.14509805, 0, 1)
 
-[node name="NPC" parent="World" unique_id=1855593358 instance=ExtResource("2_qtvd6")]
-position = Vector2(192, 259)
+[node name="NPC_Bass" parent="World" unique_id=1855593358 instance=ExtResource("3_mcuth")]
+position = Vector2(307, 178)
 
-[node name="NPC2" parent="World" unique_id=584033593 instance=ExtResource("2_qtvd6")]
-position = Vector2(318, 178)
+[node name="NPC_Harmonica" parent="World" unique_id=185486004 instance=ExtResource("4_65sn3")]
+position = Vector2(200, 272)
 
 [node name="player" parent="." unique_id=685309387 instance=ExtResource("3_hiehu")]
 position = Vector2(523, 72)
 
 [node name="MusicSystem" type="Node" parent="." unique_id=476369026 groups=["music_system"]]
 script = ExtResource("4_qtvd6")
-guitar_stem = ExtResource("5_8wr2o")
-bass_stem = ExtResource("6_43e8y")
-harmonica_stem = ExtResource("7_g7rjq")
+
+[node name="GuitarStem" type="AudioStreamPlayer" parent="MusicSystem" unique_id=2120928999]
+stream = ExtResource("5_8wr2o")
+
+[node name="BassStem" type="AudioStreamPlayer" parent="MusicSystem" unique_id=1986529439]
+stream = ExtResource("6_43e8y")
+
+[node name="HarmonicaStem" type="AudioStreamPlayer" parent="MusicSystem" unique_id=1056557252]
+stream = ExtResource("7_g7rjq")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=759509068]
 
