@@ -31,6 +31,9 @@ func _handle_guitar_input() -> void:
 	if music_system == null:
 		return
 
+	if not music_system.song_playing:
+		return
+
 	if Input.is_action_pressed("interact"):
 		if not guitar_is_playing:
 			guitar_is_playing = true

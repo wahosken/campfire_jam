@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://caabunylbva7i"]
 
-[ext_resource type="Script" uid="uid://bjhdxj07mhdxx" path="res://scripts/campfire_jam_prototype.gd" id="1_qtvd6"]
+[ext_resource type="Script" uid="uid://bjhdxj07mhdxx" path="res://scripts/campfire_jam.gd" id="1_qtvd6"]
 [ext_resource type="PackedScene" uid="uid://pkdwl144phc3" path="res://scenes/npc.tscn" id="2_qtvd6"]
 [ext_resource type="PackedScene" uid="uid://blfnmt5xbykgs" path="res://scenes/player.tscn" id="3_hiehu"]
 [ext_resource type="Script" uid="uid://yh6chcyp3ch2" path="res://scripts/music_system.gd" id="4_qtvd6"]
@@ -32,7 +32,7 @@ position = Vector2(192, 259)
 position = Vector2(318, 178)
 
 [node name="player" parent="." unique_id=685309387 instance=ExtResource("3_hiehu")]
-position = Vector2(537, 83)
+position = Vector2(523, 72)
 
 [node name="MusicSystem" type="Node" parent="." unique_id=476369026 groups=["music_system"]]
 script = ExtResource("4_qtvd6")

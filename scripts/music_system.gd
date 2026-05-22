@@ -32,7 +32,6 @@ func _ready() -> void:
 	loop_length_seconds = seconds_per_measure * loop_measures
 
 	_create_audio_players()
-	start_song()
 
 
 func _process(delta: float) -> void:
@@ -145,3 +144,10 @@ func _update_timing_values() -> void:
 
 func get_loop_position_text() -> String:
 	return str(snapped(song_time, 0.01)) + "s / " + str(snapped(loop_length_seconds, 0.01)) + "s"
+
+
+func start_jam_from_user_input() -> void:
+	if song_playing:
+		return
+
+	start_song()

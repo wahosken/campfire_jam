@@ -9,11 +9,23 @@ extends Node2D
 @onready var current_measure_label: Label = $CanvasLayer/UI/HBoxContainer/CurrentMeasureLabel
 @onready var current_loop_position_label: Label = $CanvasLayer/UI/HBoxContainer/CurrentLoopPositionLabel
 
+var jam_started := false
 
 func _process(_delta: float) -> void:
+	_handle_start_jam_input()
+
 	_update_music_labels()
 	_update_interaction_prompt()
 	_update_current_instrument_label()
+
+
+func _handle_start_jam_input() -> void:
+	if jam_started:
+		return
+
+	if Input.is_anything_pressed():
+		jam_started = true
+		music_system.start_jam_from_user_input()
 
 
 func _update_music_labels() -> void:
@@ -23,33 +35,18 @@ func _update_music_labels() -> void:
 
 
 func _update_interaction_prompt() -> void:
-	if player.nearby_jam_spot == null:
-		interaction_prompt.text = ""
+	if not jam_started:
+		interaction_prompt.text = "Press any key to start jam"
 		return
 
-	var spot = player.nearby_jam_spot
-	var stem_name: String = spot.stem_name
-	var instrument_name: String = spot.instrument_name
-
-	if music_system.is_stem_active(stem_name):
-		interaction_prompt.text = "Press E to stop playing " + instrument_name
+	if Input.is_action_pressed("interact"):
+		interaction_prompt.text = "Playing Guitar"
 	else:
-		interaction_prompt.text = "Press E to play " + instrument_name
+		interaction_prompt.text = "Hold E to strum Guitar"
 
 
 func _update_current_instrument_label() -> void:
-	var active_instruments: Array[String] = []
-
 	if music_system.is_stem_active("guitar"):
-		active_instruments.append("Guitar")
-
-	if music_system.is_stem_active("bass"):
-		active_instruments.append("Bass")
-
-	if music_system.is_stem_active("harmonica"):
-		active_instruments.append("Harmonica")
-
-	if active_instruments.is_empty():
-		current_instrument_label.text = "Current Instrument: None"
+		current_instrument_label.text = "You: Guitar | NPCs: Bass, Harmonica"
 	else:
-		current_instrument_label.text = "Current Instrument: " + ", ".join(active_instruments)
+		current_instrument_label.text = "You: Not Playing | NPCs: Bass, Harmonica"
