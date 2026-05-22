@@ -21,8 +21,8 @@ var current_measure := 1
 var stem_players := {}
 var active_stems := {
 	"guitar": false,
-	"bass": false,
-	"harmonica": false
+	"bass": true,
+	"harmonica": true
 }
 
 
