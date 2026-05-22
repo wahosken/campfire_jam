@@ -2,51 +2,46 @@ extends Node2D
 
 @onready var music_system: Node = $MusicSystem
 @onready var player: CharacterBody2D = $player
+@onready var jam_ui: Control = $CanvasLayer/UI
 
-@onready var current_instrument_label: Label = $CanvasLayer/UI/HBoxContainer/CurrentInstrumentLabel
-@onready var interaction_prompt: Label = $CanvasLayer/UI/HBoxContainer/InteractionPrompt
-@onready var current_beat_label: Label = $CanvasLayer/UI/HBoxContainer/CurrentBeatLabel
-@onready var current_measure_label: Label = $CanvasLayer/UI/HBoxContainer/CurrentMeasureLabel
-@onready var current_loop_position_label: Label = $CanvasLayer/UI/HBoxContainer/CurrentLoopPositionLabel
+var last_printed_beat := -1
+var last_printed_measure := -1
+var last_printed_loop_position := ""
 
-var jam_started := false
+
+func _ready() -> void:
+	jam_ui.setup_ui(player, music_system)
+
 
 func _process(_delta: float) -> void:
-	_handle_start_jam_input()
-
-	_update_music_labels()
-	_update_interaction_prompt()
-	_update_current_instrument_label()
+	jam_ui.update_ui()
+	_print_music_debug_to_console()
 
 
-func _handle_start_jam_input() -> void:
-	if jam_started:
+func _print_music_debug_to_console() -> void:
+	if not music_system.song_playing:
 		return
 
-	if Input.is_anything_pressed():
-		jam_started = true
-		music_system.start_jam_from_user_input()
+	var current_beat: int = int(music_system.current_beat)
+	var current_measure: int = int(music_system.current_measure)
+	var loop_position_text: String = str(music_system.get_loop_position_text())
 
+	var beat_changed: bool = current_beat != last_printed_beat
+	var measure_changed: bool = current_measure != last_printed_measure
+	var loop_position_changed: bool = loop_position_text != last_printed_loop_position
 
-func _update_music_labels() -> void:
-	current_beat_label.text = "Current Beat: " + str(music_system.current_beat)
-	current_measure_label.text = "Current Measure: " + str(music_system.current_measure)
-	current_loop_position_label.text = "Current Loop Position: " + music_system.get_loop_position_text()
-
-
-func _update_interaction_prompt() -> void:
-	if not jam_started:
-		interaction_prompt.text = "Press any key to start jam"
+	if not beat_changed and not measure_changed and not loop_position_changed:
 		return
 
-	if Input.is_action_pressed("interact"):
-		interaction_prompt.text = "Playing Guitar"
-	else:
-		interaction_prompt.text = "Hold E to strum Guitar"
+	last_printed_beat = current_beat
+	last_printed_measure = current_measure
+	last_printed_loop_position = loop_position_text
 
-
-func _update_current_instrument_label() -> void:
-	if music_system.is_stem_active("guitar"):
-		current_instrument_label.text = "You: Guitar | NPCs: Bass, Harmonica"
-	else:
-		current_instrument_label.text = "You: Not Playing | NPCs: Bass, Harmonica"
+	print(
+		"Beat: ",
+		current_beat,
+		" | Measure: ",
+		current_measure,
+		" | Loop Position: ",
+		loop_position_text
+	)

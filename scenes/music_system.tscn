@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://tu61b7d68xgv"]
+
+[ext_resource type="Script" uid="uid://yh6chcyp3ch2" path="res://scripts/music_system.gd" id="1_4jf4q"]
+[ext_resource type="AudioStream" uid="uid://bwix87b5wuy3m" path="res://songs/campfire_jam_audio-001 guitar.wav" id="2_no50n"]
+[ext_resource type="AudioStream" uid="uid://fl7idifbduy" path="res://songs/campfire_jam_audio-002 bass.wav" id="3_jg0j3"]
+[ext_resource type="AudioStream" uid="uid://bgr2sagy1dsus" path="res://songs/campfire_jam_audio-003 harmonica.wav" id="4_i83sw"]
+
+[node name="MusicSystem" type="Node" unique_id=1650685233 groups=["music_system"]]
+script = ExtResource("1_4jf4q")
+
+[node name="GuitarStem" type="AudioStreamPlayer" parent="." unique_id=1094640972]
+stream = ExtResource("2_no50n")
+
+[node name="BassStem" type="AudioStreamPlayer" parent="." unique_id=1112270544]
+stream = ExtResource("3_jg0j3")
+
+[node name="HarmonicaStem" type="AudioStreamPlayer" parent="." unique_id=1615591978]
+stream = ExtResource("4_i83sw")

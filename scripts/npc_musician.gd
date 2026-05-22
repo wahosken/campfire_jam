@@ -1,71 +1,43 @@
 extends Node2D
 
-@export var stem_name := "bass"
+@export var instrument_id: String = "guitar"
+@export var display_name: String = "Musician"
 
-@export var start_playing := false
-@export var playing_color := Color(1.0, 0.9, 0.15)
-@export var idle_color := Color(0.12, 0.12, 0.12)
-@export var bounce_amount := 4.0
-@export var squish_amount := 0.08
-@export var pulse_speed := 8.0
-
-@onready var visual: ColorRect = $ColorRect
-
-var is_playing := false
-var base_position := Vector2.ZERO
-var base_scale := Vector2.ONE
-var anim_time := 0.0
 var music_system: Node = null
+var visually_playing := false
 
 
 func _ready() -> void:
+	add_to_group("npc_musician")
 	music_system = get_tree().get_first_node_in_group("music_system")
-
-	base_position = visual.position
-	base_scale = visual.scale
-
-	if start_playing:
-		start_music()
-	else:
-		stop_music()
+	set_visual_playing(false)
 
 
-func _process(delta: float) -> void:
-	if is_playing:
-		anim_time += delta * pulse_speed
-
-		var bounce := sin(anim_time) * bounce_amount
-		var squish := sin(anim_time) * squish_amount
-
-		visual.position = base_position + Vector2(0, bounce)
-		visual.scale = Vector2(
-			base_scale.x + squish,
-			base_scale.y - squish
-		)
-	else:
-		visual.position = visual.position.lerp(base_position, delta * 12.0)
-		visual.scale = visual.scale.lerp(base_scale, delta * 12.0)
+func get_instrument_id() -> String:
+	return instrument_id
 
 
 func interact() -> void:
-	if is_playing:
-		stop_music()
+	if music_system == null:
+		music_system = get_tree().get_first_node_in_group("music_system")
+
+	if music_system == null:
+		push_warning(display_name + " could not find music_system.")
+		return
+
+	if music_system.has_method("npc_toggle_instrument"):
+		music_system.npc_toggle_instrument(instrument_id)
+
+
+func set_visual_playing(value: bool) -> void:
+	if visually_playing == value:
+		return
+
+	visually_playing = value
+
+	if visually_playing:
+		modulate = Color(1.25, 1.1, 0.75, 1.0)
 	else:
-		start_music()
+		modulate = Color(1, 1, 1, 1)
 
-
-func start_music() -> void:
-	is_playing = true
-	anim_time = 0.0
-	visual.color = playing_color
-
-	if music_system != null:
-		music_system.set_stem_active(stem_name, true)
-
-
-func stop_music() -> void:
-	is_playing = false
-	visual.color = idle_color
-
-	if music_system != null:
-		music_system.set_stem_active(stem_name, false)
+	print(display_name, " visual playing: ", visually_playing)

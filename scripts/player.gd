@@ -3,10 +3,36 @@ extends CharacterBody2D
 @export var speed := 180.0
 
 @onready var interaction_area: Area2D = $InteractionArea
+@onready var sprite: ColorRect = $ColorRect
 
 var nearby_npcs: Array[Node] = []
-var guitar_is_playing := false
 var music_system: Node = null
+
+var is_playing_instrument := false
+var instrument_visual_tween: Tween = null
+
+var current_instrument_index := 0
+
+var instruments := [
+	{
+		"id": "guitar",
+		"display_name": "Guitar"
+	},
+	{
+		"id": "bass",
+		"display_name": "Bass"
+	},
+	{
+		"id": "harmonica",
+		"display_name": "Harmonica"
+	}
+]
+
+const NORMAL_COLOR := Color(1, 1, 1, 1)
+const PLAYING_COLOR := Color(1.25, 1.1, 0.75, 1)
+
+const NORMAL_SCALE := Vector2(1, 1)
+const PLAYING_SCALE := Vector2(1.08, 0.94)
 
 
 func _ready() -> void:
@@ -15,11 +41,15 @@ func _ready() -> void:
 
 	music_system = get_tree().get_first_node_in_group("music_system")
 
+	sprite.modulate = NORMAL_COLOR
+	sprite.scale = NORMAL_SCALE
+
 
 func _physics_process(_delta: float) -> void:
 	_handle_movement()
 	_handle_npc_interact_input()
-	_handle_guitar_input()
+	_handle_instrument_cycle_input()
+	_handle_play_instrument_input()
 
 
 func _handle_movement() -> void:
@@ -42,32 +72,103 @@ func _handle_npc_interact_input() -> void:
 			closest_npc.interact()
 
 
-func _handle_guitar_input() -> void:
-	if music_system == null:
-		return
+func _handle_instrument_cycle_input() -> void:
+	if Input.is_action_just_pressed("cycle_instrument"):
+		cycle_instrument()
 
+
+func cycle_instrument() -> void:
+	var was_playing := is_playing_instrument
+
+	if was_playing:
+		stop_instrument()
+
+	current_instrument_index += 1
+
+	if current_instrument_index >= instruments.size():
+		current_instrument_index = 0
+
+	print("Selected Instrument: ", get_current_instrument_display_name())
+
+	if was_playing:
+		start_instrument()
+
+
+func _handle_play_instrument_input() -> void:
 	if Input.is_action_pressed("play_instrument"):
-		start_guitar()
+		start_instrument()
 	else:
-		stop_guitar()
+		stop_instrument()
 
 
-func start_guitar() -> void:
-	if guitar_is_playing:
+func start_instrument() -> void:
+	if is_playing_instrument:
 		return
 
-	guitar_is_playing = true
-	music_system.set_stem_active("guitar", true)
+	is_playing_instrument = true
 
-
-func stop_guitar() -> void:
-	if not guitar_is_playing:
-		return
-
-	guitar_is_playing = false
+	var instrument_id: String = get_current_instrument_id()
 
 	if music_system != null:
-		music_system.set_stem_active("guitar", false)
+		music_system.player_take_over_instrument(instrument_id)
+
+	_start_instrument_visuals()
+
+
+func stop_instrument() -> void:
+	if not is_playing_instrument:
+		return
+
+	is_playing_instrument = false
+
+	var instrument_id: String = get_current_instrument_id()
+
+	if music_system != null:
+		music_system.player_release_instrument(instrument_id)
+
+	_stop_instrument_visuals()
+
+
+func get_current_instrument_id() -> String:
+	return instruments[current_instrument_index]["id"]
+
+
+func get_current_instrument_display_name() -> String:
+	return instruments[current_instrument_index]["display_name"]
+
+
+func _start_instrument_visuals() -> void:
+	if instrument_visual_tween:
+		instrument_visual_tween.kill()
+
+	sprite.modulate = PLAYING_COLOR
+	sprite.scale = NORMAL_SCALE
+
+	instrument_visual_tween = create_tween()
+	instrument_visual_tween.set_loops()
+
+	instrument_visual_tween.tween_property(
+		sprite,
+		"scale",
+		PLAYING_SCALE,
+		0.12
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	instrument_visual_tween.tween_property(
+		sprite,
+		"scale",
+		NORMAL_SCALE,
+		0.12
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+
+func _stop_instrument_visuals() -> void:
+	if instrument_visual_tween:
+		instrument_visual_tween.kill()
+		instrument_visual_tween = null
+
+	sprite.modulate = NORMAL_COLOR
+	sprite.scale = NORMAL_SCALE
 
 
 func get_closest_npc() -> Node:

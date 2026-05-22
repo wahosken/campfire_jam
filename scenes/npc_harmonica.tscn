@@ -2,33 +2,41 @@
 
 [ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/npc_musician.gd" id="1_khbeg"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_u8vuu"]
-size = Vector2(82, 60)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_khbeg"]
+size = Vector2(60, 60)
 
-[node name="NPC_Harmonica" type="Area2D" unique_id=1855593358 groups=["npc_musician"]]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_k024s"]
+size = Vector2(150, 150)
+
+[node name="NPC_Harmonica" type="Node2D" unique_id=1522585034 groups=["npc_musician"]]
 script = ExtResource("1_khbeg")
 stem_name = "harmonica"
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
+[node name="ColorRect" type="ColorRect" parent="." unique_id=2015864313]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -42.0
+offset_left = -30.0
 offset_top = -30.0
-offset_right = 41.0
+offset_right = 30.0
 offset_bottom = 30.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.19076231, 0.19076234, 0.19076231, 1)
 
-[node name="InteractionArea" type="Area2D" parent="." unique_id=212893023]
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=757584145]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=684937592]
-shape = SubResource("RectangleShape2D_u8vuu")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1006660269]
+shape = SubResource("RectangleShape2D_khbeg")
 
-[node name="Label" type="Label" parent="." unique_id=1190288767]
+[node name="InteractionArea" type="Area2D" parent="." unique_id=1854872277]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=1733360430]
+shape = SubResource("RectangleShape2D_k024s")
+
+[node name="Label" type="Label" parent="InteractionArea" unique_id=1190288767]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5

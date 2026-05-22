@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://dgi3bcdtv1vab"]
+[gd_scene format=3 uid="uid://ch5e2petf0x3t"]
 
-[ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/npc_musician.gd" id="1_iubrl"]
+[ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/npc_musician.gd" id="1_njmx8"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_iubrl"]
 size = Vector2(60, 60)
@@ -8,8 +8,8 @@ size = Vector2(60, 60)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_u8vuu"]
 size = Vector2(150, 150)
 
-[node name="NPC_Bass" type="Node2D" unique_id=718845583 groups=["npc_musician"]]
-script = ExtResource("1_iubrl")
+[node name="NPC_Guitar" type="Node2D" unique_id=718845583 groups=["npc_musician"]]
+script = ExtResource("1_njmx8")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8
@@ -47,4 +47,4 @@ offset_right = 20.0
 offset_bottom = 11.5
 grow_horizontal = 2
 grow_vertical = 2
-text = "Bass"
+text = "Guitar"
