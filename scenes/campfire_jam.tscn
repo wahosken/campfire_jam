@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://8cj1uwe35wqt" path="res://scenes/npc_mandolin.tscn" id="5_mcuth"]
 [ext_resource type="PackedScene" uid="uid://tu61b7d68xgv" path="res://scenes/music_system.tscn" id="6_wu1ak"]
 [ext_resource type="Script" uid="uid://cevh1omjrnc6a" path="res://scripts/jam_ui.gd" id="7_41670"]
+[ext_resource type="PackedScene" uid="uid://d21e1vvxjrume" path="res://scenes/overlay.tscn" id="10_dp30u"]
 
 [node name="campfire_jam" type="Node2D" unique_id=163281152]
 script = ExtResource("1_qtvd6")
@@ -73,6 +74,8 @@ position_smoothing_enabled = true
 position_smoothing_speed = 6.0
 
 [node name="MusicSystem" parent="." unique_id=1650685233 instance=ExtResource("6_wu1ak")]
+
+[node name="TouchOverlay" parent="." unique_id=183187612 instance=ExtResource("10_dp30u")]
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=759509068]
 

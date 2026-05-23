@@ -1,0 +1,169 @@
+[gd_scene format=3 uid="uid://d21e1vvxjrume"]
+
+[ext_resource type="Texture2D" uid="uid://dcrs8kyagur1l" path="res://assets/buttons7.png" id="1_i2ryd"]
+[ext_resource type="Script" uid="uid://fvw1mmpa61pa" path="res://scripts/touch_overlay.gd" id="1_njieu"]
+[ext_resource type="Texture2D" uid="uid://dhp42yaxpi4q8" path="res://assets/buttons8.png" id="2_njieu"]
+[ext_resource type="Texture2D" uid="uid://c310ancmn7xd6" path="res://assets/buttons3.png" id="3_rqwgw"]
+[ext_resource type="Texture2D" uid="uid://c42fulrdxr25o" path="res://assets/buttons4.png" id="4_lot3u"]
+[ext_resource type="Texture2D" uid="uid://deusfo4muwabm" path="res://assets/buttons1.png" id="5_ubex6"]
+[ext_resource type="Texture2D" uid="uid://d34r5t00d5r7d" path="res://assets/buttons2.png" id="6_4jgic"]
+[ext_resource type="Texture2D" uid="uid://b0auxwxucccwm" path="res://assets/buttons5.png" id="7_76wxp"]
+[ext_resource type="Texture2D" uid="uid://7jqyxs1ubxqu" path="res://assets/buttons6.png" id="8_8rtgm"]
+[ext_resource type="Texture2D" uid="uid://cricbsha6b26" path="res://assets/pause_button.png" id="9_p5rgw"]
+[ext_resource type="Texture2D" uid="uid://bhclna2yubkcp" path="res://assets/pause_button_pressed.png" id="10_vg6n2"]
+[ext_resource type="Texture2D" uid="uid://lb3xm5d3t48c" path="res://assets/buttons13.png" id="11_vkldo"]
+[ext_resource type="Texture2D" uid="uid://b6whiafbh3ce6" path="res://assets/buttons14.png" id="12_2m6gh"]
+
+[node name="Overlay" type="CanvasLayer" unique_id=183187612]
+script = ExtResource("1_njieu")
+
+[node name="UI" type="Control" parent="." unique_id=402755030]
+z_index = 1
+layout_mode = 3
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = -359.0
+offset_right = 960.0
+offset_bottom = 361.0
+grow_horizontal = 2
+grow_vertical = 0
+scale = Vector2(0.5, 0.5)
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UI" unique_id=1020125758]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 63.0
+offset_top = -176.99994
+offset_right = 173.0
+offset_bottom = -126.99994
+grow_vertical = 0
+scale = Vector2(2.5, 2.5)
+metadata/_edit_use_anchors_ = true
+
+[node name="Left" type="TouchScreenButton" parent="UI/HBoxContainer" unique_id=1247280356]
+modulate = Color(1, 1, 1, 0.8)
+scale = Vector2(1.5, 1.5)
+texture_normal = ExtResource("1_i2ryd")
+texture_pressed = ExtResource("2_njieu")
+action = "move_left"
+
+[node name="Right" type="TouchScreenButton" parent="UI/HBoxContainer" unique_id=1927191664]
+modulate = Color(1, 1, 1, 0.8)
+position = Vector2(59.2, 0)
+scale = Vector2(1.5, 1.5)
+texture_normal = ExtResource("3_rqwgw")
+texture_pressed = ExtResource("4_lot3u")
+action = "move_right"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="UI" unique_id=776764698]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -179.0
+offset_top = -312.99997
+offset_right = -129.0
+offset_bottom = -209.4
+grow_horizontal = 0
+grow_vertical = 0
+scale = Vector2(2.5, 2.5)
+
+[node name="Up" type="TouchScreenButton" parent="UI/HBoxContainer2" unique_id=46413604]
+modulate = Color(1, 1, 1, 0.8)
+position = Vector2(0, -4.4000125)
+scale = Vector2(1.5, 1.5)
+texture_normal = ExtResource("5_ubex6")
+texture_pressed = ExtResource("6_4jgic")
+action = "move_up"
+
+[node name="Down" type="TouchScreenButton" parent="UI/HBoxContainer2" unique_id=618835995]
+modulate = Color(1, 1, 1, 0.8)
+position = Vector2(0, 55)
+scale = Vector2(1.4999999, 1.4999999)
+texture_normal = ExtResource("7_76wxp")
+texture_pressed = ExtResource("8_8rtgm")
+action = "move_down"
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="UI" unique_id=562433868]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -34.0
+offset_top = -34.0
+offset_right = 88.0
+offset_bottom = 96.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PauseButton" type="TouchScreenButton" parent="UI/HBoxContainer3" unique_id=971477884]
+modulate = Color(1, 1, 1, 0.8)
+position = Vector2(546, -294)
+scale = Vector2(3, 3)
+texture_normal = ExtResource("9_p5rgw")
+texture_pressed = ExtResource("10_vg6n2")
+action = "pause"
+
+[node name="HBoxContainer4" type="HBoxContainer" parent="UI" unique_id=1915549014]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -40.0
+offset_right = -20.0
+offset_bottom = 40.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="InteractButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=554425371]
+modulate = Color(1, 1, 1, 0.8)
+scale = Vector2(2, 2)
+texture_normal = ExtResource("11_vkldo")
+texture_pressed = ExtResource("12_2m6gh")
+action = "interact"
+
+[node name="HBoxContainer5" type="HBoxContainer" parent="UI" unique_id=464047050]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -40.0
+offset_right = -20.0
+offset_bottom = 40.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="JamButton" type="TouchScreenButton" parent="UI/HBoxContainer5" unique_id=2070411827]
+modulate = Color(1, 1, 1, 0.8)
+position = Vector2(-1100, 130)
+scale = Vector2(2, 2)
+texture_normal = ExtResource("11_vkldo")
+texture_pressed = ExtResource("12_2m6gh")
+action = "play_instrument"
+
+[node name="CycleInstrumentsButton" type="TouchScreenButton" parent="UI/HBoxContainer5" unique_id=1807431339]
+modulate = Color(1, 1, 1, 0.8)
+position = Vector2(-932, 130)
+scale = Vector2(2, 2)
+texture_normal = ExtResource("11_vkldo")
+texture_pressed = ExtResource("12_2m6gh")
+action = "cycle_instrument"
