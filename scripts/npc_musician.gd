@@ -23,8 +23,6 @@ func _ready() -> void:
 	if display_name == "":
 		display_name = instrument_name.capitalize()
 
-	label.text = display_name
-
 	if audio_source != null:
 		audio_source.instrument_name = instrument_name
 		audio_source.owner_type = "npc"
@@ -33,12 +31,11 @@ func _ready() -> void:
 		music_system.register_audio_source(instrument_name, "npc", audio_source)
 		music_system.instrument_owner_changed.connect(_on_instrument_owner_changed)
 		music_system.arrangement_changed.connect(_on_arrangement_changed)
+	else:
+		push_warning("NPC could not find music_system group.")
 
 	_set_visual_idle()
-
-
-func _on_arrangement_changed() -> void:
-	_update_visual_from_owner()
+	_update_label()
 
 
 func interact() -> void:
@@ -60,6 +57,7 @@ func start_music() -> void:
 		push_warning("NPC could not find music_system group.")
 
 	_update_visual_from_owner()
+	_update_label()
 
 
 func stop_music() -> void:
@@ -74,6 +72,7 @@ func stop_music() -> void:
 		push_warning("NPC could not find music_system group.")
 
 	_set_visual_idle()
+	_update_label()
 
 
 func _on_instrument_owner_changed(changed_instrument_name: String, _instrument_owner: String) -> void:
@@ -81,6 +80,12 @@ func _on_instrument_owner_changed(changed_instrument_name: String, _instrument_o
 		return
 
 	_update_visual_from_owner()
+	_update_label()
+
+
+func _on_arrangement_changed() -> void:
+	_update_visual_from_owner()
+	_update_label()
 
 
 func _update_visual_from_owner() -> void:
@@ -106,6 +111,24 @@ func _update_visual_from_owner() -> void:
 		_set_visual_playing()
 	else:
 		_set_visual_idle()
+
+
+func _update_label() -> void:
+	if label == null:
+		return
+
+	var part_text := "silent"
+
+	if music_system != null and music_system.has_method("get_current_owner_part"):
+		part_text = music_system.get_current_owner_part("npc", instrument_name)
+
+	if part_text == "silent":
+		label.text = "%s: ----" % display_name
+	else:
+		label.text = "%s: %s" % [
+			display_name,
+			part_text.capitalize()
+		]
 
 
 func _set_visual_playing() -> void:

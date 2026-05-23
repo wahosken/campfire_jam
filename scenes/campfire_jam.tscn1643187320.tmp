@@ -92,13 +92,13 @@ offset_bottom = 131.0
 layout_mode = 2
 text = "Current instrument:"
 
-[node name="ActiveInstrumentsLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=759452365]
-layout_mode = 2
-text = "Active Instruments:"
-
 [node name="FeaturedInstrumentLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=640857474]
 layout_mode = 2
 text = "Featured Instrument:"
+
+[node name="ActiveInstrumentsLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=759452365]
+layout_mode = 2
+text = "Active Instruments:"
 
 [node name="InteractPromptLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=530178011]
 layout_mode = 2

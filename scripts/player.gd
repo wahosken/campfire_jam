@@ -10,6 +10,8 @@ extends CharacterBody2D
 @onready var harmonica_audio_source: Node = $PlayerAudioSources/HarmonicaAudioSource
 @onready var mandolin_audio_source: Node = $PlayerAudioSources/MandolinAudioSource
 
+@onready var part_label: Label = $PlayerPartLabel
+
 var nearby_npcs: Array[Node] = []
 var music_system: Node = null
 
@@ -54,8 +56,11 @@ func _ready() -> void:
 
 	sprite.modulate = NORMAL_COLOR
 	sprite.scale = NORMAL_SCALE
+	
+	_update_part_label()
 
-	print("Selected Instrument: ", get_current_instrument_display_name())
+	if music_system != null:
+		music_system.arrangement_changed.connect(_on_arrangement_changed)
 
 
 func _physics_process(_delta: float) -> void:
@@ -63,6 +68,29 @@ func _physics_process(_delta: float) -> void:
 	_handle_npc_interact_input()
 	_handle_instrument_cycle_input()
 	_handle_play_instrument_input()
+
+
+func _on_arrangement_changed() -> void:
+	_update_part_label()
+
+
+func _update_part_label() -> void:
+	if part_label == null:
+		return
+
+	var instrument_name := get_current_instrument_display_name()
+	var part_text := "silent"
+
+	if music_system != null and music_system.has_method("get_current_owner_part"):
+		part_text = music_system.get_current_owner_part("player", get_current_instrument_id())
+
+	if part_text == "silent":
+		part_label.text = "%s: ----" % instrument_name
+	else:
+		part_label.text = "%s: %s" % [
+			instrument_name,
+			part_text.capitalize()
+		]
 
 
 func _handle_movement() -> void:
@@ -119,7 +147,7 @@ func cycle_instrument() -> void:
 	if current_instrument_index >= instruments.size():
 		current_instrument_index = 0
 
-	print("Selected Instrument: ", get_current_instrument_display_name())
+	_update_part_label()
 
 	if was_playing:
 		start_instrument()
@@ -137,6 +165,7 @@ func start_instrument() -> void:
 		music_system.set_player_instrument_active(instrument_id, true)
 
 	_start_instrument_visuals()
+	_update_part_label()
 
 
 func stop_instrument() -> void:
@@ -151,6 +180,7 @@ func stop_instrument() -> void:
 		music_system.set_player_instrument_active(instrument_id, false)
 
 	_stop_instrument_visuals()
+	_update_part_label()
 
 
 func get_current_instrument_id() -> String:

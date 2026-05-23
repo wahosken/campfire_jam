@@ -33,6 +33,28 @@ var audio_sources := {
 	"player": {}
 }
 
+var current_parts := {
+	"guitar": "silent",
+	"bass": "silent",
+	"harmonica": "silent",
+	"mandolin": "silent"
+}
+
+var current_owner_parts := {
+	"npc": {
+		"guitar": "silent",
+		"bass": "silent",
+		"harmonica": "silent",
+		"mandolin": "silent"
+	},
+	"player": {
+		"guitar": "silent",
+		"bass": "silent",
+		"harmonica": "silent",
+		"mandolin": "silent"
+	}
+}
+
 var current_melody_index := 0
 var current_featured_instrument := ""
 
@@ -90,10 +112,13 @@ func register_audio_source(instrument_name: String, owner_type: String, source: 
 
 	audio_sources[owner_type][instrument_name] = source
 
-	# If the song is already running when a source registers, start it silently in sync.
 	if song_started and source.has_method("play_synced"):
 		source.play_synced(0.0)
 		_update_arrangement()
+
+
+
+
 
 
 func unregister_audio_source(instrument_name: String, owner_type: String) -> void:
@@ -185,6 +210,8 @@ func _stop_song() -> void:
 	current_featured_instrument = ""
 
 	_stop_all_stems()
+	_clear_current_parts()
+	_clear_current_owner_parts()
 	arrangement_changed.emit()
 
 
@@ -218,6 +245,8 @@ func _update_arrangement() -> void:
 	var active_count := _get_active_count()
 
 	_mute_all_stems()
+	_clear_current_parts()
+	_clear_current_owner_parts()
 
 	if active_count == 0:
 		arrangement_changed.emit()
@@ -228,13 +257,23 @@ func _update_arrangement() -> void:
 
 		if is_same_instrument_duet(solo_instrument):
 			# Player and NPC both have same instrument, and no other instruments are active.
-			# Let both play: player melody, NPC rhythm.
+			# Player gets melody, NPC gets rhythm.
 			_set_source_tracks(solo_instrument, "player", false, true)
 			_set_source_tracks(solo_instrument, "npc", true, false)
+
+			_set_current_part(solo_instrument, "both")
+			_set_current_owner_part("player", solo_instrument, "melody")
+			_set_current_owner_part("npc", solo_instrument, "rhythm")
 		elif player_active_instruments[solo_instrument]:
 			_set_source_tracks(solo_instrument, "player", true, true)
+
+			_set_current_part(solo_instrument, "both")
+			_set_current_owner_part("player", solo_instrument, "both")
 		else:
 			_set_source_tracks(solo_instrument, "npc", true, true)
+
+			_set_current_part(solo_instrument, "both")
+			_set_current_owner_part("npc", solo_instrument, "both")
 
 		arrangement_changed.emit()
 		return
@@ -253,20 +292,29 @@ func _update_arrangement() -> void:
 			if player_is_active:
 				# Player gets melody priority.
 				_set_source_tracks(instrument_name, "player", false, true)
+				_set_current_part(instrument_name, "melody")
+				_set_current_owner_part("player", instrument_name, "melody")
 
 				if npc_is_active:
 					# Same-instrument NPC backs player with rhythm.
 					_set_source_tracks(instrument_name, "npc", true, false)
+					_set_current_part(instrument_name, "both")
+					_set_current_owner_part("npc", instrument_name, "rhythm")
 			else:
 				# No player on this instrument, so NPC takes melody.
 				_set_source_tracks(instrument_name, "npc", false, true)
+				_set_current_part(instrument_name, "melody")
+				_set_current_owner_part("npc", instrument_name, "melody")
 		else:
 			if player_is_active:
 				# Player is active, but this instrument is not featured.
-				# Player owns the audible rhythm unless NPC-only.
 				_set_source_tracks(instrument_name, "player", true, false)
+				_set_current_part(instrument_name, "rhythm")
+				_set_current_owner_part("player", instrument_name, "rhythm")
 			elif npc_is_active:
 				_set_source_tracks(instrument_name, "npc", true, false)
+				_set_current_part(instrument_name, "rhythm")
+				_set_current_owner_part("npc", instrument_name, "rhythm")
 
 	arrangement_changed.emit()
 
@@ -384,17 +432,71 @@ func should_same_instrument_npc_play_rhythm(instrument_name: String) -> bool:
 	return _get_active_count() > 1
 
 
-func get_current_beat_in_measure() -> int:
-	return int(beat_index % beats_per_measure) + 1
+func _set_current_part(instrument_name: String, part_name: String) -> void:
+	if current_parts.has(instrument_name):
+		current_parts[instrument_name] = part_name
 
 
-func get_loop_position_text() -> String:
-	return "Measure %d / %d | Beat %d / %d | Featured: %s" % [
-		current_measure,
-		total_measures,
-		get_current_beat_in_measure(),
-		beats_per_measure,
-		current_featured_instrument.capitalize() if current_featured_instrument != "" else "None"
+func _clear_current_parts() -> void:
+	for instrument_name in current_parts.keys():
+		current_parts[instrument_name] = "silent"
+
+
+func get_current_part(instrument_name: String) -> String:
+	if not current_parts.has(instrument_name):
+		return "silent"
+
+	return current_parts[instrument_name]
+
+
+func _set_current_owner_part(owner_type: String, instrument_name: String, part_name: String) -> void:
+	if not current_owner_parts.has(owner_type):
+		return
+
+	if current_owner_parts[owner_type].has(instrument_name):
+		current_owner_parts[owner_type][instrument_name] = part_name
+
+
+func _clear_current_owner_parts() -> void:
+	for owner_type in current_owner_parts.keys():
+		for instrument_name in current_owner_parts[owner_type].keys():
+			current_owner_parts[owner_type][instrument_name] = "silent"
+
+
+func get_current_owner_part(owner_type: String, instrument_name: String) -> String:
+	if not current_owner_parts.has(owner_type):
+		return "silent"
+
+	if not current_owner_parts[owner_type].has(instrument_name):
+		return "silent"
+
+	return current_owner_parts[owner_type][instrument_name]
+
+
+func get_active_instruments_text() -> String:
+	var active_names: Array[String] = []
+
+	for instrument_name in melody_priority:
+		if is_instrument_active(instrument_name):
+			active_names.append(instrument_name.capitalize())
+
+	if active_names.is_empty():
+		return "None"
+
+	return ", ".join(active_names)
+
+
+func get_featured_instrument_text() -> String:
+	if current_featured_instrument == "":
+		return "None"
+
+	return current_featured_instrument.capitalize()
+
+
+func get_arrangement_debug_text() -> String:
+	return "Featured: %s\nCurrently Playing: %s" % [
+		get_featured_instrument_text(),
+		get_active_instruments_text()
 	]
 
 
