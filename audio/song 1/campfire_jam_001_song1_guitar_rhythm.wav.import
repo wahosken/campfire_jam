@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bp4m25g3cyl1j"
+path="res://.godot/imported/campfire_jam_001_song1_guitar_rhythm.wav-a3e324936d13344c57ef3b1c5bd63006.sample"
+
+[deps]
+
+source_file="res://audio/song 1/campfire_jam_001_song1_guitar_rhythm.wav"
+dest_files=["res://.godot/imported/campfire_jam_001_song1_guitar_rhythm.wav-a3e324936d13344c57ef3b1c5bd63006.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

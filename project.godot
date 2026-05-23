@@ -13,7 +13,6 @@ config_version=5
 config/name="campfire_jam"
 run/main_scene="uid://caabunylbva7i"
 config/features=PackedStringArray("4.6", "GL Compatibility")
-config/icon="res://icon.svg"
 
 [display]
 
@@ -29,6 +28,7 @@ window/stretch/scale_mode="integer"
 music_system=""
 player=""
 npc_musician=""
+interactable=""
 
 [input]
 

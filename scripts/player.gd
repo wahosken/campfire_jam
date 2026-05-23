@@ -12,11 +12,14 @@ extends CharacterBody2D
 
 @onready var part_label: Label = $PlayerPartLabel
 
-var nearby_npcs: Array[Node] = []
+var nearby_interactables: Array[Node] = []
 var music_system: Node = null
 
 var is_playing_instrument := false
 var instrument_visual_tween: Tween = null
+
+var is_playing_solo_jam := false
+var started_in_campfire_jam := false
 
 var current_instrument_index := 0
 
@@ -47,6 +50,8 @@ const PLAYING_SCALE := Vector2(1.08, 0.94)
 
 
 func _ready() -> void:
+	add_to_group("player")
+
 	interaction_area.area_entered.connect(_on_interaction_area_entered)
 	interaction_area.area_exited.connect(_on_interaction_area_exited)
 
@@ -56,14 +61,19 @@ func _ready() -> void:
 
 	sprite.modulate = NORMAL_COLOR
 	sprite.scale = NORMAL_SCALE
-	
+
 	_update_part_label()
 
 	if music_system != null:
 		music_system.arrangement_changed.connect(_on_arrangement_changed)
 
+	print("Selected Instrument: ", get_current_instrument_display_name())
+
 
 func _physics_process(_delta: float) -> void:
+	if music_system != null and music_system.has_method("update_player_jam_area"):
+		music_system.update_player_jam_area(global_position)
+	
 	_handle_movement()
 	_handle_npc_interact_input()
 	_handle_instrument_cycle_input()
@@ -81,7 +91,9 @@ func _update_part_label() -> void:
 	var instrument_name := get_current_instrument_display_name()
 	var part_text := "silent"
 
-	if music_system != null and music_system.has_method("get_current_owner_part"):
+	if is_playing_solo_jam:
+		part_text = "both"
+	elif music_system != null and music_system.has_method("get_current_owner_part"):
 		part_text = music_system.get_current_owner_part("player", get_current_instrument_id())
 
 	if part_text == "silent":
@@ -160,9 +172,22 @@ func start_instrument() -> void:
 	is_playing_instrument = true
 
 	var instrument_id := get_current_instrument_id()
+	started_in_campfire_jam = false
+	is_playing_solo_jam = false
 
-	if music_system != null:
-		music_system.set_player_instrument_active(instrument_id, true)
+	if music_system != null and music_system.has_method("is_player_joined_to_campfire_jam"):
+		started_in_campfire_jam = music_system.is_player_joined_to_campfire_jam()
+
+	if started_in_campfire_jam:
+		if music_system != null:
+			music_system.set_player_instrument_active(instrument_id, true)
+	else:
+		is_playing_solo_jam = true
+
+		var current_audio_source := get_current_audio_source()
+
+		if current_audio_source != null and current_audio_source.has_method("start_solo_jam"):
+			current_audio_source.start_solo_jam()
 
 	_start_instrument_visuals()
 	_update_part_label()
@@ -172,12 +197,20 @@ func stop_instrument() -> void:
 	if not is_playing_instrument:
 		return
 
-	is_playing_instrument = false
-
 	var instrument_id := get_current_instrument_id()
 
-	if music_system != null:
-		music_system.set_player_instrument_active(instrument_id, false)
+	if is_playing_solo_jam:
+		var current_audio_source := get_current_audio_source()
+
+		if current_audio_source != null and current_audio_source.has_method("stop_solo_jam"):
+			current_audio_source.stop_solo_jam()
+	else:
+		if music_system != null:
+			music_system.set_player_instrument_active(instrument_id, false)
+
+	is_playing_instrument = false
+	is_playing_solo_jam = false
+	started_in_campfire_jam = false
 
 	_stop_instrument_visuals()
 	_update_part_label()
@@ -226,35 +259,58 @@ func _stop_instrument_visuals() -> void:
 
 
 func get_closest_npc() -> Node:
-	if nearby_npcs.is_empty():
+	return get_closest_interactable()
+
+
+func get_closest_interactable() -> Node:
+	if nearby_interactables.is_empty():
 		return null
 
-	var closest_npc: Node = null
+	var closest_node: Node = null
 	var closest_distance := INF
 
-	for npc in nearby_npcs:
-		if not is_instance_valid(npc):
+	for node in nearby_interactables:
+		if not is_instance_valid(node):
 			continue
 
-		var distance := global_position.distance_to(npc.global_position)
+		var distance := global_position.distance_to(node.global_position)
 
 		if distance < closest_distance:
 			closest_distance = distance
-			closest_npc = npc
+			closest_node = node
 
-	return closest_npc
+	return closest_node
 
 
 func _on_interaction_area_entered(area: Area2D) -> void:
-	var possible_npc := area.get_parent()
+	var possible_interactable := area.get_parent()
 
-	if possible_npc.is_in_group("npc_musician"):
-		if not nearby_npcs.has(possible_npc):
-			nearby_npcs.append(possible_npc)
+	if possible_interactable.is_in_group("interactable") or possible_interactable.is_in_group("npc_musician"):
+		if not nearby_interactables.has(possible_interactable):
+			nearby_interactables.append(possible_interactable)
 
 
 func _on_interaction_area_exited(area: Area2D) -> void:
-	var possible_npc := area.get_parent()
+	var possible_interactable := area.get_parent()
 
-	if nearby_npcs.has(possible_npc):
-		nearby_npcs.erase(possible_npc)
+	if nearby_interactables.has(possible_interactable):
+		nearby_interactables.erase(possible_interactable)
+
+
+func get_current_audio_source() -> Node:
+	var instrument_id := get_current_instrument_id()
+
+	match instrument_id:
+		"guitar":
+			return guitar_audio_source
+		"bass":
+			return bass_audio_source
+		"harmonica":
+			return harmonica_audio_source
+		"mandolin":
+			return mandolin_audio_source
+		_:
+			return null
+
+func is_latched_to_campfire_jam() -> bool:
+	return is_playing_instrument and started_in_campfire_jam and not is_playing_solo_jam

@@ -7,6 +7,14 @@ signal arrangement_changed
 @export var beats_per_measure := 4
 @export var total_measures := 8
 
+@export var jam_join_radius := 1000.0
+@export var jam_leave_radius := 1100.0
+
+var player_is_in_campfire_jam := true
+
+var jam_enabled := true
+var npc_jam_enabled := true
+
 var npc_active_instruments := {
 	"guitar": false,
 	"bass": false,
@@ -144,9 +152,22 @@ func _get_audio_source(instrument_name: String, owner_type: String) -> Node:
 	return audio_sources[owner_type][instrument_name]
 
 
+func set_npc_jam_enabled(is_enabled: bool) -> void:
+	npc_jam_enabled = is_enabled
+
+	if not npc_jam_enabled:
+		for instrument_name in npc_active_instruments.keys():
+			npc_active_instruments[instrument_name] = false
+
+		_refresh_song_state()
+
+
 func set_npc_instrument_active(instrument_name: String, is_active: bool) -> void:
 	if not npc_active_instruments.has(instrument_name):
 		push_warning("Unknown NPC instrument: " + instrument_name)
+		return
+
+	if not npc_jam_enabled and is_active:
 		return
 
 	var old_owner := get_instrument_owner(instrument_name)
@@ -164,6 +185,9 @@ func set_npc_instrument_active(instrument_name: String, is_active: bool) -> void
 func set_player_instrument_active(instrument_name: String, is_active: bool) -> void:
 	if not player_active_instruments.has(instrument_name):
 		push_warning("Unknown player instrument: " + instrument_name)
+		return
+
+	if not jam_enabled and is_active:
 		return
 
 	var old_owner := get_instrument_owner(instrument_name)
@@ -264,7 +288,7 @@ func _update_arrangement() -> void:
 			_set_current_part(solo_instrument, "both")
 			_set_current_owner_part("player", solo_instrument, "melody")
 			_set_current_owner_part("npc", solo_instrument, "rhythm")
-		elif player_active_instruments[solo_instrument]:
+		elif is_player_instrument_active_in_campfire(solo_instrument):
 			_set_source_tracks(solo_instrument, "player", true, true)
 
 			_set_current_part(solo_instrument, "both")
@@ -285,7 +309,7 @@ func _update_arrangement() -> void:
 		if not is_instrument_active(instrument_name):
 			continue
 
-		var player_is_active: bool = player_active_instruments[instrument_name]
+		var player_is_active: bool = is_player_instrument_active_in_campfire(instrument_name)
 		var npc_is_active: bool = npc_active_instruments[instrument_name]
 
 		if instrument_name == current_featured_instrument:
@@ -323,14 +347,14 @@ func is_instrument_active(instrument_name: String) -> bool:
 	if not npc_active_instruments.has(instrument_name):
 		return false
 
-	return npc_active_instruments[instrument_name] or player_active_instruments[instrument_name]
+	return npc_active_instruments[instrument_name] or is_player_instrument_active_in_campfire(instrument_name)
 
 
 func get_instrument_owner(instrument_name: String) -> String:
 	if not npc_active_instruments.has(instrument_name):
 		return "none"
 
-	if player_active_instruments[instrument_name]:
+	if is_player_instrument_active_in_campfire(instrument_name):
 		return "player"
 
 	if npc_active_instruments[instrument_name]:
@@ -410,7 +434,7 @@ func is_same_instrument_duet(instrument_name: String) -> bool:
 	if not npc_active_instruments[instrument_name]:
 		return false
 
-	if not player_active_instruments[instrument_name]:
+	if not is_player_instrument_active_in_campfire(instrument_name):
 		return false
 
 	return _get_active_count() == 1
@@ -423,7 +447,7 @@ func should_same_instrument_npc_play_rhythm(instrument_name: String) -> bool:
 	if not npc_active_instruments[instrument_name]:
 		return false
 
-	if not player_active_instruments[instrument_name]:
+	if not is_player_instrument_active_in_campfire(instrument_name):
 		return false
 
 	if current_featured_instrument != instrument_name:
@@ -506,3 +530,88 @@ func is_song_started() -> bool:
 
 func get_featured_instrument() -> String:
 	return current_featured_instrument
+
+
+func set_jam_enabled(is_enabled: bool) -> void:
+	jam_enabled = is_enabled
+
+	if not jam_enabled:
+		for instrument_name in npc_active_instruments.keys():
+			npc_active_instruments[instrument_name] = false
+
+		for instrument_name in player_active_instruments.keys():
+			player_active_instruments[instrument_name] = false
+
+		_stop_song()
+	else:
+		_refresh_song_state()
+
+
+func is_jam_enabled() -> bool:
+	return jam_enabled
+
+func update_player_jam_area(player_position: Vector2) -> void:
+	var check_radius := jam_leave_radius if player_is_in_campfire_jam else jam_join_radius
+	var is_near_active_jam := false
+
+	for npc in get_tree().get_nodes_in_group("npc_musician"):
+		if not is_instance_valid(npc):
+			continue
+
+		if not npc.has_method("is_actively_playing_jam"):
+			continue
+
+		if not npc.is_actively_playing_jam():
+			continue
+
+		var distance := player_position.distance_to(npc.global_position)
+
+		if distance <= check_radius:
+			is_near_active_jam = true
+			break
+
+	if is_near_active_jam == player_is_in_campfire_jam:
+		return
+
+	if is_near_active_jam:
+		_on_player_entered_campfire_jam()
+	else:
+		_on_player_left_campfire_jam()
+
+
+func _on_player_entered_campfire_jam() -> void:
+	player_is_in_campfire_jam = true
+
+	if current_featured_instrument == "" or not is_instrument_active(current_featured_instrument):
+		_choose_first_featured_instrument()
+
+	_update_arrangement()
+
+
+func _on_player_left_campfire_jam() -> void:
+	player_is_in_campfire_jam = false
+
+	var player_node := get_tree().get_first_node_in_group("player")
+
+	if player_node != null:
+		if player_node.has_method("is_latched_to_campfire_jam"):
+			if player_node.is_latched_to_campfire_jam():
+				# Player started synced inside the jam and is still holding play.
+				# Keep them in the campfire arrangement until they release.
+				player_is_in_campfire_jam = true
+				return
+
+	if current_featured_instrument == "" or not is_instrument_active(current_featured_instrument):
+		_choose_first_featured_instrument()
+
+	_update_arrangement()
+
+func is_player_joined_to_campfire_jam() -> bool:
+	return player_is_in_campfire_jam
+
+
+func is_player_instrument_active_in_campfire(instrument_name: String) -> bool:
+	if not player_active_instruments.has(instrument_name):
+		return false
+
+	return player_is_in_campfire_jam and player_active_instruments[instrument_name]

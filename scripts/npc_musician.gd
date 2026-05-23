@@ -17,6 +17,7 @@ const PLAYING_COLOR := Color(1.25, 1.1, 0.75, 1)
 
 func _ready() -> void:
 	add_to_group("npc_musician")
+	add_to_group("interactable")
 
 	music_system = get_tree().get_first_node_in_group("music_system")
 
@@ -139,3 +140,6 @@ func _set_visual_playing() -> void:
 func _set_visual_idle() -> void:
 	if sprite:
 		sprite.modulate = IDLE_COLOR
+
+func is_actively_playing_jam() -> bool:
+	return wants_to_play
