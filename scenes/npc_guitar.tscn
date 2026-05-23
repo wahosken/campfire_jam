@@ -1,6 +1,9 @@
 [gd_scene format=3 uid="uid://ch5e2petf0x3t"]
 
 [ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/npc_musician.gd" id="1_njmx8"]
+[ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/instrument_audio_source.gd" id="2_v3fsn"]
+[ext_resource type="AudioStream" uid="uid://bp4m25g3cyl1j" path="res://audio/song 1/001_song1_guitar_rhythm.wav" id="3_w4p14"]
+[ext_resource type="AudioStream" uid="uid://dopob82cdybje" path="res://audio/song 1/002_song1_guitar_lead.wav" id="4_csoos"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_iubrl"]
 size = Vector2(60, 60)
@@ -10,6 +13,7 @@ size = Vector2(150, 150)
 
 [node name="NPC_Guitar" type="Node2D" unique_id=718845583 groups=["npc_musician"]]
 script = ExtResource("1_njmx8")
+display_name = null
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8
@@ -35,16 +39,30 @@ shape = SubResource("RectangleShape2D_iubrl")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=532288306]
 shape = SubResource("RectangleShape2D_u8vuu")
 
-[node name="Label" type="Label" parent="." unique_id=1190288767]
+[node name="Label" type="Label" parent="." unique_id=1916719615]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.0
+offset_left = -35.0
 offset_top = -11.5
-offset_right = 20.0
+offset_right = 35.0
 offset_bottom = 11.5
 grow_horizontal = 2
 grow_vertical = 2
-text = "Guitar"
+text = "Musician"
+horizontal_alignment = 1
+
+[node name="InstrumentAudioSource" type="Node2D" parent="." unique_id=1158120352]
+script = ExtResource("2_v3fsn")
+rhythm_stream = ExtResource("3_w4p14")
+melody_stream = ExtResource("4_csoos")
+
+[node name="RhythmPlayer" type="AudioStreamPlayer2D" parent="InstrumentAudioSource" unique_id=2099121620]
+max_distance = 1000.0
+attenuation = 0.75
+
+[node name="MelodyPlayer" type="AudioStreamPlayer2D" parent="InstrumentAudioSource" unique_id=1894801425]
+max_distance = 1000.0
+attenuation = 0.75

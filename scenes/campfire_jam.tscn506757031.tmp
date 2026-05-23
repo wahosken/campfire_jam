@@ -1,12 +1,9 @@
 [gd_scene format=3 uid="uid://caabunylbva7i"]
 
 [ext_resource type="Script" uid="uid://bjhdxj07mhdxx" path="res://scripts/campfire_jam.gd" id="1_qtvd6"]
-[ext_resource type="PackedScene" uid="uid://ch5e2petf0x3t" path="res://scenes/npc_guitar.tscn" id="2_q2hrs"]
+[ext_resource type="PackedScene" uid="uid://hva52qmd64yx" path="res://scenes/npc_musician.tscn" id="2_wu1ak"]
 [ext_resource type="PackedScene" uid="uid://blfnmt5xbykgs" path="res://scenes/player.tscn" id="3_hiehu"]
-[ext_resource type="PackedScene" uid="uid://dgi3bcdtv1vab" path="res://scenes/npc_bass.tscn" id="3_mcuth"]
-[ext_resource type="PackedScene" uid="uid://drl7f1y3s7a6x" path="res://scenes/npc_harmonica.tscn" id="4_65sn3"]
 [ext_resource type="PackedScene" uid="uid://80o547y8x4gj" path="res://scenes/house.tscn" id="4_mcuth"]
-[ext_resource type="PackedScene" uid="uid://8cj1uwe35wqt" path="res://scenes/npc_mandolin.tscn" id="5_mcuth"]
 [ext_resource type="PackedScene" uid="uid://tu61b7d68xgv" path="res://scenes/music_system.tscn" id="6_wu1ak"]
 [ext_resource type="Script" uid="uid://cevh1omjrnc6a" path="res://scripts/jam_ui.gd" id="7_41670"]
 
@@ -36,24 +33,77 @@ offset_right = 502.0
 offset_bottom = -346.0
 color = Color(1, 0.14509805, 0, 1)
 
-[node name="NPC_Guitar" parent="World" unique_id=173912358 instance=ExtResource("2_q2hrs")]
-position = Vector2(305, -371)
-instrument_name = "guitar"
-display_name = "Guitar"
+[node name="NPC_Guitar" parent="World" unique_id=718845583 instance=ExtResource("2_wu1ak")]
+position = Vector2(311, -408)
 
-[node name="NPC_Bass" parent="World" unique_id=718845583 instance=ExtResource("3_mcuth")]
-position = Vector2(472, -510)
-display_name = "Bass"
+[node name="Label" type="Label" parent="World/NPC_Guitar" unique_id=116104814]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.5
+offset_top = -11.5
+offset_right = 24.5
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "Guitar"
+horizontal_alignment = 1
 
-[node name="NPC_Harmonica" parent="World" unique_id=1800832853 instance=ExtResource("4_65sn3")]
-position = Vector2(628, -390)
-instrument_name = "harmonica"
-display_name = "Harmonica"
+[node name="NPC_Bass" parent="World" unique_id=1504409300 instance=ExtResource("2_wu1ak")]
+position = Vector2(493, -532)
 
-[node name="NPC_Mandolin" parent="World" unique_id=2034953610 instance=ExtResource("5_mcuth")]
-position = Vector2(463, -240)
-instrument_name = "mandolin"
-display_name = "Mandolin"
+[node name="Label" type="Label" parent="World/NPC_Bass" unique_id=458401303]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.5
+offset_top = -11.5
+offset_right = 24.5
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "Bass"
+horizontal_alignment = 1
+
+[node name="NPC_Harmonica" parent="World" unique_id=1546807625 instance=ExtResource("2_wu1ak")]
+position = Vector2(670, -413)
+
+[node name="Label" type="Label" parent="World/NPC_Harmonica" unique_id=138234111]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.5
+offset_top = -11.5
+offset_right = 24.5
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "Harmonica"
+horizontal_alignment = 1
+
+[node name="NPC_Mandolin" parent="World" unique_id=1225718068 instance=ExtResource("2_wu1ak")]
+position = Vector2(495, -243)
+
+[node name="Label" type="Label" parent="World/NPC_Mandolin" unique_id=971101338]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.5
+offset_top = -11.5
+offset_right = 24.5
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "Mandolin"
+horizontal_alignment = 1
 
 [node name="House" parent="World" unique_id=1834173392 instance=ExtResource("4_mcuth")]
 position = Vector2(527, -914)

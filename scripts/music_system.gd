@@ -1,268 +1,406 @@
 extends Node
 
+signal instrument_owner_changed(instrument_name: String, instrument_owner: String)
+signal arrangement_changed
+
 @export var bpm := 100.0
 @export var beats_per_measure := 4
 @export var total_measures := 8
 
-@onready var guitar_stem: AudioStreamPlayer = $GuitarStem
-@onready var bass_stem: AudioStreamPlayer = $BassStem
-@onready var harmonica_stem: AudioStreamPlayer = $HarmonicaStem
-
-var song_playing := false
-
-var current_beat := 1
-var current_measure := 1
-var current_loop_position := 0.0
-
-var active_stems := {
-	"guitar": false,
-	"bass": false,
-	"harmonica": false
-}
-
 var npc_active_instruments := {
 	"guitar": false,
 	"bass": false,
-	"harmonica": false
+	"harmonica": false,
+	"mandolin": false
 }
 
-var player_active_instrument := ""
+var player_active_instruments := {
+	"guitar": false,
+	"bass": false,
+	"harmonica": false,
+	"mandolin": false
+}
+
+var melody_priority := [
+	"guitar",
+	"harmonica",
+	"mandolin",
+	"bass"
+]
+
+var audio_sources := {
+	"npc": {},
+	"player": {}
+}
+
+var current_melody_index := 0
+var current_featured_instrument := ""
+
+var song_started := false
+var beat_index := 0
+var current_measure := 1
+
+var beat_timer := 0.0
+var seconds_per_beat := 0.0
 
 
 func _ready() -> void:
 	add_to_group("music_system")
 
-	_set_stem_active("guitar", false)
-	_set_stem_active("bass", false)
-	_set_stem_active("harmonica", false)
+	seconds_per_beat = 60.0 / bpm
+	_mute_all_stems()
 
 
-func _process(_delta: float) -> void:
-	if not song_playing:
+func _process(delta: float) -> void:
+	if not song_started:
 		return
 
-	_update_timing()
-	_stop_song_if_everyone_stopped()
+	beat_timer += delta
 
+	while beat_timer >= seconds_per_beat:
+		beat_timer -= seconds_per_beat
+		_on_beat()
 
-func start_song() -> void:
-	if song_playing:
-		return
 
-	song_playing = true
-	current_beat = 1
-	current_measure = 1
-	current_loop_position = 0.0
+func _on_beat() -> void:
+	beat_index += 1
 
-	if guitar_stem != null:
-		guitar_stem.play(0.0)
+	var total_beats := beats_per_measure * total_measures
 
-	if bass_stem != null:
-		bass_stem.play(0.0)
+	if beat_index >= total_beats:
+		beat_index = 0
+		_on_song_loop()
 
-	if harmonica_stem != null:
-		harmonica_stem.play(0.0)
-
-	_apply_all_stem_volumes()
-
-
-func stop_song() -> void:
-	song_playing = false
-
-	if guitar_stem != null:
-		guitar_stem.stop()
-
-	if bass_stem != null:
-		bass_stem.stop()
-
-	if harmonica_stem != null:
-		harmonica_stem.stop()
-
-	current_beat = 1
-	current_measure = 1
-	current_loop_position = 0.0
-
-
-func npc_toggle_instrument(instrument_id: String) -> void:
-	if not npc_active_instruments.has(instrument_id):
-		push_warning("Unknown NPC instrument: " + instrument_id)
-		return
-
-	var currently_active: bool = npc_active_instruments[instrument_id]
-	set_npc_instrument_active(instrument_id, not currently_active)
-
-
-func set_npc_instrument_active(instrument_id: String, active: bool) -> void:
-	if not npc_active_instruments.has(instrument_id):
-		push_warning("Unknown NPC instrument: " + instrument_id)
-		return
-
-	npc_active_instruments[instrument_id] = active
-
-	var player_is_playing_this_instrument: bool = player_active_instrument == instrument_id
-
-	if active:
-		if not song_playing:
-			start_song()
-
-		if player_is_playing_this_instrument:
-			_set_matching_npcs_visual_playing(instrument_id, false)
-		else:
-			_set_matching_npcs_visual_playing(instrument_id, true)
-
-		_set_stem_active(instrument_id, true)
-	else:
-		_set_matching_npcs_visual_playing(instrument_id, false)
-
-		if player_is_playing_this_instrument:
-			_set_stem_active(instrument_id, true)
-		else:
-			_set_stem_active(instrument_id, false)
-
-	_stop_song_if_everyone_stopped()
-
-
-func player_take_over_instrument(instrument_id: String) -> void:
-	if not active_stems.has(instrument_id):
-		push_warning("Unknown player instrument: " + instrument_id)
-		return
-
-	player_active_instrument = instrument_id
-
-	if not song_playing:
-		start_song()
-
-	_set_matching_npcs_visual_playing(instrument_id, false)
-	_set_stem_active(instrument_id, true)
-
-
-func player_release_instrument(instrument_id: String) -> void:
-	if player_active_instrument != instrument_id:
-		return
-
-	player_active_instrument = ""
-
-	var matching_npc_was_active: bool = npc_active_instruments[instrument_id]
-
-	if matching_npc_was_active:
-		_set_matching_npcs_visual_playing(instrument_id, true)
-		_set_stem_active(instrument_id, true)
-	else:
-		_set_matching_npcs_visual_playing(instrument_id, false)
-		_set_stem_active(instrument_id, false)
-
-	_stop_song_if_everyone_stopped()
-
-
-func _is_any_other_npc_playing(excluded_instrument_id: String) -> bool:
-	for instrument_id: String in npc_active_instruments.keys():
-		if instrument_id == excluded_instrument_id:
-			continue
-
-		if npc_active_instruments[instrument_id]:
-			return true
-
-	return false
-
-
-func _stop_song_if_everyone_stopped() -> void:
-	if player_active_instrument != "":
-		return
-
-	for instrument_id: String in npc_active_instruments.keys():
-		if npc_active_instruments[instrument_id]:
-			return
-
-	stop_song()
-
-
-func _set_stem_active(stem_name: String, active: bool) -> void:
-	if not active_stems.has(stem_name):
-		push_warning("Unknown stem name: " + stem_name)
-		return
-
-	active_stems[stem_name] = active
-
-	if active and not song_playing:
-		start_song()
-
-	match stem_name:
-		"guitar":
-			_set_player_muted(guitar_stem, not active)
-		"bass":
-			_set_player_muted(bass_stem, not active)
-		"harmonica":
-			_set_player_muted(harmonica_stem, not active)
-
-
-func _apply_all_stem_volumes() -> void:
-	_set_player_muted(guitar_stem, not active_stems["guitar"])
-	_set_player_muted(bass_stem, not active_stems["bass"])
-	_set_player_muted(harmonica_stem, not active_stems["harmonica"])
-
-
-func _set_player_muted(player: AudioStreamPlayer, muted: bool) -> void:
-	if player == null:
-		return
-
-	if muted:
-		player.volume_db = -80.0
-	else:
-		player.volume_db = 0.0
-
-
-func is_stem_active(stem_name: String) -> bool:
-	if not active_stems.has(stem_name):
-		return false
-
-	return active_stems[stem_name]
-
-
-func _set_matching_npcs_visual_playing(instrument_id: String, playing: bool) -> void:
-	var npcs: Array[Node] = get_tree().get_nodes_in_group("npc_musician")
-
-	for npc: Node in npcs:
-		if not npc.has_method("get_instrument_id"):
-			continue
-
-		if not npc.has_method("set_visual_playing"):
-			continue
-
-		var npc_instrument_id: String = npc.get_instrument_id()
-
-		if npc_instrument_id == instrument_id:
-			npc.set_visual_playing(playing)
-
-
-func _update_timing() -> void:
-	if guitar_stem == null:
-		return
-
-	var playback_position: float = guitar_stem.get_playback_position()
-
-	var seconds_per_beat: float = 60.0 / bpm
-	var total_beats: int = beats_per_measure * total_measures
-	var loop_length_seconds: float = seconds_per_beat * float(total_beats)
-
-	current_loop_position = fmod(playback_position, loop_length_seconds)
-
-	var beat_index: int = int(current_loop_position / seconds_per_beat)
-
-	current_beat = beat_index % beats_per_measure + 1
 	current_measure = int(float(beat_index) / float(beats_per_measure)) + 1
 
 
+func _on_song_loop() -> void:
+	_restart_all_stems_synced()
+	_advance_featured_instrument()
+	_update_arrangement()
+
+
+func register_audio_source(instrument_name: String, owner_type: String, source: Node) -> void:
+	if source == null:
+		push_warning("Tried to register null audio source for " + owner_type + " " + instrument_name)
+		return
+
+	if not audio_sources.has(owner_type):
+		audio_sources[owner_type] = {}
+
+	audio_sources[owner_type][instrument_name] = source
+
+	# If the song is already running when a source registers, start it silently in sync.
+	if song_started and source.has_method("play_synced"):
+		source.play_synced(0.0)
+		_update_arrangement()
+
+
+func unregister_audio_source(instrument_name: String, owner_type: String) -> void:
+	if not audio_sources.has(owner_type):
+		return
+
+	if audio_sources[owner_type].has(instrument_name):
+		var source: Node = audio_sources[owner_type][instrument_name]
+
+		if source != null and source.has_method("stop_all"):
+			source.stop_all()
+
+		audio_sources[owner_type].erase(instrument_name)
+
+
+func _get_audio_source(instrument_name: String, owner_type: String) -> Node:
+	if not audio_sources.has(owner_type):
+		return null
+
+	if not audio_sources[owner_type].has(instrument_name):
+		return null
+
+	return audio_sources[owner_type][instrument_name]
+
+
+func set_npc_instrument_active(instrument_name: String, is_active: bool) -> void:
+	if not npc_active_instruments.has(instrument_name):
+		push_warning("Unknown NPC instrument: " + instrument_name)
+		return
+
+	var old_owner := get_instrument_owner(instrument_name)
+
+	npc_active_instruments[instrument_name] = is_active
+
+	var new_owner := get_instrument_owner(instrument_name)
+
+	if old_owner != new_owner:
+		instrument_owner_changed.emit(instrument_name, new_owner)
+
+	_refresh_song_state()
+
+
+func set_player_instrument_active(instrument_name: String, is_active: bool) -> void:
+	if not player_active_instruments.has(instrument_name):
+		push_warning("Unknown player instrument: " + instrument_name)
+		return
+
+	var old_owner := get_instrument_owner(instrument_name)
+
+	player_active_instruments[instrument_name] = is_active
+
+	var new_owner := get_instrument_owner(instrument_name)
+
+	if old_owner != new_owner:
+		instrument_owner_changed.emit(instrument_name, new_owner)
+
+	_refresh_song_state()
+
+
+func _refresh_song_state() -> void:
+	if _get_active_count() > 0:
+		if not song_started:
+			_start_song()
+		else:
+			if current_featured_instrument == "" or not is_instrument_active(current_featured_instrument):
+				_choose_first_featured_instrument()
+
+			_update_arrangement()
+	else:
+		_stop_song()
+
+
+func _start_song() -> void:
+	song_started = true
+	beat_index = 0
+	current_measure = 1
+	beat_timer = 0.0
+
+	_play_all_stems_synced()
+	_choose_first_featured_instrument()
+	_update_arrangement()
+
+
+func _stop_song() -> void:
+	song_started = false
+	beat_index = 0
+	current_measure = 1
+	beat_timer = 0.0
+	current_featured_instrument = ""
+
+	_stop_all_stems()
+	arrangement_changed.emit()
+
+
+func _choose_first_featured_instrument() -> void:
+	for i in melody_priority.size():
+		var instrument_name: String = melody_priority[i]
+
+		if is_instrument_active(instrument_name):
+			current_melody_index = i
+			current_featured_instrument = instrument_name
+			return
+
+	current_featured_instrument = ""
+
+
+func _advance_featured_instrument() -> void:
+	if _get_active_count() == 0:
+		current_featured_instrument = ""
+		return
+
+	for step in melody_priority.size():
+		current_melody_index = (current_melody_index + 1) % melody_priority.size()
+		var candidate: String = melody_priority[current_melody_index]
+
+		if is_instrument_active(candidate):
+			current_featured_instrument = candidate
+			return
+
+
+func _update_arrangement() -> void:
+	var active_count := _get_active_count()
+
+	_mute_all_stems()
+
+	if active_count == 0:
+		arrangement_changed.emit()
+		return
+
+	if active_count == 1:
+		var solo_instrument := _get_first_active_instrument()
+
+		if is_same_instrument_duet(solo_instrument):
+			# Player and NPC both have same instrument, and no other instruments are active.
+			# Let both play: player melody, NPC rhythm.
+			_set_source_tracks(solo_instrument, "player", false, true)
+			_set_source_tracks(solo_instrument, "npc", true, false)
+		elif player_active_instruments[solo_instrument]:
+			_set_source_tracks(solo_instrument, "player", true, true)
+		else:
+			_set_source_tracks(solo_instrument, "npc", true, true)
+
+		arrangement_changed.emit()
+		return
+
+	if current_featured_instrument == "" or not is_instrument_active(current_featured_instrument):
+		_choose_first_featured_instrument()
+
+	for instrument_name in melody_priority:
+		if not is_instrument_active(instrument_name):
+			continue
+
+		var player_is_active: bool = player_active_instruments[instrument_name]
+		var npc_is_active: bool = npc_active_instruments[instrument_name]
+
+		if instrument_name == current_featured_instrument:
+			if player_is_active:
+				# Player gets melody priority.
+				_set_source_tracks(instrument_name, "player", false, true)
+
+				if npc_is_active:
+					# Same-instrument NPC backs player with rhythm.
+					_set_source_tracks(instrument_name, "npc", true, false)
+			else:
+				# No player on this instrument, so NPC takes melody.
+				_set_source_tracks(instrument_name, "npc", false, true)
+		else:
+			if player_is_active:
+				# Player is active, but this instrument is not featured.
+				# Player owns the audible rhythm unless NPC-only.
+				_set_source_tracks(instrument_name, "player", true, false)
+			elif npc_is_active:
+				_set_source_tracks(instrument_name, "npc", true, false)
+
+	arrangement_changed.emit()
+
+
+func is_instrument_active(instrument_name: String) -> bool:
+	if not npc_active_instruments.has(instrument_name):
+		return false
+
+	return npc_active_instruments[instrument_name] or player_active_instruments[instrument_name]
+
+
+func get_instrument_owner(instrument_name: String) -> String:
+	if not npc_active_instruments.has(instrument_name):
+		return "none"
+
+	if player_active_instruments[instrument_name]:
+		return "player"
+
+	if npc_active_instruments[instrument_name]:
+		return "npc"
+
+	return "none"
+
+
+func _get_active_count() -> int:
+	var count := 0
+
+	for instrument_name in melody_priority:
+		if is_instrument_active(instrument_name):
+			count += 1
+
+	return count
+
+
+func _get_first_active_instrument() -> String:
+	for instrument_name in melody_priority:
+		if is_instrument_active(instrument_name):
+			return instrument_name
+
+	return ""
+
+
+func _play_all_stems_synced() -> void:
+	for owner_type in audio_sources.keys():
+		for instrument_name in audio_sources[owner_type].keys():
+			var source: Node = audio_sources[owner_type][instrument_name]
+
+			if source != null and source.has_method("play_synced"):
+				source.play_synced(0.0)
+
+
+func _restart_all_stems_synced() -> void:
+	for owner_type in audio_sources.keys():
+		for instrument_name in audio_sources[owner_type].keys():
+			var source: Node = audio_sources[owner_type][instrument_name]
+
+			if source != null and source.has_method("restart_synced"):
+				source.restart_synced()
+
+
+func _stop_all_stems() -> void:
+	for owner_type in audio_sources.keys():
+		for instrument_name in audio_sources[owner_type].keys():
+			var source: Node = audio_sources[owner_type][instrument_name]
+
+			if source != null and source.has_method("stop_all"):
+				source.stop_all()
+
+
+func _mute_all_stems() -> void:
+	for owner_type in audio_sources.keys():
+		for instrument_name in audio_sources[owner_type].keys():
+			var source: Node = audio_sources[owner_type][instrument_name]
+
+			if source != null and source.has_method("set_tracks_audible"):
+				source.set_tracks_audible(false, false)
+
+
+func _set_source_tracks(instrument_name: String, owner_type: String, rhythm_on: bool, melody_on: bool) -> void:
+	var source := _get_audio_source(instrument_name, owner_type)
+
+	if source == null:
+		return
+
+	if source.has_method("set_tracks_audible"):
+		source.set_tracks_audible(rhythm_on, melody_on)
+
+
+func is_same_instrument_duet(instrument_name: String) -> bool:
+	if not npc_active_instruments.has(instrument_name):
+		return false
+
+	if not npc_active_instruments[instrument_name]:
+		return false
+
+	if not player_active_instruments[instrument_name]:
+		return false
+
+	return _get_active_count() == 1
+
+
+func should_same_instrument_npc_play_rhythm(instrument_name: String) -> bool:
+	if not npc_active_instruments.has(instrument_name):
+		return false
+
+	if not npc_active_instruments[instrument_name]:
+		return false
+
+	if not player_active_instruments[instrument_name]:
+		return false
+
+	if current_featured_instrument != instrument_name:
+		return false
+
+	return _get_active_count() > 1
+
+
+func get_current_beat_in_measure() -> int:
+	return int(beat_index % beats_per_measure) + 1
+
+
 func get_loop_position_text() -> String:
-	return "Measure %d / Beat %d" % [current_measure, current_beat]
+	return "Measure %d / %d | Beat %d / %d | Featured: %s" % [
+		current_measure,
+		total_measures,
+		get_current_beat_in_measure(),
+		beats_per_measure,
+		current_featured_instrument.capitalize() if current_featured_instrument != "" else "None"
+	]
 
 
-func get_current_measure_text() -> String:
-	return "Measure: %d" % current_measure
+func is_song_started() -> bool:
+	return song_started
 
 
-func get_current_beat_text() -> String:
-	return "Beat: %d" % current_beat
-
-
-func get_current_loop_position_text() -> String:
-	return "Loop: %.2f" % current_loop_position
+func get_featured_instrument() -> String:
+	return current_featured_instrument

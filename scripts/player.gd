@@ -5,6 +5,11 @@ extends CharacterBody2D
 @onready var interaction_area: Area2D = $InteractionArea
 @onready var sprite: ColorRect = $ColorRect
 
+@onready var guitar_audio_source: Node = $PlayerAudioSources/GuitarAudioSource
+@onready var bass_audio_source: Node = $PlayerAudioSources/BassAudioSource
+@onready var harmonica_audio_source: Node = $PlayerAudioSources/HarmonicaAudioSource
+@onready var mandolin_audio_source: Node = $PlayerAudioSources/MandolinAudioSource
+
 var nearby_npcs: Array[Node] = []
 var music_system: Node = null
 
@@ -25,6 +30,10 @@ var instruments := [
 	{
 		"id": "harmonica",
 		"display_name": "Harmonica"
+	},
+	{
+		"id": "mandolin",
+		"display_name": "Mandolin"
 	}
 ]
 
@@ -41,8 +50,12 @@ func _ready() -> void:
 
 	music_system = get_tree().get_first_node_in_group("music_system")
 
+	_register_player_audio_sources()
+
 	sprite.modulate = NORMAL_COLOR
 	sprite.scale = NORMAL_SCALE
+
+	print("Selected Instrument: ", get_current_instrument_display_name())
 
 
 func _physics_process(_delta: float) -> void:
@@ -77,6 +90,24 @@ func _handle_instrument_cycle_input() -> void:
 		cycle_instrument()
 
 
+func _handle_play_instrument_input() -> void:
+	if Input.is_action_pressed("play_instrument"):
+		start_instrument()
+	else:
+		stop_instrument()
+
+
+func _register_player_audio_sources() -> void:
+	if music_system == null:
+		push_warning("Player could not find music_system group.")
+		return
+
+	music_system.register_audio_source("guitar", "player", guitar_audio_source)
+	music_system.register_audio_source("bass", "player", bass_audio_source)
+	music_system.register_audio_source("harmonica", "player", harmonica_audio_source)
+	music_system.register_audio_source("mandolin", "player", mandolin_audio_source)
+
+
 func cycle_instrument() -> void:
 	var was_playing := is_playing_instrument
 
@@ -94,23 +125,16 @@ func cycle_instrument() -> void:
 		start_instrument()
 
 
-func _handle_play_instrument_input() -> void:
-	if Input.is_action_pressed("play_instrument"):
-		start_instrument()
-	else:
-		stop_instrument()
-
-
 func start_instrument() -> void:
 	if is_playing_instrument:
 		return
 
 	is_playing_instrument = true
 
-	var instrument_id: String = get_current_instrument_id()
+	var instrument_id := get_current_instrument_id()
 
 	if music_system != null:
-		music_system.player_take_over_instrument(instrument_id)
+		music_system.set_player_instrument_active(instrument_id, true)
 
 	_start_instrument_visuals()
 
@@ -121,10 +145,10 @@ func stop_instrument() -> void:
 
 	is_playing_instrument = false
 
-	var instrument_id: String = get_current_instrument_id()
+	var instrument_id := get_current_instrument_id()
 
 	if music_system != null:
-		music_system.player_release_instrument(instrument_id)
+		music_system.set_player_instrument_active(instrument_id, false)
 
 	_stop_instrument_visuals()
 

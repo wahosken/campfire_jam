@@ -1,9 +1,7 @@
-[gd_scene format=3 uid="uid://dgi3bcdtv1vab"]
+[gd_scene format=3 uid="uid://hva52qmd64yx"]
 
-[ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/npc_musician.gd" id="1_iubrl"]
-[ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/instrument_audio_source.gd" id="2_58ipr"]
-[ext_resource type="AudioStream" uid="uid://buysytn1e57lf" path="res://audio/song 1/003_song1_bass_rhythm.wav" id="3_uq81o"]
-[ext_resource type="AudioStream" uid="uid://da2xgs26eeq1j" path="res://audio/song 1/004_song1_bass_lead.wav" id="4_uqgcj"]
+[ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/npc_musician.gd" id="1_6gkxe"]
+[ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/instrument_audio_source.gd" id="2_w3slx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_iubrl"]
 size = Vector2(60, 60)
@@ -11,8 +9,8 @@ size = Vector2(60, 60)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_u8vuu"]
 size = Vector2(150, 150)
 
-[node name="NPC_Bass" type="Node2D" unique_id=718845583 groups=["npc_musician"]]
-script = ExtResource("1_iubrl")
+[node name="NPC_Musician" type="Node2D" unique_id=718845583 groups=["npc_musician"]]
+script = ExtResource("1_6gkxe")
 display_name = null
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
@@ -54,14 +52,13 @@ grow_vertical = 2
 text = "Musician"
 horizontal_alignment = 1
 
-[node name="InstrumentAudioSource" type="Node2D" parent="." unique_id=2006424832]
-script = ExtResource("2_58ipr")
-instrument_name = "bass"
-rhythm_stream = ExtResource("3_uq81o")
-melody_stream = ExtResource("4_uqgcj")
+[node name="InstrumentAudioSource" type="Node2D" parent="." unique_id=1654993321]
+script = ExtResource("2_w3slx")
 
-[node name="RhythmPlayer" type="AudioStreamPlayer2D" parent="InstrumentAudioSource" unique_id=1485252885]
+[node name="RhythmPlayer" type="AudioStreamPlayer2D" parent="InstrumentAudioSource" unique_id=1977176037]
 max_distance = 1000.0
 attenuation = 0.75
 
-[node name="MelodyPlayer" type="AudioStreamPlayer2D" parent="InstrumentAudioSource" unique_id=1851563887]
+[node name="MelodyPlayer" type="AudioStreamPlayer2D" parent="InstrumentAudioSource" unique_id=379109324]
+max_distance = 1000.0
+attenuation = 0.75

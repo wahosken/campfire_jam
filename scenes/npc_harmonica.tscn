@@ -1,18 +1,21 @@
 [gd_scene format=3 uid="uid://drl7f1y3s7a6x"]
 
 [ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/npc_musician.gd" id="1_khbeg"]
+[ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/instrument_audio_source.gd" id="2_1qbbg"]
+[ext_resource type="AudioStream" uid="uid://bu3iwdsfvre0l" path="res://audio/song 1/005_song1_harmonica_rhythm.wav" id="3_piaih"]
+[ext_resource type="AudioStream" uid="uid://b7uvt238a5bkk" path="res://audio/song 1/006_song1_harmonica_lead.wav" id="4_e5rru"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_khbeg"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_iubrl"]
 size = Vector2(60, 60)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_k024s"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_u8vuu"]
 size = Vector2(150, 150)
 
-[node name="NPC_Harmonica" type="Node2D" unique_id=1522585034 groups=["npc_musician"]]
+[node name="NPC_Harmonica" type="Node2D" unique_id=718845583 groups=["npc_musician"]]
 script = ExtResource("1_khbeg")
-stem_name = "harmonica"
+display_name = null
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=2015864313]
+[node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -26,26 +29,41 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.19076231, 0.19076234, 0.19076231, 1)
 
-[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=757584145]
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=809637847]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1006660269]
-shape = SubResource("RectangleShape2D_khbeg")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1899097799]
+shape = SubResource("RectangleShape2D_iubrl")
 
-[node name="InteractionArea" type="Area2D" parent="." unique_id=1854872277]
+[node name="InteractionArea" type="Area2D" parent="." unique_id=392024863]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=1733360430]
-shape = SubResource("RectangleShape2D_k024s")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=532288306]
+shape = SubResource("RectangleShape2D_u8vuu")
 
-[node name="Label" type="Label" parent="InteractionArea" unique_id=1190288767]
+[node name="Label" type="Label" parent="." unique_id=1916719615]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.0
+offset_left = -35.0
 offset_top = -11.5
-offset_right = 20.0
+offset_right = 35.0
 offset_bottom = 11.5
 grow_horizontal = 2
 grow_vertical = 2
-text = "Harp"
+text = "Musician"
+horizontal_alignment = 1
+
+[node name="InstrumentAudioSource" type="Node2D" parent="." unique_id=798115895]
+script = ExtResource("2_1qbbg")
+instrument_name = "harmonica"
+rhythm_stream = ExtResource("3_piaih")
+melody_stream = ExtResource("4_e5rru")
+
+[node name="RhythmPlayer" type="AudioStreamPlayer2D" parent="InstrumentAudioSource" unique_id=754703140]
+max_distance = 1000.0
+attenuation = 0.75
+
+[node name="MelodyPlayer" type="AudioStreamPlayer2D" parent="InstrumentAudioSource" unique_id=746897699]
+max_distance = 1000.0
+attenuation = 0.75
