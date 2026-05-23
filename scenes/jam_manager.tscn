@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c75d3iwksb5lt"]
+
+[ext_resource type="Script" uid="uid://beo7h470h78wm" path="res://scripts/jam_manager.gd" id="1_5i408"]
+
+[node name="JamManager" type="Node" unique_id=841948683 groups=["jam_manager"]]
+script = ExtResource("1_5i408")

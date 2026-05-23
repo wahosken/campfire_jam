@@ -1,14 +1,10 @@
 [gd_scene format=3 uid="uid://cuy8oa3i1e11g"]
 
 [ext_resource type="Script" uid="uid://dafv1jiuv4pav" path="res://scripts/jam_spot.gd" id="1_0ko27"]
+[ext_resource type="Script" uid="uid://crbcdbde1uclf" path="res://scripts/jam_context.gd" id="2_vyejd"]
 
 [node name="JamSpot" type="Node2D" unique_id=1582202994]
 script = ExtResource("1_0ko27")
 
-[node name="Label" type="Label" parent="." unique_id=1769746664]
-offset_right = 40.0
-offset_bottom = 23.0
-
-[node name="Area2D" type="Area2D" parent="." unique_id=1471522948]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=272101025]
+[node name="JamContext" type="Node" parent="." unique_id=849390137]
+script = ExtResource("2_vyejd")

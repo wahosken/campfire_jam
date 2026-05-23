@@ -3,23 +3,38 @@ extends Node2D
 @export var instrument_name := "bass"
 @export var display_name := ""
 
+@export var starting_jam_spot_path: NodePath
+
+@export var can_auto_accompany_player := true
+@export var auto_accompany_radius := 300.0
+
 @onready var interaction_area: Area2D = $InteractionArea
 @onready var sprite: ColorRect = $ColorRect
 @onready var label: Label = $Label
 @onready var audio_source: Node = $InstrumentAudioSource
 
-var music_system: Node = null
+var jam_manager: Node = null
+
+var current_jam_spot: Node = null
+var current_jam_context: Node = null
+
 var wants_to_play := false
+var current_part := "silent"
+
+var instrument_visual_tween: Tween = null
 
 const IDLE_COLOR := Color(1, 1, 1, 1)
 const PLAYING_COLOR := Color(1.25, 1.1, 0.75, 1)
+
+const NORMAL_SCALE := Vector2(1, 1)
+const PLAYING_SCALE := Vector2(1.08, 0.94)
 
 
 func _ready() -> void:
 	add_to_group("npc_musician")
 	add_to_group("interactable")
 
-	music_system = get_tree().get_first_node_in_group("music_system")
+	jam_manager = get_tree().get_first_node_in_group("jam_manager")
 
 	if display_name == "":
 		display_name = instrument_name.capitalize()
@@ -28,15 +43,10 @@ func _ready() -> void:
 		audio_source.instrument_name = instrument_name
 		audio_source.owner_type = "npc"
 
-	if music_system != null:
-		music_system.register_audio_source(instrument_name, "npc", audio_source)
-		music_system.instrument_owner_changed.connect(_on_instrument_owner_changed)
-		music_system.arrangement_changed.connect(_on_arrangement_changed)
-	else:
-		push_warning("NPC could not find music_system group.")
-
 	_set_visual_idle()
 	_update_label()
+
+	_register_with_starting_jam_spot()
 
 
 func interact() -> void:
@@ -52,12 +62,15 @@ func start_music() -> void:
 
 	wants_to_play = true
 
-	if music_system != null:
-		music_system.set_npc_instrument_active(instrument_name, true)
+	if current_jam_context != null and current_jam_context.has_method("set_member_active"):
+		current_jam_context.set_member_active(self, true)
 	else:
-		push_warning("NPC could not find music_system group.")
+		current_part = "both"
 
-	_update_visual_from_owner()
+		if audio_source != null and audio_source.has_method("start_solo_tracks"):
+			audio_source.start_solo_tracks(true, true)
+
+	_update_visual_from_current_part()
 	_update_label()
 
 
@@ -67,79 +80,169 @@ func stop_music() -> void:
 
 	wants_to_play = false
 
-	if music_system != null:
-		music_system.set_npc_instrument_active(instrument_name, false)
+	if current_jam_spot == null:
+		if jam_manager != null and jam_manager.has_method("end_freeform_jam_if_leader"):
+			if jam_manager.has_method("is_freeform_jam_context"):
+				if jam_manager.is_freeform_jam_context(current_jam_context):
+					jam_manager.end_freeform_jam_if_leader(self)
+					return
+
+	if current_jam_context != null and current_jam_context.has_method("set_member_active"):
+		current_jam_context.set_member_active(self, false)
 	else:
-		push_warning("NPC could not find music_system group.")
+		if audio_source != null and audio_source.has_method("stop_solo_jam"):
+			audio_source.stop_solo_jam()
 
-	_set_visual_idle()
+	current_part = "silent"
+	_update_visual_from_current_part()
 	_update_label()
 
 
-func _on_instrument_owner_changed(changed_instrument_name: String, _instrument_owner: String) -> void:
-	if changed_instrument_name != instrument_name:
-		return
+func set_current_jam_spot(jam_spot: Node) -> void:
+	current_jam_spot = jam_spot
 
-	_update_visual_from_owner()
+
+func set_current_jam_context(jam_context: Node) -> void:
+	current_jam_context = jam_context
+
+
+func set_current_part(part_name: String) -> void:
+	current_part = part_name
+	_update_visual_from_current_part()
 	_update_label()
 
 
-func _on_arrangement_changed() -> void:
-	_update_visual_from_owner()
+func is_in_jam_spot() -> bool:
+	return current_jam_spot != null
+
+
+func is_available_for_player_accompaniment() -> bool:
+	if not can_auto_accompany_player:
+		return false
+
+	if is_in_jam_spot():
+		return false
+
+	if wants_to_play:
+		return false
+
+	if current_jam_context != null:
+		return false
+
+	return true
+
+
+func is_joinable_freeform_leader() -> bool:
+	if is_in_jam_spot():
+		return false
+
+	if current_jam_context != null:
+		return false
+
+	return wants_to_play
+
+
+func prepare_for_jam_context_transfer() -> void:
+	current_part = "silent"
+	_update_visual_from_current_part()
 	_update_label()
 
 
-func _update_visual_from_owner() -> void:
-	if not wants_to_play:
-		_set_visual_idle()
+func is_actively_playing_jam() -> bool:
+	return wants_to_play or current_part != "silent"
+
+
+func get_display_name() -> String:
+	return display_name
+
+
+func get_instrument_display_name() -> String:
+	return display_name
+
+
+func get_instrument_id() -> String:
+	return instrument_name
+
+
+func get_current_instrument_id() -> String:
+	return instrument_name
+
+
+func get_jam_audio_source() -> Node:
+	return audio_source
+
+
+func get_current_audio_source() -> Node:
+	return audio_source
+
+
+func get_current_part() -> String:
+	return current_part
+
+
+func _register_with_starting_jam_spot() -> void:
+	if starting_jam_spot_path == NodePath(""):
 		return
 
-	if music_system == null:
-		_set_visual_idle()
-		return
+	var jam_spot := get_node_or_null(starting_jam_spot_path)
 
-	if music_system.is_same_instrument_duet(instrument_name):
-		_set_visual_playing()
-		return
-
-	if music_system.should_same_instrument_npc_play_rhythm(instrument_name):
-		_set_visual_playing()
-		return
-
-	var instrument_owner: String = music_system.get_instrument_owner(instrument_name)
-
-	if instrument_owner == "npc":
-		_set_visual_playing()
-	else:
-		_set_visual_idle()
+	if jam_spot != null and jam_spot.has_method("register_npc"):
+		jam_spot.register_npc(self)
 
 
 func _update_label() -> void:
 	if label == null:
 		return
 
-	var part_text := "silent"
-
-	if music_system != null and music_system.has_method("get_current_owner_part"):
-		part_text = music_system.get_current_owner_part("npc", instrument_name)
-
-	if part_text == "silent":
+	if current_part == "silent":
 		label.text = "%s: ----" % display_name
 	else:
 		label.text = "%s: %s" % [
 			display_name,
-			part_text.capitalize()
+			current_part.capitalize()
 		]
+
+
+func _update_visual_from_current_part() -> void:
+	if current_part == "silent":
+		_set_visual_idle()
+	else:
+		_set_visual_playing()
 
 
 func _set_visual_playing() -> void:
 	if sprite:
 		sprite.modulate = PLAYING_COLOR
 
+	if instrument_visual_tween:
+		return
+
+	if sprite:
+		sprite.scale = NORMAL_SCALE
+
+	instrument_visual_tween = create_tween()
+	instrument_visual_tween.set_loops()
+
+	instrument_visual_tween.tween_property(
+		sprite,
+		"scale",
+		PLAYING_SCALE,
+		0.12
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	instrument_visual_tween.tween_property(
+		sprite,
+		"scale",
+		NORMAL_SCALE,
+		0.12
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
 
 func _set_visual_idle() -> void:
+	if instrument_visual_tween:
+		instrument_visual_tween.kill()
+		instrument_visual_tween = null
+
 	if sprite:
 		sprite.modulate = IDLE_COLOR
-
-func is_actively_playing_jam() -> bool:
-	return wants_to_play
+		sprite.scale = NORMAL_SCALE

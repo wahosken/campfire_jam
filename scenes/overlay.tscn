@@ -124,46 +124,41 @@ anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -100.0
-offset_top = -40.0
+offset_left = -236.0
+offset_top = -152.0
 offset_right = -20.0
-offset_bottom = 40.0
+offset_bottom = 42.0
 grow_horizontal = 0
 grow_vertical = 2
 
-[node name="InteractButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=554425371]
+[node name="MelodyButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=2070411827]
 modulate = Color(1, 1, 1, 0.8)
+position = Vector2(50, 96)
 scale = Vector2(2, 2)
 texture_normal = ExtResource("11_vkldo")
 texture_pressed = ExtResource("12_2m6gh")
-action = "interact"
+action = "play_melody"
 
-[node name="HBoxContainer5" type="HBoxContainer" parent="UI" unique_id=464047050]
-layout_mode = 1
-anchors_preset = 6
-anchor_left = 1.0
-anchor_top = 0.5
-anchor_right = 1.0
-anchor_bottom = 0.5
-offset_left = -100.0
-offset_top = -40.0
-offset_right = -20.0
-offset_bottom = 40.0
-grow_horizontal = 0
-grow_vertical = 2
-
-[node name="JamButton" type="TouchScreenButton" parent="UI/HBoxContainer5" unique_id=2070411827]
+[node name="RhythmButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=734656703]
 modulate = Color(1, 1, 1, 0.8)
-position = Vector2(-1100, 130)
+position = Vector2(138, 96)
 scale = Vector2(2, 2)
 texture_normal = ExtResource("11_vkldo")
 texture_pressed = ExtResource("12_2m6gh")
-action = "play_instrument"
+action = "play_rhythm"
 
-[node name="CycleInstrumentsButton" type="TouchScreenButton" parent="UI/HBoxContainer5" unique_id=1807431339]
+[node name="CycleInstrumentsButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=1807431339]
 modulate = Color(1, 1, 1, 0.8)
-position = Vector2(-932, 130)
+position = Vector2(50, 12)
 scale = Vector2(2, 2)
 texture_normal = ExtResource("11_vkldo")
 texture_pressed = ExtResource("12_2m6gh")
 action = "cycle_instrument"
+
+[node name="InteractButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=554425371]
+modulate = Color(1, 1, 1, 0.8)
+position = Vector2(140, 12)
+scale = Vector2(2, 2)
+texture_normal = ExtResource("11_vkldo")
+texture_pressed = ExtResource("12_2m6gh")
+action = "interact"

@@ -10,8 +10,9 @@ extends CanvasLayer
 @onready var down_button: TouchScreenButton = $UI/HBoxContainer2/Down
 @onready var pause_button: TouchScreenButton = $UI/HBoxContainer3/PauseButton
 @onready var interact_button: TouchScreenButton = $UI/HBoxContainer4/InteractButton
-@onready var jam_button: TouchScreenButton = $UI/HBoxContainer5/JamButton
-@onready var cycle_instruments_button: TouchScreenButton = $UI/HBoxContainer5/CycleInstrumentsButton
+@onready var melody_button: TouchScreenButton = $UI/HBoxContainer4/MelodyButton
+@onready var rhythm_button: TouchScreenButton = $UI/HBoxContainer4/RhythmButton
+@onready var cycle_instruments_button: TouchScreenButton = $UI/HBoxContainer4/CycleInstrumentsButton
 
 
 func _ready() -> void:
@@ -21,10 +22,12 @@ func _ready() -> void:
 	_set_touch_action(down_button, "move_down")
 	_set_touch_action(pause_button, "pause")
 	_set_touch_action(interact_button, "interact")
-	_set_touch_action(jam_button, "play_instrument")
+	_set_touch_action(melody_button, "play_melody")
+	_set_touch_action(rhythm_button, "play_rhythm")
 	_set_touch_action(cycle_instruments_button, "cycle_instrument")
 
-	ui_root.visible = show_touch_controls_on_start
+	if ui_root != null:
+		ui_root.visible = show_touch_controls_on_start
 
 
 func _input(event: InputEvent) -> void:
@@ -46,11 +49,17 @@ func _set_touch_action(button: TouchScreenButton, action_name: String) -> void:
 
 
 func _hide_touch_controls() -> void:
+	if ui_root == null:
+		return
+
 	if ui_root.visible:
 		ui_root.visible = false
 
 
 func _show_touch_controls() -> void:
+	if ui_root == null:
+		return
+
 	if not ui_root.visible:
 		ui_root.visible = true
 

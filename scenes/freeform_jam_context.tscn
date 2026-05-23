@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://025hsnsqi3wr"]
+
+[ext_resource type="Script" uid="uid://crbcdbde1uclf" path="res://scripts/jam_context.gd" id="1_e8o4t"]
+
+[node name="FreeformJamContext" type="Node" unique_id=109580849]
+script = ExtResource("1_e8o4t")

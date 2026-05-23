@@ -1,39 +1,102 @@
 extends Control
 
-
-@onready var instrument_label: Label = $HBoxContainer/CurrentInstrumentLabel
-@onready var featured_instrument_label: Label = $HBoxContainer/FeaturedInstrumentLabel
+@onready var current_instrument_label: Label = $HBoxContainer/CurrentInstrumentLabel
+@onready var nearby_jam_label: Label = $HBoxContainer/NearbyJamLabel
 @onready var active_instruments_label: Label = $HBoxContainer/ActiveInstrumentsLabel
+@onready var featured_instrument_label: Label = $HBoxContainer/FeaturedInstrumentLabel
 @onready var interact_prompt_label: Label = $HBoxContainer/InteractPromptLabel
 
 var player: Node = null
 var music_system: Node = null
+var jam_manager: Node = null
 
 
 func setup_ui(player_ref: Node, music_system_ref: Node) -> void:
 	player = player_ref
 	music_system = music_system_ref
+	jam_manager = get_tree().get_first_node_in_group("jam_manager")
+
 	update_ui()
 
 
 func update_ui() -> void:
-	_update_player_instrument_label()
+	_update_equipped_label()
+	_update_nearby_jam_label()
+	_update_active_instruments_label()
+	_update_featured_instrument_label()
 	_update_interact_prompt()
-	_update_music_debug_labels()
 
 
-func _update_player_instrument_label() -> void:
-	if instrument_label == null:
+func _update_equipped_label() -> void:
+	if current_instrument_label == null:
 		return
 
 	if player == null:
-		instrument_label.text = "Equipped: ----"
+		current_instrument_label.text = "Equipped: ----"
 		return
 
 	if player.has_method("get_current_instrument_display_name"):
-		instrument_label.text = "Equipped: %s" % player.get_current_instrument_display_name()
+		current_instrument_label.text = "Equipped: %s" % player.get_current_instrument_display_name()
 	else:
-		instrument_label.text = "Equipped: ----"
+		current_instrument_label.text = "Equipped: ----"
+
+
+func _update_nearby_jam_label() -> void:
+	if nearby_jam_label == null:
+		return
+
+	if _player_is_direct_solo():
+		nearby_jam_label.text = "Current Jam: Player Solo"
+		return
+
+	if jam_manager == null:
+		nearby_jam_label.text = "Current Jam: None"
+		return
+
+	var jam_source: Node = null
+	var jam_type := "none"
+	var jam_name := "None"
+
+	if jam_manager.has_method("get_current_nearby_jam_source"):
+		jam_source = jam_manager.get_current_nearby_jam_source()
+
+	if jam_manager.has_method("get_current_nearby_jam_type"):
+		jam_type = jam_manager.get_current_nearby_jam_type()
+
+	if jam_manager.has_method("get_current_nearby_jam_name"):
+		jam_name = jam_manager.get_current_nearby_jam_name()
+
+	if jam_source == null:
+		nearby_jam_label.text = "Current Jam: None"
+		return
+
+	match jam_type:
+		"jam_spot":
+			nearby_jam_label.text = "Current Jam: %s" % jam_name
+		"player_freeform":
+			nearby_jam_label.text = "Current Jam: Player-led Jam"
+		"npc_freeform":
+			nearby_jam_label.text = "Current Jam: %s's Jam" % jam_name
+		"musician":
+			nearby_jam_label.text = "Nearby Musician: %s" % jam_name
+		_:
+			nearby_jam_label.text = "Current Jam: %s" % jam_name
+
+
+func _update_active_instruments_label() -> void:
+	if active_instruments_label == null:
+		return
+
+	var active_text := _get_current_active_instruments_text()
+	active_instruments_label.text = "Active: %s" % active_text
+
+
+func _update_featured_instrument_label() -> void:
+	if featured_instrument_label == null:
+		return
+
+	var featured_text := _get_current_featured_instrument_text()
+	featured_instrument_label.text = "Featured: %s" % featured_text
 
 
 func _update_interact_prompt() -> void:
@@ -44,44 +107,78 @@ func _update_interact_prompt() -> void:
 		interact_prompt_label.visible = false
 		return
 
-	if not player.has_method("get_closest_npc"):
-		interact_prompt_label.visible = false
-		return
+	var closest_interactable: Node = null
 
-	var closest_npc: Node = player.get_closest_npc()
+	if player.has_method("get_closest_prompt_interactable"):
+		closest_interactable = player.get_closest_prompt_interactable()
+	elif player.has_method("get_closest_interactable"):
+		closest_interactable = player.get_closest_interactable()
 
-	if closest_npc == null:
+	if closest_interactable == null:
 		interact_prompt_label.visible = false
 		return
 
 	interact_prompt_label.visible = true
 
-	var npc_name := "NPC"
+	var interact_name := "Interact"
 
-	if "display_name" in closest_npc:
-		npc_name = closest_npc.display_name
+	if closest_interactable.has_method("get_display_name"):
+		interact_name = closest_interactable.get_display_name()
+	elif "display_name" in closest_interactable:
+		interact_name = str(closest_interactable.display_name)
+	elif closest_interactable.name != "":
+		interact_name = closest_interactable.name
 
-	interact_prompt_label.text = "Press Interact: %s" % npc_name
+	interact_prompt_label.text = "Interact: %s" % interact_name
 
 
-func _update_music_debug_labels() -> void:
-	if music_system == null:
-		if featured_instrument_label != null:
-			featured_instrument_label.text = "Featured: None"
+func _get_current_active_instruments_text() -> String:
+	var jam_context := _get_current_jam_context()
 
-		if active_instruments_label != null:
-			active_instruments_label.text = "Active: None"
+	if jam_context != null and jam_context.has_method("get_active_instruments_text"):
+		return jam_context.get_active_instruments_text()
 
-		return
+	if _player_is_direct_solo():
+		if player.has_method("get_current_active_instruments_text"):
+			return player.get_current_active_instruments_text()
 
-	if featured_instrument_label != null:
-		if music_system.has_method("get_featured_instrument_text"):
-			featured_instrument_label.text = "Featured: %s" % music_system.get_featured_instrument_text()
-		else:
-			featured_instrument_label.text = "Featured: None"
+	if jam_manager != null and jam_manager.has_method("get_current_jam_active_instruments_text"):
+		return jam_manager.get_current_jam_active_instruments_text()
 
-	if active_instruments_label != null:
-		if music_system.has_method("get_active_instruments_text"):
-			active_instruments_label.text = "Active: %s" % music_system.get_active_instruments_text()
-		else:
-			active_instruments_label.text = "Active: None"
+	return "None"
+
+
+func _get_current_featured_instrument_text() -> String:
+	var jam_context := _get_current_jam_context()
+
+	if jam_context != null and jam_context.has_method("get_featured_instrument_text"):
+		return jam_context.get_featured_instrument_text()
+
+	if _player_is_direct_solo():
+		if player.has_method("get_current_featured_instrument_text"):
+			return player.get_current_featured_instrument_text()
+
+	if jam_manager != null and jam_manager.has_method("get_current_jam_featured_instrument_text"):
+		return jam_manager.get_current_jam_featured_instrument_text()
+
+	return "None"
+
+
+func _get_current_jam_context() -> Node:
+	if jam_manager == null:
+		return null
+
+	if jam_manager.has_method("get_current_nearby_jam_context"):
+		return jam_manager.get_current_nearby_jam_context()
+
+	return null
+
+
+func _player_is_direct_solo() -> bool:
+	if player == null:
+		return false
+
+	if player.has_method("is_currently_playing_solo_jam"):
+		return player.is_currently_playing_solo_jam()
+
+	return false

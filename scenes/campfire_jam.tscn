@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://caabunylbva7i"]
 
 [ext_resource type="Script" uid="uid://bjhdxj07mhdxx" path="res://scripts/campfire_jam.gd" id="1_qtvd6"]
-[ext_resource type="PackedScene" uid="uid://bhhsnpbtss802" path="res://scenes/campfire.tscn" id="2_dp30u"]
+[ext_resource type="PackedScene" path="res://scenes/campfire.tscn" id="2_dp30u"]
 [ext_resource type="PackedScene" uid="uid://ch5e2petf0x3t" path="res://scenes/npc_guitar.tscn" id="2_q2hrs"]
 [ext_resource type="PackedScene" uid="uid://blfnmt5xbykgs" path="res://scenes/player.tscn" id="3_hiehu"]
 [ext_resource type="PackedScene" uid="uid://dgi3bcdtv1vab" path="res://scenes/npc_bass.tscn" id="3_mcuth"]
@@ -10,14 +10,21 @@
 [ext_resource type="PackedScene" uid="uid://8cj1uwe35wqt" path="res://scenes/npc_mandolin.tscn" id="5_mcuth"]
 [ext_resource type="PackedScene" uid="uid://tu61b7d68xgv" path="res://scenes/music_system.tscn" id="6_wu1ak"]
 [ext_resource type="Script" uid="uid://cevh1omjrnc6a" path="res://scripts/jam_ui.gd" id="7_41670"]
+[ext_resource type="PackedScene" uid="uid://cuy8oa3i1e11g" path="res://scenes/jam_spot.tscn" id="8_gpqwk"]
+[ext_resource type="PackedScene" uid="uid://c75d3iwksb5lt" path="res://scenes/jam_manager.tscn" id="9_ngu8v"]
+[ext_resource type="PackedScene" uid="uid://025hsnsqi3wr" path="res://scenes/freeform_jam_context.tscn" id="10_bew7y"]
 [ext_resource type="PackedScene" uid="uid://d21e1vvxjrume" path="res://scenes/overlay.tscn" id="10_dp30u"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ngu8v"]
+size = Vector2(1000, 1000)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bew7y"]
+size = Vector2(80, 80)
 
 [node name="campfire_jam" type="Node2D" unique_id=163281152]
 script = ExtResource("1_qtvd6")
 
-[node name="World" type="Node2D" parent="." unique_id=803798301]
-
-[node name="Ground" type="ColorRect" parent="World" unique_id=53549327]
+[node name="Ground" type="ColorRect" parent="." unique_id=53549327]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -31,30 +38,67 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0.19558403, 0.10315802, 1)
 
-[node name="Campfire" parent="World" unique_id=1132795021 instance=ExtResource("2_dp30u")]
+[node name="Campfire" parent="." unique_id=1132795021 instance=ExtResource("2_dp30u")]
+position = Vector2(472, -374)
+
+[node name="CampfireJamSpot" parent="." unique_id=1582202994 instance=ExtResource("8_gpqwk")]
 position = Vector2(469, -381)
 
-[node name="NPC_Guitar" parent="World" unique_id=173912358 instance=ExtResource("2_q2hrs")]
+[node name="Label" type="Label" parent="CampfireJamSpot" unique_id=1696183836]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -91.0
+offset_top = -26.25
+offset_right = 91.0
+offset_bottom = 26.25
+grow_horizontal = 2
+grow_vertical = 2
+text = "Campfire
+Jamspot"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="JamArea" type="Area2D" parent="CampfireJamSpot" unique_id=804260112]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CampfireJamSpot/JamArea" unique_id=445197964]
+shape = SubResource("RectangleShape2D_ngu8v")
+
+[node name="InteractionArea" type="Area2D" parent="CampfireJamSpot" unique_id=1262593958 groups=["interactable"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CampfireJamSpot/InteractionArea" unique_id=1194296035]
+position = Vector2(5, 8)
+shape = SubResource("RectangleShape2D_bew7y")
+
+[node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("2_q2hrs")]
 position = Vector2(305, -371)
 instrument_name = "guitar"
 display_name = "Guitar"
+starting_jam_spot_path = NodePath("../CampfireJamSpot")
 
-[node name="NPC_Bass" parent="World" unique_id=718845583 instance=ExtResource("3_mcuth")]
-position = Vector2(472, -510)
-display_name = "Bass"
-
-[node name="NPC_Harmonica" parent="World" unique_id=1800832853 instance=ExtResource("4_65sn3")]
+[node name="NPC_Harmonica" parent="." unique_id=1800832853 instance=ExtResource("4_65sn3")]
 position = Vector2(628, -390)
 instrument_name = "harmonica"
 display_name = "Harmonica"
+starting_jam_spot_path = NodePath("../CampfireJamSpot")
 
-[node name="NPC_Mandolin" parent="World" unique_id=2034953610 instance=ExtResource("5_mcuth")]
-position = Vector2(463, -240)
+[node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("5_mcuth")]
+position = Vector2(474, -207)
 instrument_name = "mandolin"
 display_name = "Mandolin"
+starting_jam_spot_path = NodePath("../CampfireJamSpot")
 
-[node name="House" parent="World" unique_id=1834173392 instance=ExtResource("4_mcuth")]
+[node name="NPC_Bass" parent="." unique_id=718845583 instance=ExtResource("3_mcuth")]
+position = Vector2(-847, -1511)
+display_name = "Bass"
+
+[node name="House" parent="." unique_id=1834173392 instance=ExtResource("4_mcuth")]
 position = Vector2(527, -914)
+
+[node name="JamManager" parent="." unique_id=841948683 instance=ExtResource("9_ngu8v")]
+freeform_jam_context_scene = ExtResource("10_bew7y")
 
 [node name="player" parent="." unique_id=685309387 instance=ExtResource("3_hiehu")]
 position = Vector2(612, -593)
@@ -84,6 +128,10 @@ offset_bottom = 131.0
 [node name="CurrentInstrumentLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=1934273161]
 layout_mode = 2
 text = "Current instrument:"
+
+[node name="NearbyJamLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=1227413359]
+layout_mode = 2
+text = "Nearby Jam:"
 
 [node name="ActiveInstrumentsLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=759452365]
 layout_mode = 2
