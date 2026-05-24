@@ -28,7 +28,7 @@ func _ready() -> void:
 	_update_label()
 
 
-func on_game_started() -> void:
+func start_if_auto_enabled() -> void:
 	if auto_start_on_ready:
 		start_jam()
 
