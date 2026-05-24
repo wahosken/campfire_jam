@@ -18,7 +18,15 @@ var jam_manager: Node = null
 var current_jam_spot: Node = null
 var current_jam_context: Node = null
 
+# Remembered NPC toggle.
+# This is what the player changes by interacting with the NPC.
+# Jam spots should use this to know whether this NPC should play when the spot is active.
+var npc_enabled := true
+
+# Actual/resolved playing state.
+# This should only be true when the NPC is currently supposed to be playing.
 var wants_to_play := false
+
 var current_part := "silent"
 
 var instrument_visual_tween: Tween = null
@@ -50,6 +58,14 @@ func _ready() -> void:
 
 
 func interact() -> void:
+	# If this NPC belongs to a jam spot, interacting with the NPC should
+	# only toggle that NPC's remembered enabled state.
+	# The jam spot decides whether enabled NPCs are actually playing.
+	if current_jam_spot != null:
+		set_npc_enabled(not npc_enabled)
+		return
+
+	# Freeform NPCs still behave like before.
 	if wants_to_play:
 		stop_music()
 	else:
@@ -57,11 +73,56 @@ func interact() -> void:
 
 
 func start_music() -> void:
-	if wants_to_play:
+	# For jam spot NPCs, this means "enable this NPC."
+	# It does not necessarily mean "play immediately" unless the jam spot is active.
+	if current_jam_spot != null:
+		set_npc_enabled(true)
 		return
 
-	wants_to_play = true
+	set_actual_playing(true)
 
+
+func stop_music() -> void:
+	# For jam spot NPCs, this means "disable this NPC."
+	# It should be remembered even after the jam spot turns off/on.
+	if current_jam_spot != null:
+		set_npc_enabled(false)
+		return
+
+	set_actual_playing(false)
+
+
+func set_npc_enabled(is_enabled: bool) -> void:
+	if npc_enabled == is_enabled:
+		return
+
+	npc_enabled = is_enabled
+
+	# Let the jam spot re-check:
+	# should_play = jam_spot_active AND npc_enabled
+	if current_jam_spot != null and current_jam_spot.has_method("refresh_npc_activity"):
+		current_jam_spot.refresh_npc_activity(self)
+	else:
+		set_actual_playing(npc_enabled)
+
+
+func is_npc_enabled() -> bool:
+	return npc_enabled
+
+
+func set_actual_playing(is_playing: bool) -> void:
+	if wants_to_play == is_playing:
+		return
+
+	wants_to_play = is_playing
+
+	if wants_to_play:
+		_start_actual_music()
+	else:
+		_stop_actual_music()
+
+
+func _start_actual_music() -> void:
 	if current_jam_context != null and current_jam_context.has_method("set_member_active"):
 		current_jam_context.set_member_active(self, true)
 	else:
@@ -74,17 +135,15 @@ func start_music() -> void:
 	_update_label()
 
 
-func stop_music() -> void:
-	if not wants_to_play:
-		return
-
-	wants_to_play = false
-
+func _stop_actual_music() -> void:
 	if current_jam_spot == null:
 		if jam_manager != null and jam_manager.has_method("end_freeform_jam_if_leader"):
 			if jam_manager.has_method("is_freeform_jam_context"):
 				if jam_manager.is_freeform_jam_context(current_jam_context):
 					jam_manager.end_freeform_jam_if_leader(self)
+					current_part = "silent"
+					_update_visual_from_current_part()
+					_update_label()
 					return
 
 	if current_jam_context != null and current_jam_context.has_method("set_member_active"):

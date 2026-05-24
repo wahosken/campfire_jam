@@ -8,8 +8,8 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_iubrl"]
 size = Vector2(60, 60)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_u8vuu"]
-size = Vector2(150, 150)
+[sub_resource type="CircleShape2D" id="CircleShape2D_uqgcj"]
+radius = 50.0
 
 [node name="NPC_Harmonica" type="Node2D" unique_id=718845583 groups=["npc_musician"]]
 script = ExtResource("1_khbeg")
@@ -37,7 +37,7 @@ shape = SubResource("RectangleShape2D_iubrl")
 [node name="InteractionArea" type="Area2D" parent="." unique_id=392024863]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=532288306]
-shape = SubResource("RectangleShape2D_u8vuu")
+shape = SubResource("CircleShape2D_uqgcj")
 
 [node name="Label" type="Label" parent="." unique_id=1916719615]
 anchors_preset = 8

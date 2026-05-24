@@ -1,8 +1,5 @@
 extends Node
 
-signal arrangement_changed
-signal instrument_owner_changed(instrument_name: String, instrument_owner: String)
-
 @export var bpm := 100.0
 @export var beats_per_measure := 4
 @export var total_measures := 8

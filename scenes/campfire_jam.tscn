@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://caabunylbva7i"]
 
 [ext_resource type="Script" uid="uid://bjhdxj07mhdxx" path="res://scripts/campfire_jam.gd" id="1_qtvd6"]
-[ext_resource type="PackedScene" path="res://scenes/campfire.tscn" id="2_dp30u"]
+[ext_resource type="PackedScene" uid="uid://bhhsnpbtss802" path="res://scenes/campfire.tscn" id="2_dp30u"]
 [ext_resource type="PackedScene" uid="uid://ch5e2petf0x3t" path="res://scenes/npc_guitar.tscn" id="2_q2hrs"]
 [ext_resource type="PackedScene" uid="uid://blfnmt5xbykgs" path="res://scenes/player.tscn" id="3_hiehu"]
 [ext_resource type="PackedScene" uid="uid://dgi3bcdtv1vab" path="res://scenes/npc_bass.tscn" id="3_mcuth"]
@@ -15,8 +15,8 @@
 [ext_resource type="PackedScene" uid="uid://025hsnsqi3wr" path="res://scenes/freeform_jam_context.tscn" id="10_bew7y"]
 [ext_resource type="PackedScene" uid="uid://d21e1vvxjrume" path="res://scenes/overlay.tscn" id="10_dp30u"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ngu8v"]
-size = Vector2(1000, 1000)
+[sub_resource type="CircleShape2D" id="CircleShape2D_bew7y"]
+radius = 500.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bew7y"]
 size = Vector2(80, 80)
@@ -64,7 +64,7 @@ vertical_alignment = 1
 [node name="JamArea" type="Area2D" parent="CampfireJamSpot" unique_id=804260112]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CampfireJamSpot/JamArea" unique_id=445197964]
-shape = SubResource("RectangleShape2D_ngu8v")
+shape = SubResource("CircleShape2D_bew7y")
 
 [node name="InteractionArea" type="Area2D" parent="CampfireJamSpot" unique_id=1262593958 groups=["interactable"]]
 
