@@ -17,11 +17,12 @@ func _ready() -> void:
 	label.text = "Press Any Button to Start"
 
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if has_started:
 		return
 	
 	if _is_start_input(event):
+		get_viewport().set_input_as_handled()
 		_start_game()
 
 
