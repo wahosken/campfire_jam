@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-@export var show_touch_controls_on_start := true
+@export var show_touch_controls_on_start := false
 
 @onready var ui_root: Control = $UI
 

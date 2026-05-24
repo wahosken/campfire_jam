@@ -928,3 +928,7 @@ func get_player_jam_label_text() -> String:
 			return "Current Jam: Solo"
 
 	return "Current Jam: None"
+
+
+func on_game_started() -> void:
+	print("JamManager received game start.")

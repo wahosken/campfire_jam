@@ -27,8 +27,10 @@ func _ready() -> void:
 	_sync_jam_context_song()
 	_update_label()
 
+
+func on_game_started() -> void:
 	if auto_start_on_ready:
-		call_deferred("start_jam")
+		start_jam()
 
 
 func interact() -> void:
