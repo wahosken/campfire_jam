@@ -24,7 +24,6 @@ func _ready() -> void:
 	add_to_group("jam_spot")
 	add_to_group("interactable")
 
-	_sync_jam_context_song()
 	_update_label()
 
 

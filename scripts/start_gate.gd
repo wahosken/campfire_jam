@@ -58,6 +58,9 @@ func _start_game() -> void:
 
 	await get_tree().process_frame
 
+	if OS.has_feature("web"):
+		await get_tree().create_timer(0.5).timeout
+
 	_start_auto_jam_spots()
 
 	queue_free()
