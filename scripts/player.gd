@@ -13,7 +13,12 @@ extends CharacterBody2D
 @onready var part_label: Label = $PlayerPartLabel
 
 var current_jam_context: Node = null
+
 var current_requested_part := "silent"
+var current_actual_part := "silent"
+
+var wants_rhythm := false
+var wants_melody := false
 
 var nearby_interactables: Array[Node] = []
 
@@ -74,35 +79,50 @@ func _physics_process(_delta: float) -> void:
 	if jam_manager != null and jam_manager.has_method("update_player_jam_proximity"):
 		jam_manager.update_player_jam_proximity(global_position)
 
+	_check_for_jam_transition_while_playing()
+
 	_handle_movement()
 	_handle_npc_interact_input()
 	_handle_instrument_cycle_input()
 	_handle_play_instrument_input()
 
 
-func start_or_update_instrument(requested_part: String) -> void:
+func start_or_update_instrument_parts(rhythm: bool, melody: bool) -> void:
+	var requested_part: String = get_requested_part_from_flags(rhythm, melody)
+
+	if requested_part == "silent":
+		stop_instrument()
+		return
+
 	if is_playing_instrument:
-		if current_requested_part == requested_part:
+		if wants_rhythm == rhythm and wants_melody == melody:
 			return
 
+		wants_rhythm = rhythm
+		wants_melody = melody
 		current_requested_part = requested_part
 
 		if is_playing_direct_solo:
-			var current_audio_source := get_current_audio_source()
+			current_actual_part = requested_part
+
+			var current_audio_source: Node = get_current_audio_source()
 
 			if current_audio_source != null and current_audio_source.has_method("start_solo_tracks"):
-				current_audio_source.start_solo_tracks(true, true)
+				current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
 		else:
-			if current_jam_context != null and current_jam_context.has_method("set_member_requested_part"):
-				current_jam_context.set_member_requested_part(self, requested_part)
+			if current_jam_context != null and is_instance_valid(current_jam_context):
+				if current_jam_context.has_method("set_member_requested_parts"):
+					current_jam_context.set_member_requested_parts(self, wants_rhythm, wants_melody)
+				elif current_jam_context.has_method("set_member_requested_part"):
+					current_jam_context.set_member_requested_part(self, current_requested_part)
 
 		_update_part_label()
 		return
 
-	start_instrument(requested_part)
+	start_instrument_parts(rhythm, melody)
 
 
-func start_instrument(requested_part := "rhythm") -> void:
+func start_instrument_parts(rhythm := true, melody := false) -> void:
 	if is_playing_instrument:
 		return
 
@@ -110,34 +130,37 @@ func start_instrument(requested_part := "rhythm") -> void:
 	is_playing_direct_solo = false
 	started_in_synced_jam = false
 
-	current_requested_part = requested_part
+	wants_rhythm = rhythm
+	wants_melody = melody
+	current_requested_part = get_requested_part_from_flags(wants_rhythm, wants_melody)
+	current_actual_part = "silent"
 	current_jam_context = null
 
 	if jam_manager != null and jam_manager.has_method("get_current_nearby_jam_context"):
 		current_jam_context = jam_manager.get_current_nearby_jam_context()
 
-	if current_jam_context == null:
-		if jam_manager != null and jam_manager.has_method("create_freeform_jam_with_accompanist"):
-			current_jam_context = jam_manager.create_freeform_jam_with_accompanist(self, global_position)
-
 	if current_jam_context != null:
 		started_in_synced_jam = true
+		is_playing_direct_solo = false
 
 		if current_jam_context.has_method("add_member"):
 			current_jam_context.add_member(self)
 
+		if current_jam_context.has_method("set_member_requested_parts"):
+			current_jam_context.set_member_requested_parts(self, wants_rhythm, wants_melody)
+		elif current_jam_context.has_method("set_member_requested_part"):
+			current_jam_context.set_member_requested_part(self, current_requested_part)
+
 		if current_jam_context.has_method("set_member_active"):
 			current_jam_context.set_member_active(self, true)
-
-		if current_jam_context.has_method("set_member_requested_part"):
-			current_jam_context.set_member_requested_part(self, requested_part)
 	else:
 		is_playing_direct_solo = true
+		current_actual_part = current_requested_part
 
-		var current_audio_source := get_current_audio_source()
+		var current_audio_source: Node = get_current_audio_source()
 
 		if current_audio_source != null and current_audio_source.has_method("start_solo_tracks"):
-			current_audio_source.start_solo_tracks(true, true)
+			current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
 
 	_start_instrument_visuals()
 	_update_part_label()
@@ -147,40 +170,39 @@ func stop_instrument() -> void:
 	if not is_playing_instrument:
 		return
 
-	if is_playing_direct_solo:
-		var current_audio_source := get_current_audio_source()
+	var previous_jam_context: Node = current_jam_context
+	var current_audio_source: Node = get_current_audio_source()
 
-		if current_audio_source != null and current_audio_source.has_method("stop_solo_jam"):
+	if current_jam_context != null and is_instance_valid(current_jam_context):
+		if current_jam_context.has_method("clear_member_requested_part"):
+			current_jam_context.clear_member_requested_part(self)
+
+		if current_jam_context.has_method("set_member_active"):
+			current_jam_context.set_member_active(self, false)
+
+	if jam_manager != null:
+		if jam_manager.has_method("handle_player_stopped_playing"):
+			jam_manager.handle_player_stopped_playing(previous_jam_context)
+
+	# Important:
+	# This is a true player stop, not a recategorization.
+	# Force the player's audio off after any JamManager/JamContext cleanup.
+	if current_audio_source != null:
+		if current_audio_source.has_method("stop_all"):
+			current_audio_source.stop_all()
+		elif current_audio_source.has_method("stop_solo_jam"):
 			current_audio_source.stop_solo_jam()
-	else:
-		if current_jam_context != null:
-			if current_jam_context.has_method("clear_member_requested_part"):
-				current_jam_context.clear_member_requested_part(self)
-
-			if current_jam_context.has_method("set_member_active"):
-				current_jam_context.set_member_active(self, false)
-
-		if jam_manager != null:
-			if jam_manager.has_method("is_freeform_jam_context"):
-				if jam_manager.is_freeform_jam_context(current_jam_context):
-					var freeform_started_by_npc := false
-
-					if jam_manager.has_method("is_active_freeform_started_by_npc"):
-						freeform_started_by_npc = jam_manager.is_active_freeform_started_by_npc()
-
-					if freeform_started_by_npc:
-						if current_jam_context != null and current_jam_context.has_method("refresh_arrangement"):
-							current_jam_context.refresh_arrangement()
-					else:
-						if jam_manager.has_method("end_freeform_jam"):
-							jam_manager.end_freeform_jam()
 
 	is_playing_instrument = false
 	is_playing_direct_solo = false
 	started_in_synced_jam = false
 
 	current_jam_context = null
+
+	wants_rhythm = false
+	wants_melody = false
 	current_requested_part = "silent"
+	current_actual_part = "silent"
 
 	_stop_instrument_visuals()
 	_update_part_label()
@@ -188,9 +210,11 @@ func stop_instrument() -> void:
 
 func cycle_instrument() -> void:
 	var was_playing := is_playing_instrument
-	var previous_requested_part := current_requested_part
 	var previous_direct_solo := is_playing_direct_solo
-	var previous_audio_source := get_current_audio_source()
+	var previous_audio_source: Node = get_current_audio_source()
+
+	var previous_wants_rhythm := wants_rhythm
+	var previous_wants_melody := wants_melody
 
 	if was_playing and previous_audio_source != null:
 		if previous_audio_source.has_method("stop_solo_jam"):
@@ -203,18 +227,26 @@ func cycle_instrument() -> void:
 	if current_instrument_index >= instruments.size():
 		current_instrument_index = 0
 
-	current_requested_part = previous_requested_part
+	wants_rhythm = previous_wants_rhythm
+	wants_melody = previous_wants_melody
+	current_requested_part = get_requested_part_from_flags(wants_rhythm, wants_melody)
+	current_actual_part = "silent"
 
 	if was_playing:
 		if previous_direct_solo:
-			var new_audio_source := get_current_audio_source()
+			is_playing_direct_solo = true
+			current_actual_part = current_requested_part
+
+			var new_audio_source: Node = get_current_audio_source()
 
 			if new_audio_source != null and new_audio_source.has_method("start_solo_tracks"):
-				new_audio_source.start_solo_tracks(true, true)
+				new_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
 		else:
-			if current_jam_context != null:
-				if current_jam_context.has_method("set_member_requested_part"):
-					current_jam_context.set_member_requested_part(self, previous_requested_part)
+			if current_jam_context != null and is_instance_valid(current_jam_context):
+				if current_jam_context.has_method("set_member_requested_parts"):
+					current_jam_context.set_member_requested_parts(self, wants_rhythm, wants_melody)
+				elif current_jam_context.has_method("set_member_requested_part"):
+					current_jam_context.set_member_requested_part(self, current_requested_part)
 
 				if current_jam_context.has_method("set_member_active"):
 					current_jam_context.set_member_active(self, true)
@@ -223,6 +255,132 @@ func cycle_instrument() -> void:
 					current_jam_context.refresh_arrangement()
 
 	_update_part_label()
+
+
+func _check_for_jam_transition_while_playing() -> void:
+	if not is_playing_instrument:
+		return
+
+	if jam_manager == null:
+		return
+
+	if not is_playing_direct_solo:
+		if current_jam_context != null and is_instance_valid(current_jam_context):
+			var is_freeform := false
+
+			if jam_manager.has_method("is_freeform_jam_context"):
+				is_freeform = jam_manager.is_freeform_jam_context(current_jam_context)
+
+			if not is_freeform:
+				if jam_manager.has_method("is_player_near_current_jamspot_context"):
+					var still_near_jamspot: bool = jam_manager.is_player_near_current_jamspot_context(current_jam_context)
+
+					if not still_near_jamspot:
+						detach_from_current_jam_to_carried_solo()
+
+			if is_freeform:
+				var still_near_manual_freeform := true
+
+				if jam_manager.has_method("is_player_near_manual_freeform_context"):
+					still_near_manual_freeform = jam_manager.is_player_near_manual_freeform_context(current_jam_context)
+
+				if not still_near_manual_freeform:
+					detach_from_current_jam_to_carried_solo()
+			else:
+				if jam_manager.has_method("is_player_near_current_jamspot_context"):
+					var still_near_jamspot: bool = jam_manager.is_player_near_current_jamspot_context(current_jam_context)
+
+					if not still_near_jamspot:
+						detach_from_current_jam_to_carried_solo()
+
+	if is_playing_direct_solo:
+		if jam_manager.has_method("try_auto_attach_npc_to_player"):
+			jam_manager.try_auto_attach_npc_to_player(self, global_position)
+
+
+func detach_from_current_jam_to_carried_solo() -> void:
+	if not is_playing_instrument:
+		return
+
+	var previous_context: Node = current_jam_context
+
+	if previous_context != null and is_instance_valid(previous_context):
+		if previous_context.has_method("detach_member_preserve_audio"):
+			previous_context.detach_member_preserve_audio(self)
+		else:
+			if previous_context.has_method("clear_member_requested_part"):
+				previous_context.clear_member_requested_part(self)
+
+			if previous_context.has_method("set_member_active"):
+				previous_context.set_member_active(self, false)
+
+	current_jam_context = null
+	is_playing_direct_solo = true
+	started_in_synced_jam = false
+	current_actual_part = current_requested_part
+
+	var current_audio_source: Node = get_current_audio_source()
+
+	if current_audio_source != null and current_audio_source.has_method("start_solo_tracks"):
+		current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
+
+	_update_part_label()
+
+
+func return_to_carried_solo_from_freeform() -> void:
+	if not is_playing_instrument:
+		return
+
+	current_jam_context = null
+	is_playing_direct_solo = true
+	started_in_synced_jam = false
+	current_actual_part = current_requested_part
+
+	var current_audio_source: Node = get_current_audio_source()
+
+	if current_audio_source != null and current_audio_source.has_method("start_solo_tracks"):
+		current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
+
+	_update_part_label()
+
+
+func mark_as_freeform_jam_context(jam_context: Node) -> void:
+	current_jam_context = jam_context
+	is_playing_direct_solo = false
+	started_in_synced_jam = true
+	current_actual_part = "silent"
+	_update_part_label()
+
+
+func set_current_jam_context(jam_context: Node) -> void:
+	current_jam_context = jam_context
+
+	if current_jam_context == null:
+		current_actual_part = "silent"
+
+
+func set_current_part(part_name: String) -> void:
+	current_actual_part = part_name
+	_update_part_label()
+
+
+func get_requested_part_from_flags(rhythm: bool, melody: bool) -> String:
+	if rhythm and melody:
+		return "both"
+	elif melody:
+		return "melody"
+	elif rhythm:
+		return "rhythm"
+
+	return "silent"
+
+
+func get_wants_rhythm() -> bool:
+	return wants_rhythm
+
+
+func get_wants_melody() -> bool:
+	return wants_melody
 
 
 func get_current_instrument_id() -> String:
@@ -354,7 +512,7 @@ func _handle_movement() -> void:
 
 func _handle_npc_interact_input() -> void:
 	if Input.is_action_just_pressed("interact"):
-		var closest_interactable := get_closest_interactable()
+		var closest_interactable: Node = get_closest_interactable()
 
 		if closest_interactable != null and closest_interactable.has_method("interact"):
 			closest_interactable.interact()
@@ -369,10 +527,8 @@ func _handle_play_instrument_input() -> void:
 	var melody_pressed := Input.is_action_pressed("play_melody")
 	var rhythm_pressed := Input.is_action_pressed("play_rhythm")
 
-	if melody_pressed:
-		start_or_update_instrument("melody")
-	elif rhythm_pressed:
-		start_or_update_instrument("rhythm")
+	if melody_pressed or rhythm_pressed:
+		start_or_update_instrument_parts(rhythm_pressed, melody_pressed)
 	else:
 		stop_instrument()
 
@@ -385,11 +541,13 @@ func _update_part_label() -> void:
 	var part_text := "silent"
 
 	if is_playing_direct_solo:
-		part_text = "both"
+		part_text = current_requested_part
+	elif current_actual_part != "silent":
+		part_text = current_actual_part
+	elif current_jam_context != null and is_instance_valid(current_jam_context) and current_jam_context.has_method("get_current_part_for_member"):
+		part_text = current_jam_context.get_current_part_for_member(self)
 	elif is_playing_instrument:
 		part_text = current_requested_part
-	elif current_jam_context != null and current_jam_context.has_method("get_current_part_for_member"):
-		part_text = current_jam_context.get_current_part_for_member(self)
 
 	if part_text == "silent":
 		part_label.text = "%s: ----" % instrument_name
@@ -435,7 +593,7 @@ func _stop_instrument_visuals() -> void:
 
 
 func _on_interaction_area_entered(area: Area2D) -> void:
-	var possible_interactable := area.get_parent()
+	var possible_interactable: Node = area.get_parent()
 
 	if possible_interactable.is_in_group("interactable") or possible_interactable.is_in_group("npc_musician"):
 		if not nearby_interactables.has(possible_interactable):
@@ -443,7 +601,7 @@ func _on_interaction_area_entered(area: Area2D) -> void:
 
 
 func _on_interaction_area_exited(area: Area2D) -> void:
-	var possible_interactable := area.get_parent()
+	var possible_interactable: Node = area.get_parent()
 
 	if nearby_interactables.has(possible_interactable):
 		nearby_interactables.erase(possible_interactable)

@@ -14,6 +14,7 @@ const FULL_DB := 0.0
 
 var solo_override := false
 
+var solo_loop_enabled := false
 
 func _ready() -> void:
 	if rhythm_player == null:
@@ -33,14 +34,55 @@ func _ready() -> void:
 	set_tracks_audible(false, false)
 
 
-func play_synced(from_position := 0.0) -> void:
-	solo_override = false
+func _process(_delta: float) -> void:
+	if not solo_override:
+		return
 
+	if not solo_loop_enabled:
+		return
+
+	# Keep both players running during solo mode, even if one is muted.
+	# This keeps rhythm/melody aligned when switching parts.
 	if rhythm_player != null and rhythm_player.stream != null:
-		rhythm_player.play(from_position)
+		if not rhythm_player.playing:
+			rhythm_player.play(0.0)
 
 	if melody_player != null and melody_player.stream != null:
-		melody_player.play(from_position)
+		if not melody_player.playing:
+			melody_player.play(0.0)
+
+
+func play_synced(from_position := 0.0) -> void:
+	solo_override = false
+	solo_loop_enabled = false
+
+	var safe_position: float = maxf(from_position, 0.0)
+
+	if rhythm_player != null and rhythm_player.stream != null:
+		rhythm_player.stop()
+		rhythm_player.play(safe_position)
+
+	if melody_player != null and melody_player.stream != null:
+		melody_player.stop()
+		melody_player.play(safe_position)
+
+
+func stop_all() -> void:
+	solo_override = false
+	solo_loop_enabled = false
+	_force_stop_all()
+
+
+func stop_solo_jam() -> void:
+	solo_override = false
+	solo_loop_enabled = false
+	_force_stop_all()
+
+
+func adopt_into_synced_jam(rhythm_on: bool, melody_on: bool) -> void:
+	solo_override = false
+	solo_loop_enabled = false
+	_apply_track_volumes(rhythm_on, melody_on)
 
 
 func restart_synced() -> void:
@@ -48,32 +90,38 @@ func restart_synced() -> void:
 	play_synced(0.0)
 
 
-func stop_all() -> void:
-	solo_override = false
-	_force_stop_all()
-
-
 func set_tracks_audible(rhythm_on: bool, melody_on: bool) -> void:
-	if solo_override:
-		return
+	solo_override = false
+	_apply_track_volumes(rhythm_on, melody_on)
+
+
+func set_track_volumes(rhythm_on: bool, melody_on: bool, rhythm_db := FULL_DB, melody_db := FULL_DB) -> void:
+	solo_override = false
 
 	if rhythm_player != null:
-		rhythm_player.volume_db = FULL_DB if rhythm_on else MUTED_DB
+		rhythm_player.volume_db = rhythm_db if rhythm_on else MUTED_DB
 
 	if melody_player != null:
-		melody_player.volume_db = FULL_DB if melody_on else MUTED_DB
+		melody_player.volume_db = melody_db if melody_on else MUTED_DB
 
 
 func start_solo_tracks(rhythm_on: bool, melody_on: bool) -> void:
 	solo_override = true
+	solo_loop_enabled = true
 
 	if rhythm_player != null and rhythm_player.stream != null:
-		rhythm_player.play(0.0)
-		rhythm_player.volume_db = FULL_DB if rhythm_on else MUTED_DB
+		if not rhythm_player.playing:
+			rhythm_player.play(0.0)
 
 	if melody_player != null and melody_player.stream != null:
-		melody_player.play(0.0)
-		melody_player.volume_db = FULL_DB if melody_on else MUTED_DB
+		if not melody_player.playing:
+			melody_player.play(0.0)
+
+	_apply_track_volumes(rhythm_on, melody_on)
+
+
+func start_solo_jam() -> void:
+	start_solo_tracks(true, true)
 
 
 func get_playback_position() -> float:
@@ -85,19 +133,23 @@ func get_playback_position() -> float:
 
 	return 0.0
 
-func adopt_into_synced_jam(rhythm_on: bool, melody_on: bool) -> void:
-	solo_override = false
-	set_tracks_audible(rhythm_on, melody_on)
+
+func is_any_track_playing() -> bool:
+	if rhythm_player != null and rhythm_player.playing:
+		return true
+
+	if melody_player != null and melody_player.playing:
+		return true
+
+	return false
 
 
+func _apply_track_volumes(rhythm_on: bool, melody_on: bool) -> void:
+	if rhythm_player != null:
+		rhythm_player.volume_db = FULL_DB if rhythm_on else MUTED_DB
 
-func start_solo_jam() -> void:
-	start_solo_tracks(true, true)
-
-
-func stop_solo_jam() -> void:
-	solo_override = false
-	_force_stop_all()
+	if melody_player != null:
+		melody_player.volume_db = FULL_DB if melody_on else MUTED_DB
 
 
 func _force_stop_all() -> void:
@@ -121,3 +173,17 @@ func _prepare_player(player: AudioStreamPlayer2D) -> void:
 	if player.stream != null:
 		if "loop" in player.stream:
 			player.stream.loop = true
+
+
+func ensure_synced_playing(from_position := 0.0) -> void:
+	solo_override = false
+
+	var safe_position: float = maxf(from_position, 0.0)
+
+	if rhythm_player != null and rhythm_player.stream != null:
+		if not rhythm_player.playing:
+			rhythm_player.play(safe_position)
+
+	if melody_player != null and melody_player.stream != null:
+		if not melody_player.playing:
+			melody_player.play(safe_position)

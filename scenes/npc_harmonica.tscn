@@ -13,7 +13,8 @@ radius = 50.0
 
 [node name="NPC_Harmonica" type="Node2D" unique_id=718845583 groups=["npc_musician"]]
 script = ExtResource("1_khbeg")
-display_name = null
+instrument_name = "harmonica"
+display_name = "Harmonica"
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8

@@ -13,7 +13,7 @@ radius = 50.0
 
 [node name="NPC_Bass" type="Node2D" unique_id=718845583 groups=["npc_musician"]]
 script = ExtResource("1_iubrl")
-display_name = null
+display_name = "Bass"
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8
