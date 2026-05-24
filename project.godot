@@ -14,6 +14,10 @@ config/name="campfire_jam"
 run/main_scene="uid://caabunylbva7i"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 
+[audio]
+
+general/default_playback_type.web=0
+
 [display]
 
 window/size/viewport_width=640
