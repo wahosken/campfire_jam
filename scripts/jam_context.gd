@@ -791,9 +791,6 @@ func _set_member_tracks(member: Node, rhythm_on: bool, melody_on: bool) -> void:
 		push_warning("JamContext: No audio source for track assignment: " + str(member.name))
 		return
 
-	if audio_source.has_method("ensure_synced_playing"):
-		audio_source.ensure_synced_playing(_get_current_song_position())
-
 	if audio_source.has_method("set_tracks_audible"):
 		audio_source.set_tracks_audible(rhythm_on, melody_on)
 	else:
