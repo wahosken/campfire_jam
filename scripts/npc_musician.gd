@@ -408,11 +408,24 @@ func _update_label() -> void:
 
 	if current_part == "silent":
 		label.text = "%s: ----" % display_name
-	else:
-		label.text = "%s: %s" % [
-			display_name,
-			current_part.capitalize()
-		]
+		return
+
+	var db_text := ""
+
+	if current_part == "rhythm" or current_part == "both":
+		var rhythm_db := 0.0
+
+		if current_jam_context != null and current_jam_context.has_method("get_rhythm_db_for_member"):
+			rhythm_db = current_jam_context.get_rhythm_db_for_member(self)
+
+		if rhythm_db < 0.0:
+			db_text = " %.0fdB" % rhythm_db
+
+	label.text = "%s: %s%s" % [
+		display_name,
+		current_part.capitalize(),
+		db_text
+	]
 
 
 func _update_visual_from_current_part() -> void:

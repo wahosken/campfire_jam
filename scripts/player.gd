@@ -552,9 +552,22 @@ func _update_part_label() -> void:
 	if part_text == "silent":
 		part_label.text = "%s: ----" % instrument_name
 	else:
-		part_label.text = "%s: %s" % [
+		var db_text := ""
+
+		if part_text == "rhythm" or part_text == "both":
+			var rhythm_db := 0.0
+
+			if current_jam_context != null and is_instance_valid(current_jam_context):
+				if current_jam_context.has_method("get_rhythm_db_for_member"):
+					rhythm_db = current_jam_context.get_rhythm_db_for_member(self)
+
+			if rhythm_db < 0.0:
+				db_text = " %.0fdB" % rhythm_db
+
+		part_label.text = "%s: %s%s" % [
 			instrument_name,
-			part_text.capitalize()
+			part_text.capitalize(),
+			db_text
 		]
 
 

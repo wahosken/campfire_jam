@@ -20,6 +20,7 @@ var active_members: Array[Node] = []
 
 var member_parts := {}
 var member_requested_parts := {}
+var member_rhythm_db := {}
 
 var current_featured_instrument := ""
 var current_melody_index := 0
@@ -70,6 +71,7 @@ func add_member(member: Node) -> void:
 	if member.has_method("set_current_jam_context"):
 		member.set_current_jam_context(self)
 
+	member_rhythm_db[member] = 0.0
 
 func remove_member(member: Node) -> void:
 	if member == null:
@@ -98,6 +100,9 @@ func remove_member(member: Node) -> void:
 
 	if featured_member_before_forced_melody == member:
 		featured_member_before_forced_melody = null
+
+	if member_rhythm_db.has(member):
+		member_rhythm_db.erase(member)
 
 	_update_arrangement()
 
@@ -143,6 +148,16 @@ func detach_member_preserve_audio(member: Node) -> void:
 		_update_arrangement()
 
 	arrangement_changed.emit()
+
+	if member_rhythm_db.has(member):
+		member_rhythm_db[member] = 0.0
+
+
+func get_rhythm_db_for_member(member: Node) -> float:
+	if member_rhythm_db.has(member):
+		return float(member_rhythm_db[member])
+
+	return 0.0
 
 
 func start_from_existing_member(member: Node) -> void:
@@ -602,18 +617,7 @@ func _set_member_tracks_with_volume(
 		push_warning("JamContext: No audio source for track assignment: " + str(member.name))
 		return
 
-	if audio_source.has_method("ensure_synced_playing"):
-		audio_source.ensure_synced_playing(_get_current_song_position())
-
-	_debug_log(
-		"Set %s tracks: rhythm=%s melody=%s rhythm_db=%s melody_db=%s" % [
-			str(member.name),
-			str(rhythm_on),
-			str(melody_on),
-			str(rhythm_db),
-			str(melody_db)
-		]
-	)
+	member_rhythm_db[member] = rhythm_db if rhythm_on else 0.0
 
 	if audio_source.has_method("set_track_volumes"):
 		audio_source.set_track_volumes(rhythm_on, melody_on, rhythm_db, melody_db)
@@ -791,6 +795,8 @@ func _set_member_tracks(member: Node, rhythm_on: bool, melody_on: bool) -> void:
 		audio_source.set_tracks_audible(rhythm_on, melody_on)
 	else:
 		push_warning("JamContext: audio source missing set_tracks_audible(): " + str(audio_source.name))
+
+	member_rhythm_db[member] = 0.0
 
 
 func _set_member_part(member: Node, part_name: String) -> void:
