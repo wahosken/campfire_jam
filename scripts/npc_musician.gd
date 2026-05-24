@@ -406,6 +406,10 @@ func _update_label() -> void:
 	if label == null:
 		return
 
+	if current_part == "waiting":
+		label.text = "%s: Waiting" % display_name
+		return
+
 	if current_part == "silent":
 		label.text = "%s: ----" % display_name
 		return

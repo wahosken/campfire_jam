@@ -539,6 +539,10 @@ func _update_part_label() -> void:
 
 	var instrument_name := get_current_instrument_display_name()
 	var part_text := "silent"
+	
+	if part_text == "waiting":
+		part_label.text = "%s: Waiting" % instrument_name
+		return
 
 	if is_playing_direct_solo:
 		part_text = current_requested_part

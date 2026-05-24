@@ -21,6 +21,7 @@ var active_members: Array[Node] = []
 var member_parts := {}
 var member_requested_parts := {}
 var member_rhythm_db := {}
+var pending_sync_members: Array[Node] = []
 
 var current_featured_instrument := ""
 var current_melody_index := 0
@@ -185,11 +186,22 @@ func set_member_active(member: Node, should_be_active: bool) -> void:
 		if not song_started:
 			_start_song()
 		else:
-			_start_member_audio(member)
+			# Browser-safe beat sync:
+			# Do not start newly joined members immediately mid-frame.
+			# Queue them to start on the next beat boundary.
+			if not pending_sync_members.has(member):
+				pending_sync_members.append(member)
+
+			_set_member_tracks_with_volume(member, false, false)
+			_set_member_part(member, "waiting")
+
 			_update_arrangement()
 	else:
 		if active_members.has(member):
 			active_members.erase(member)
+
+		if pending_sync_members.has(member):
+			pending_sync_members.erase(member)
 
 		_stop_member_audio(member)
 		_set_member_part(member, "silent")
@@ -377,11 +389,14 @@ func _on_beat() -> void:
 	if beat_index >= total_beats:
 		beat_index = 0
 		_on_song_loop()
+	else:
+		_start_pending_sync_members()
 
 	current_measure = int(float(beat_index) / float(beats_per_measure)) + 1
 
 
 func _on_song_loop() -> void:
+	pending_sync_members.clear()
 	_restart_all_active_members_synced()
 	_advance_featured_instrument()
 	_update_arrangement()
@@ -471,6 +486,11 @@ func _update_arrangement() -> void:
 
 	for member in active_members:
 		if member == null or not is_instance_valid(member):
+			continue
+
+		if pending_sync_members.has(member):
+			_set_member_tracks_with_volume(member, false, false)
+			_set_member_part(member, "waiting")
 			continue
 
 		var requested_part: String = _get_member_requested_part(member)
@@ -748,6 +768,34 @@ func _start_member_audio(member: Node) -> void:
 		audio_source.play_synced(sync_position)
 	else:
 		push_warning("JamContext: audio source missing play_synced(): " + str(audio_source.name))
+
+
+func _start_pending_sync_members() -> void:
+	if pending_sync_members.is_empty():
+		return
+
+	var members_to_start: Array[Node] = pending_sync_members.duplicate()
+	pending_sync_members.clear()
+
+	var sync_position: float = _get_current_song_position()
+
+	for member in members_to_start:
+		if member == null or not is_instance_valid(member):
+			continue
+
+		if not active_members.has(member):
+			continue
+
+		var audio_source: Node = _get_member_audio_source(member)
+
+		if audio_source == null:
+			continue
+
+		if audio_source.has_method("play_synced"):
+			audio_source.play_synced(sync_position)
+
+	_update_arrangement()
+
 
 
 func _get_best_live_sync_position(excluded_member: Node = null) -> float:
