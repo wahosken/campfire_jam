@@ -8,13 +8,12 @@ extends Node2D
 
 @export var auto_start_on_ready := true
 @export var leave_radius_padding := 50.0
+@export var active_refresh_interval := 0.25
 
 @onready var label: Label = $Label
 @onready var jam_context: Node = $JamContext
 @onready var jam_area: Area2D = $JamArea
 @onready var jam_collision_shape: CollisionShape2D = $JamArea/CollisionShape2D
-
-@export var active_refresh_interval := 0.25
 
 var active_refresh_timer := 0.0
 
@@ -22,27 +21,21 @@ var registered_npcs: Array[Node] = []
 var jam_is_active := false
 
 
+# ------------------------------------------------------------
+# Lifecycle
+# ------------------------------------------------------------
+
 func _ready() -> void:
 	add_to_group("jam_spot")
 
-	if jam_area != null:
-		if not jam_area.area_entered.is_connected(_on_jam_area_area_entered):
-			jam_area.area_entered.connect(_on_jam_area_area_entered)
-
-		if not jam_area.area_exited.is_connected(_on_jam_area_area_exited):
-			jam_area.area_exited.connect(_on_jam_area_area_exited)
-
-		if not jam_area.body_entered.is_connected(_on_jam_area_body_entered):
-			jam_area.body_entered.connect(_on_jam_area_body_entered)
-
-		if not jam_area.body_exited.is_connected(_on_jam_area_body_exited):
-			jam_area.body_exited.connect(_on_jam_area_body_exited)
-
+	_connect_jam_area_signals()
 	_sync_jam_context_song()
 	_update_label()
 
-	# For browser builds, you may still prefer StartGate calling start_if_auto_enabled()
-	# instead of starting directly in _ready().
+	# For browser builds, StartGate should call start_if_auto_enabled()
+	# after the first player input.
+	#
+	# If this project is not being tested in browser, this can be restored:
 	# if auto_start_on_ready:
 	#	call_deferred("start_jam")
 
@@ -60,6 +53,27 @@ func _process(delta: float) -> void:
 	_rescan_and_refresh_active_jam()
 
 
+func _connect_jam_area_signals() -> void:
+	if jam_area == null:
+		return
+
+	if not jam_area.area_entered.is_connected(_on_jam_area_area_entered):
+		jam_area.area_entered.connect(_on_jam_area_area_entered)
+
+	if not jam_area.area_exited.is_connected(_on_jam_area_area_exited):
+		jam_area.area_exited.connect(_on_jam_area_area_exited)
+
+	if not jam_area.body_entered.is_connected(_on_jam_area_body_entered):
+		jam_area.body_entered.connect(_on_jam_area_body_entered)
+
+	if not jam_area.body_exited.is_connected(_on_jam_area_body_exited):
+		jam_area.body_exited.connect(_on_jam_area_body_exited)
+
+
+# ------------------------------------------------------------
+# Public controls
+# ------------------------------------------------------------
+
 func start_if_auto_enabled() -> void:
 	if auto_start_on_ready:
 		start_jam()
@@ -69,11 +83,58 @@ func interact() -> void:
 	toggle_jam()
 
 
-func register_npc(npc: Node) -> void:
-	if npc == null:
+func set_jam_active(should_be_active: bool) -> void:
+	if should_be_active:
+		start_jam()
+	else:
+		stop_jam()
+
+
+func toggle_jam() -> void:
+	if jam_is_active:
+		stop_jam()
+	else:
+		start_jam()
+
+
+func start_jam() -> void:
+	if jam_is_active:
 		return
 
-	if not is_instance_valid(npc):
+	jam_is_active = true
+	active_refresh_timer = 0.0
+
+	_sync_jam_context_song()
+	_rescan_npcs_inside_jam_area()
+	refresh_all_npc_activity()
+	_update_label()
+
+
+func stop_jam() -> void:
+	if not jam_is_active:
+		return
+
+	jam_is_active = false
+
+	var npcs_to_release: Array[Node] = registered_npcs.duplicate()
+
+	for npc in npcs_to_release:
+		_release_npc_from_stopped_jam(npc)
+
+	registered_npcs.clear()
+
+	if jam_context != null and jam_context.has_method("stop_all_members"):
+		jam_context.stop_all_members()
+
+	_update_label()
+
+
+# ------------------------------------------------------------
+# NPC registration
+# ------------------------------------------------------------
+
+func register_npc(npc: Node) -> void:
+	if not _is_valid_npc(npc):
 		return
 
 	if not registered_npcs.has(npc):
@@ -83,6 +144,8 @@ func register_npc(npc: Node) -> void:
 		npc.set_current_jam_spot(self)
 
 	if jam_is_active:
+		# Defer so all area/body enter events can settle before JamContext
+		# decides arrangement. This prevents temporary "solo/both" states.
 		call_deferred("refresh_all_npc_activity")
 	else:
 		refresh_npc_activity(npc)
@@ -101,80 +164,10 @@ func unregister_npc(npc: Node) -> void:
 	if npc.has_method("end_jam_spot_control"):
 		npc.end_jam_spot_control(self)
 	else:
-		if jam_context != null and jam_context.has_method("set_member_active"):
-			jam_context.set_member_active(npc, false)
-
-		if npc.has_method("set_current_jam_context"):
-			npc.set_current_jam_context(null)
+		_fallback_release_npc(npc)
 
 	if npc.has_method("set_current_jam_spot"):
 		npc.set_current_jam_spot(null)
-
-	_update_label()
-
-
-func start_jam() -> void:
-	if jam_is_active:
-		return
-
-	jam_is_active = true
-	active_refresh_timer = 0.0
-	_sync_jam_context_song()
-
-	_rescan_npcs_inside_jam_area()
-	refresh_all_npc_activity()
-	_update_label()
-
-
-func stop_jam() -> void:
-	if not jam_is_active:
-		return
-
-	jam_is_active = false
-
-	var npcs_to_release: Array[Node] = registered_npcs.duplicate()
-
-	for npc in npcs_to_release:
-		if npc == null or not is_instance_valid(npc):
-			continue
-
-		if jam_context != null and jam_context.has_method("set_member_active"):
-			jam_context.set_member_active(npc, false)
-
-		if npc.has_method("end_jam_spot_control"):
-			npc.end_jam_spot_control(self)
-		else:
-			if npc.has_method("set_current_jam_context"):
-				npc.set_current_jam_context(null)
-
-			if npc.has_method("set_current_part"):
-				npc.set_current_part("silent")
-
-			var source: Node = null
-
-			if npc.has_method("get_current_audio_source"):
-				source = npc.get_current_audio_source()
-			elif npc.has_method("get_jam_audio_source"):
-				source = npc.get_jam_audio_source()
-
-			if source != null:
-				if source.has_method("stop_all"):
-					source.stop_all()
-				elif source.has_method("stop_solo_jam"):
-					source.stop_solo_jam()
-
-		# Reset availability only.
-		# Do not call set_npc_enabled(true), because that can restart music.
-		if "npc_enabled" in npc:
-			npc.npc_enabled = true
-
-		if npc.has_method("set_current_jam_spot"):
-			npc.set_current_jam_spot(null)
-
-	registered_npcs.clear()
-
-	if jam_context != null and jam_context.has_method("stop_all_members"):
-		jam_context.stop_all_members()
 
 	_update_label()
 
@@ -188,27 +181,69 @@ func _rescan_npcs_inside_jam_area() -> void:
 	for area in jam_area.get_overlapping_areas():
 		var possible_npc: Node = area.get_parent()
 
-		if possible_npc != null and possible_npc.is_in_group("npc_musician"):
+		if _is_valid_npc(possible_npc):
 			register_npc(possible_npc)
 
 	for body in jam_area.get_overlapping_bodies():
-		if body != null and body.is_in_group("npc_musician"):
+		if _is_valid_npc(body):
 			register_npc(body)
 
 
-func set_jam_active(should_be_active: bool) -> void:
-	if should_be_active:
-		start_jam()
-	else:
-		stop_jam()
+func _rescan_and_refresh_active_jam() -> void:
+	if not jam_is_active:
+		return
+
+	if jam_area == null:
+		return
+
+	var found_npcs: Array[Node] = _get_npcs_currently_inside_jam_area()
+
+	# Add newly found NPCs.
+	for npc in found_npcs:
+		if not registered_npcs.has(npc):
+			registered_npcs.append(npc)
+
+		if npc.has_method("set_current_jam_spot"):
+			npc.set_current_jam_spot(self)
+
+	# Remove NPCs that are no longer actually inside the JamArea.
+	for npc in registered_npcs.duplicate():
+		if npc == null or not is_instance_valid(npc):
+			registered_npcs.erase(npc)
+			continue
+
+		if not found_npcs.has(npc):
+			unregister_npc(npc)
+
+	# Refresh the whole group together.
+	refresh_all_npc_activity()
+	_update_label()
 
 
-func toggle_jam() -> void:
-	if jam_is_active:
-		stop_jam()
-	else:
-		start_jam()
+func _get_npcs_currently_inside_jam_area() -> Array[Node]:
+	var found_npcs: Array[Node] = []
 
+	if jam_area == null:
+		return found_npcs
+
+	for area in jam_area.get_overlapping_areas():
+		var possible_npc: Node = area.get_parent()
+
+		if _is_valid_npc(possible_npc):
+			if not found_npcs.has(possible_npc):
+				found_npcs.append(possible_npc)
+
+	for body in jam_area.get_overlapping_bodies():
+		if _is_valid_npc(body):
+			if not found_npcs.has(body):
+				found_npcs.append(body)
+
+	return found_npcs
+
+
+# ------------------------------------------------------------
+# NPC activity / fixed-area priority
+# ------------------------------------------------------------
 
 func refresh_all_npc_activity() -> void:
 	for npc in registered_npcs.duplicate():
@@ -216,10 +251,7 @@ func refresh_all_npc_activity() -> void:
 
 
 func refresh_npc_activity(npc: Node) -> void:
-	if npc == null:
-		return
-
-	if not is_instance_valid(npc):
+	if not _is_valid_npc(npc):
 		return
 
 	if not npc.has_method("is_npc_enabled"):
@@ -228,43 +260,52 @@ func refresh_npc_activity(npc: Node) -> void:
 	var should_play: bool = jam_is_active and npc.is_npc_enabled()
 
 	if not should_play:
-		if jam_context != null and jam_context.has_method("set_member_active"):
-			jam_context.set_member_active(npc, false)
-
-		if jam_is_active:
-			# JamSpot is still ON, but this NPC is sitting out.
-			# Keep current_jam_spot intact so they can rejoin this same JamSpot.
-			if npc.has_method("set_current_jam_context"):
-				npc.set_current_jam_context(null)
-
-			if npc.has_method("set_current_part"):
-				npc.set_current_part("silent")
-
-			if "wants_to_play" in npc:
-				npc.wants_to_play = false
-
-			if "wants_rhythm" in npc:
-				npc.wants_rhythm = false
-
-			if "wants_melody" in npc:
-				npc.wants_melody = false
-		else:
-			# JamSpot is OFF, so fully release JamSpot control.
-			if npc.has_method("end_jam_spot_control"):
-				npc.end_jam_spot_control(self)
-			else:
-				if npc.has_method("set_current_jam_context"):
-					npc.set_current_jam_context(null)
-
-				if npc.has_method("set_current_jam_spot"):
-					npc.set_current_jam_spot(null)
-
-				if npc.has_method("set_current_part"):
-					npc.set_current_part("silent")
-
+		_handle_npc_should_not_play(npc)
 		return
 
-	# JamSpot is active and NPC is enabled, so JamSpot takes control.
+	_claim_npc_for_active_jam(npc)
+
+
+func _handle_npc_should_not_play(npc: Node) -> void:
+	if jam_context != null and jam_context.has_method("set_member_active"):
+		jam_context.set_member_active(npc, false)
+
+	if jam_is_active:
+		_mark_npc_sitting_out(npc)
+	else:
+		_release_npc_from_inactive_jam(npc)
+
+
+func _mark_npc_sitting_out(npc: Node) -> void:
+	# JamSpot is still ON, but this NPC is sitting out.
+	# Keep current_jam_spot intact so they can rejoin this same JamSpot.
+	if npc.has_method("set_current_jam_context"):
+		npc.set_current_jam_context(null)
+
+	if npc.has_method("set_current_part"):
+		npc.set_current_part("silent")
+
+	if "wants_to_play" in npc:
+		npc.wants_to_play = false
+
+	if "wants_rhythm" in npc:
+		npc.wants_rhythm = false
+
+	if "wants_melody" in npc:
+		npc.wants_melody = false
+
+
+func _release_npc_from_inactive_jam(npc: Node) -> void:
+	# JamSpot is OFF, so fully release JamSpot control.
+	if npc.has_method("end_jam_spot_control"):
+		npc.end_jam_spot_control(self)
+	else:
+		_fallback_release_npc(npc)
+
+
+func _claim_npc_for_active_jam(npc: Node) -> void:
+	# JamSpot is active and NPC is enabled, so JamSpot takes priority.
+	# Any freeform/manual state should reset before the fixed JamSpot controls it.
 	if npc.has_method("reset_temporary_music_state_for_jam_join"):
 		npc.reset_temporary_music_state_for_jam_join()
 
@@ -277,14 +318,7 @@ func refresh_npc_activity(npc: Node) -> void:
 		if npc.has_method("set_current_jam_context"):
 			npc.set_current_jam_context(jam_context)
 
-	if jam_context != null and jam_context.has_method("add_member"):
-		jam_context.add_member(npc)
-
-	if jam_context != null:
-		if jam_context.has_method("set_member_requested_parts"):
-			jam_context.set_member_requested_parts(npc, true, true)
-		elif jam_context.has_method("set_member_requested_part"):
-			jam_context.set_member_requested_part(npc, "both")
+	_request_npc_both_parts(npc)
 
 	if "wants_to_play" in npc:
 		npc.wants_to_play = true
@@ -298,6 +332,154 @@ func refresh_npc_activity(npc: Node) -> void:
 	if jam_context != null and jam_context.has_method("set_member_active"):
 		jam_context.set_member_active(npc, true)
 
+
+func _request_npc_both_parts(npc: Node) -> void:
+	if jam_context == null:
+		return
+
+	if jam_context.has_method("add_member"):
+		jam_context.add_member(npc)
+
+	if jam_context.has_method("set_member_requested_parts"):
+		jam_context.set_member_requested_parts(npc, true, true)
+	elif jam_context.has_method("set_member_requested_part"):
+		jam_context.set_member_requested_part(npc, "both")
+
+
+func _release_npc_from_stopped_jam(npc: Node) -> void:
+	if npc == null or not is_instance_valid(npc):
+		return
+
+	if jam_context != null and jam_context.has_method("set_member_active"):
+		jam_context.set_member_active(npc, false)
+
+	if npc.has_method("end_jam_spot_control"):
+		npc.end_jam_spot_control(self)
+	else:
+		_fallback_release_npc(npc)
+
+	# Reset availability only.
+	# Do not call set_npc_enabled(true), because that can restart music.
+	if "npc_enabled" in npc:
+		npc.npc_enabled = true
+
+	if npc.has_method("set_current_jam_spot"):
+		npc.set_current_jam_spot(null)
+
+
+func _fallback_release_npc(npc: Node) -> void:
+	if jam_context != null and jam_context.has_method("set_member_active"):
+		jam_context.set_member_active(npc, false)
+
+	if npc.has_method("set_current_jam_context"):
+		npc.set_current_jam_context(null)
+
+	if npc.has_method("set_current_jam_spot"):
+		npc.set_current_jam_spot(null)
+
+	if npc.has_method("set_current_part"):
+		npc.set_current_part("silent")
+
+	var source: Node = _get_npc_audio_source(npc)
+
+	if source != null:
+		if source.has_method("stop_all"):
+			source.stop_all()
+		elif source.has_method("stop_solo_jam"):
+			source.stop_solo_jam()
+
+
+func _get_npc_audio_source(npc: Node) -> Node:
+	if npc == null:
+		return null
+
+	if npc.has_method("get_current_audio_source"):
+		return npc.get_current_audio_source()
+
+	if npc.has_method("get_jam_audio_source"):
+		return npc.get_jam_audio_source()
+
+	return null
+
+
+# ------------------------------------------------------------
+# Jam area callbacks
+# ------------------------------------------------------------
+
+func _on_jam_area_area_entered(area: Area2D) -> void:
+	var possible_npc: Node = area.get_parent()
+	_try_register_possible_npc(possible_npc)
+
+
+func _on_jam_area_area_exited(area: Area2D) -> void:
+	var possible_npc: Node = area.get_parent()
+	_try_unregister_possible_npc(possible_npc)
+
+
+func _on_jam_area_body_entered(body: Node) -> void:
+	_try_register_possible_npc(body)
+
+
+func _on_jam_area_body_exited(body: Node) -> void:
+	_try_unregister_possible_npc(body)
+
+
+func _try_register_possible_npc(node: Node) -> void:
+	if not jam_is_active:
+		return
+
+	if not _is_valid_npc(node):
+		return
+
+	register_npc(node)
+
+
+func _try_unregister_possible_npc(node: Node) -> void:
+	if not _is_valid_npc(node):
+		return
+
+	if registered_npcs.has(node):
+		unregister_npc(node)
+
+
+# ------------------------------------------------------------
+# Radius helpers
+# ------------------------------------------------------------
+
+func get_join_radius() -> float:
+	if jam_collision_shape == null:
+		return 100.0
+
+	if jam_collision_shape.shape == null:
+		return 100.0
+
+	if jam_collision_shape.shape is CircleShape2D:
+		var circle_shape: CircleShape2D = jam_collision_shape.shape as CircleShape2D
+		return circle_shape.radius * jam_collision_shape.global_scale.x
+
+	if jam_collision_shape.shape is RectangleShape2D:
+		var rectangle_shape: RectangleShape2D = jam_collision_shape.shape as RectangleShape2D
+		var scaled_size: Vector2 = rectangle_shape.size * jam_collision_shape.global_scale
+		return maxf(scaled_size.x, scaled_size.y) * 0.5
+
+	return 100.0
+
+
+func get_leave_radius() -> float:
+	return get_join_radius() + leave_radius_padding
+
+
+func is_position_inside_join_radius(world_position: Vector2) -> bool:
+	return global_position.distance_to(world_position) <= get_join_radius()
+
+
+func is_position_inside_leave_radius(world_position: Vector2) -> bool:
+	return global_position.distance_to(world_position) <= get_leave_radius()
+
+
+# ------------------------------------------------------------
+# Queries
+# ------------------------------------------------------------
 
 func is_jam_active() -> bool:
 	return jam_is_active
@@ -333,36 +515,9 @@ func get_featured_instrument_text() -> String:
 	return "None"
 
 
-func get_join_radius() -> float:
-	if jam_collision_shape == null:
-		return 100.0
-
-	if jam_collision_shape.shape == null:
-		return 100.0
-
-	if jam_collision_shape.shape is CircleShape2D:
-		var circle_shape: CircleShape2D = jam_collision_shape.shape as CircleShape2D
-		return circle_shape.radius * jam_collision_shape.global_scale.x
-
-	if jam_collision_shape.shape is RectangleShape2D:
-		var rectangle_shape: RectangleShape2D = jam_collision_shape.shape as RectangleShape2D
-		var scaled_size: Vector2 = rectangle_shape.size * jam_collision_shape.global_scale
-		return maxf(scaled_size.x, scaled_size.y) * 0.5
-
-	return 100.0
-
-
-func get_leave_radius() -> float:
-	return get_join_radius() + leave_radius_padding
-
-
-func is_position_inside_join_radius(world_position: Vector2) -> bool:
-	return global_position.distance_to(world_position) <= get_join_radius()
-
-
-func is_position_inside_leave_radius(world_position: Vector2) -> bool:
-	return global_position.distance_to(world_position) <= get_leave_radius()
-
+# ------------------------------------------------------------
+# Helpers
+# ------------------------------------------------------------
 
 func _sync_jam_context_song() -> void:
 	if jam_context == null:
@@ -374,52 +529,14 @@ func _sync_jam_context_song() -> void:
 		jam_context.song_id = song_id
 
 
-func _on_jam_area_area_entered(area: Area2D) -> void:
-	var possible_npc: Node = area.get_parent()
-	_try_register_possible_npc(possible_npc)
-
-
-func _on_jam_area_area_exited(area: Area2D) -> void:
-	var possible_npc: Node = area.get_parent()
-	_try_unregister_possible_npc(possible_npc)
-
-
-func _on_jam_area_body_entered(body: Node) -> void:
-	_try_register_possible_npc(body)
-
-
-func _on_jam_area_body_exited(body: Node) -> void:
-	_try_unregister_possible_npc(body)
-
-
-func _try_register_possible_npc(node: Node) -> void:
-	if not jam_is_active:
-		return
-
+func _is_valid_npc(node: Node) -> bool:
 	if node == null:
-		return
+		return false
 
 	if not is_instance_valid(node):
-		return
+		return false
 
-	if not node.is_in_group("npc_musician"):
-		return
-
-	register_npc(node)
-
-
-func _try_unregister_possible_npc(node: Node) -> void:
-	if node == null:
-		return
-
-	if not is_instance_valid(node):
-		return
-
-	if not node.is_in_group("npc_musician"):
-		return
-
-	if registered_npcs.has(node):
-		unregister_npc(node)
+	return node.is_in_group("npc_musician")
 
 
 func _update_label() -> void:
@@ -444,48 +561,3 @@ func _debug_spot(message: String) -> void:
 			str(jam_is_active),
 			registered_npcs.size()
 		])
-
-
-func _rescan_and_refresh_active_jam() -> void:
-	if not jam_is_active:
-		return
-
-	if jam_area == null:
-		return
-
-	var found_npcs: Array[Node] = []
-
-	for area in jam_area.get_overlapping_areas():
-		var possible_npc: Node = area.get_parent()
-
-		if possible_npc != null and is_instance_valid(possible_npc):
-			if possible_npc.is_in_group("npc_musician"):
-				if not found_npcs.has(possible_npc):
-					found_npcs.append(possible_npc)
-
-	for body in jam_area.get_overlapping_bodies():
-		if body != null and is_instance_valid(body):
-			if body.is_in_group("npc_musician"):
-				if not found_npcs.has(body):
-					found_npcs.append(body)
-
-	# Add newly found NPCs.
-	for npc in found_npcs:
-		if not registered_npcs.has(npc):
-			registered_npcs.append(npc)
-
-		if npc.has_method("set_current_jam_spot"):
-			npc.set_current_jam_spot(self)
-
-	# Remove NPCs that are no longer actually inside the JamArea.
-	for npc in registered_npcs.duplicate():
-		if npc == null or not is_instance_valid(npc):
-			registered_npcs.erase(npc)
-			continue
-
-		if not found_npcs.has(npc):
-			unregister_npc(npc)
-
-	# Refresh the whole group together.
-	refresh_all_npc_activity()
-	_update_label()
