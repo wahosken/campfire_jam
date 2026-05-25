@@ -620,6 +620,9 @@ func _set_member_tracks_with_volume(
 		push_warning("JamContext: No audio source for track assignment: " + str(member.name))
 		return
 
+	if audio_source.has_method("force_jam_control"):
+		audio_source.force_jam_control()
+
 	member_rhythm_db[member] = rhythm_db if rhythm_on else 0.0
 
 	if audio_source.has_method("set_track_volumes"):
@@ -803,6 +806,9 @@ func _set_member_tracks(member: Node, rhythm_on: bool, melody_on: bool) -> void:
 		push_warning("JamContext: No audio source for track assignment: " + str(member.name))
 		return
 
+	if audio_source.has_method("force_jam_control"):
+		audio_source.force_jam_control()
+
 	if audio_source.has_method("set_tracks_audible"):
 		audio_source.set_tracks_audible(rhythm_on, melody_on)
 	else:
@@ -815,14 +821,23 @@ func _set_member_part(member: Node, part_name: String) -> void:
 	if member == null:
 		return
 
+	if not is_instance_valid(member):
+		return
+
 	member_parts[member] = part_name
+
+	# Only the member's current JamContext should control its visible/actual part.
+	# This prevents old/stale contexts from setting a transferred NPC to "silent".
+	if "current_jam_context" in member:
+		if member.current_jam_context != null and member.current_jam_context != self:
+			return
 
 	if member.has_method("set_current_part"):
 		member.set_current_part(part_name)
 
 
 func _clear_member_parts() -> void:
-	for member in registered_members:
+	for member in active_members:
 		_set_member_part(member, "silent")
 
 

@@ -34,6 +34,10 @@ func _ready() -> void:
 	music_system = get_tree().get_first_node_in_group("music_system")
 
 
+func _process(_delta: float) -> void:
+	update_following_npc_jam_priorities()
+
+
 func update_player_jam_proximity(player_position: Vector2) -> void:
 	_detach_player_from_freeform_if_too_far(player_position)
 	update_proximity_blocks(player_position)
@@ -1091,6 +1095,9 @@ func _add_npc_to_active_freeform_jam(npc: Node, make_manual := false) -> bool:
 	if not is_instance_valid(active_freeform_jam_context):
 		return false
 
+	if npc.has_method("set_current_jam_context"):
+		npc.set_current_jam_context(active_freeform_jam_context)
+
 	if active_freeform_jam_context.has_method("add_member"):
 		active_freeform_jam_context.add_member(npc)
 
@@ -1103,26 +1110,29 @@ func _add_npc_to_active_freeform_jam(npc: Node, make_manual := false) -> bool:
 	elif npc.has_method("get_jam_audio_source"):
 		audio_source = npc.get_jam_audio_source()
 
-	if audio_source != null and audio_source.has_method("set_song_id"):
-		if "song_id" in active_freeform_jam_context:
-			audio_source.set_song_id(active_freeform_jam_context.song_id)
+	if audio_source != null:
+		if audio_source.has_method("force_jam_control"):
+			audio_source.force_jam_control()
 
-	if active_freeform_jam_context.has_method("set_member_active"):
-		active_freeform_jam_context.set_member_active(npc, true)
+		if audio_source.has_method("set_song_id"):
+			if "song_id" in active_freeform_jam_context:
+				audio_source.set_song_id(active_freeform_jam_context.song_id)
 
 	if make_manual:
 		if npc.has_method("start_manual_freeform"):
 			npc.start_manual_freeform()
-		elif npc.has_method("set_actual_playing"):
-			npc.set_actual_playing(true)
 	else:
 		if npc.has_method("start_auto_freeform"):
 			npc.start_auto_freeform()
-		elif npc.has_method("set_actual_playing"):
-			npc.set_actual_playing(true)
 
 	if not active_freeform_members.has(npc):
 		active_freeform_members.append(npc)
+
+	if active_freeform_jam_context.has_method("set_member_active"):
+		active_freeform_jam_context.set_member_active(npc, true)
+
+	if active_freeform_jam_context.has_method("refresh_arrangement"):
+		active_freeform_jam_context.refresh_arrangement()
 
 	_refresh_freeform_leader()
 
@@ -1333,6 +1343,9 @@ func try_add_manual_npc_to_nearby_jam(npc: Node) -> bool:
 		var jam_spot: Node = nearby_jam_spot["source"]
 
 		if jam_spot != null and is_instance_valid(jam_spot):
+			if npc.has_method("reset_temporary_music_state_for_jam_join"):
+				npc.reset_temporary_music_state_for_jam_join()
+
 			if jam_spot.has_method("register_npc"):
 				jam_spot.register_npc(npc)
 
@@ -1350,7 +1363,64 @@ func try_add_manual_npc_to_nearby_jam(npc: Node) -> bool:
 			var distance: float = npc_position.distance_to(anchor.global_position)
 
 			if distance <= join_radius:
+				if npc.has_method("reset_temporary_music_state_for_jam_join"):
+					npc.reset_temporary_music_state_for_jam_join()
+
 				_add_npc_to_active_freeform_jam(npc, true)
 				return true
 
 	return false
+
+
+func update_following_npc_jam_priorities() -> void:
+	for npc in get_tree().get_nodes_in_group("npc_musician"):
+		if npc == null or not is_instance_valid(npc):
+			continue
+
+		if not npc.has_method("is_following_player"):
+			continue
+
+		if not npc.is_following_player():
+			continue
+
+		if not npc is Node2D:
+			continue
+
+		# Active JamSpot priority.
+		var nearby_jam_spot: Dictionary = _find_best_active_jam_spot(npc.global_position)
+
+		if not nearby_jam_spot.is_empty():
+			var jam_spot: Node = nearby_jam_spot["source"]
+
+			if jam_spot != null and is_instance_valid(jam_spot):
+				if npc.has_method("is_controlled_by_active_jam_spot"):
+					if npc.is_controlled_by_active_jam_spot():
+						continue
+
+				if npc.has_method("reset_temporary_music_state_for_jam_join"):
+					npc.reset_temporary_music_state_for_jam_join()
+
+				if jam_spot.has_method("register_npc"):
+					jam_spot.register_npc(npc)
+
+				if jam_spot.has_method("refresh_npc_activity"):
+					jam_spot.refresh_npc_activity(npc)
+
+				continue
+
+		# Existing freeform jam priority.
+		if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+			if active_freeform_members.has(npc):
+				continue
+
+			var anchor: Node = active_freeform_anchor
+
+			if anchor != null and is_instance_valid(anchor) and anchor is Node2D:
+				var join_radius: float = _get_npc_join_radius(anchor)
+				var distance: float = npc.global_position.distance_to(anchor.global_position)
+
+				if distance <= join_radius:
+					if npc.has_method("reset_temporary_music_state_for_jam_join"):
+						npc.reset_temporary_music_state_for_jam_join()
+
+					_add_npc_to_active_freeform_jam(npc, false)

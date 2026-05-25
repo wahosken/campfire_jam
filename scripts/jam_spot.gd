@@ -14,6 +14,10 @@ extends Node2D
 @onready var jam_area: Area2D = $JamArea
 @onready var jam_collision_shape: CollisionShape2D = $JamArea/CollisionShape2D
 
+@export var active_refresh_interval := 0.25
+
+var active_refresh_timer := 0.0
+
 var registered_npcs: Array[Node] = []
 var jam_is_active := false
 
@@ -43,6 +47,19 @@ func _ready() -> void:
 	#	call_deferred("start_jam")
 
 
+func _process(delta: float) -> void:
+	if not jam_is_active:
+		return
+
+	active_refresh_timer += delta
+
+	if active_refresh_timer < active_refresh_interval:
+		return
+
+	active_refresh_timer = 0.0
+	_rescan_and_refresh_active_jam()
+
+
 func start_if_auto_enabled() -> void:
 	if auto_start_on_ready:
 		start_jam()
@@ -65,10 +82,11 @@ func register_npc(npc: Node) -> void:
 	if npc.has_method("set_current_jam_spot"):
 		npc.set_current_jam_spot(self)
 
-	# Important:
-	# Merely being inside the JamSpot does not mean JamSpot controls the NPC.
-	# Only active JamSpots take control.
-	refresh_npc_activity(npc)
+	if jam_is_active:
+		call_deferred("refresh_all_npc_activity")
+	else:
+		refresh_npc_activity(npc)
+
 	_update_label()
 
 
@@ -100,6 +118,7 @@ func start_jam() -> void:
 		return
 
 	jam_is_active = true
+	active_refresh_timer = 0.0
 	_sync_jam_context_song()
 
 	_rescan_npcs_inside_jam_area()
@@ -113,7 +132,9 @@ func stop_jam() -> void:
 
 	jam_is_active = false
 
-	for npc in registered_npcs.duplicate():
+	var npcs_to_release: Array[Node] = registered_npcs.duplicate()
+
+	for npc in npcs_to_release:
 		if npc == null or not is_instance_valid(npc):
 			continue
 
@@ -126,16 +147,25 @@ func stop_jam() -> void:
 			if npc.has_method("set_current_jam_context"):
 				npc.set_current_jam_context(null)
 
-			if npc.has_method("set_current_jam_spot"):
-				npc.set_current_jam_spot(null)
-
 			if npc.has_method("set_current_part"):
 				npc.set_current_part("silent")
 
-		# Reset temporary JamSpot opt-out.
-		if npc.has_method("set_npc_enabled"):
-			npc.set_npc_enabled(true)
-		elif "npc_enabled" in npc:
+			var source: Node = null
+
+			if npc.has_method("get_current_audio_source"):
+				source = npc.get_current_audio_source()
+			elif npc.has_method("get_jam_audio_source"):
+				source = npc.get_jam_audio_source()
+
+			if source != null:
+				if source.has_method("stop_all"):
+					source.stop_all()
+				elif source.has_method("stop_solo_jam"):
+					source.stop_solo_jam()
+
+		# Reset availability only.
+		# Do not call set_npc_enabled(true), because that can restart music.
+		if "npc_enabled" in npc:
 			npc.npc_enabled = true
 
 		if npc.has_method("set_current_jam_spot"):
@@ -235,6 +265,9 @@ func refresh_npc_activity(npc: Node) -> void:
 		return
 
 	# JamSpot is active and NPC is enabled, so JamSpot takes control.
+	if npc.has_method("reset_temporary_music_state_for_jam_join"):
+		npc.reset_temporary_music_state_for_jam_join()
+
 	if npc.has_method("begin_jam_spot_control"):
 		npc.begin_jam_spot_control(self, jam_context)
 	else:
@@ -411,3 +444,48 @@ func _debug_spot(message: String) -> void:
 			str(jam_is_active),
 			registered_npcs.size()
 		])
+
+
+func _rescan_and_refresh_active_jam() -> void:
+	if not jam_is_active:
+		return
+
+	if jam_area == null:
+		return
+
+	var found_npcs: Array[Node] = []
+
+	for area in jam_area.get_overlapping_areas():
+		var possible_npc: Node = area.get_parent()
+
+		if possible_npc != null and is_instance_valid(possible_npc):
+			if possible_npc.is_in_group("npc_musician"):
+				if not found_npcs.has(possible_npc):
+					found_npcs.append(possible_npc)
+
+	for body in jam_area.get_overlapping_bodies():
+		if body != null and is_instance_valid(body):
+			if body.is_in_group("npc_musician"):
+				if not found_npcs.has(body):
+					found_npcs.append(body)
+
+	# Add newly found NPCs.
+	for npc in found_npcs:
+		if not registered_npcs.has(npc):
+			registered_npcs.append(npc)
+
+		if npc.has_method("set_current_jam_spot"):
+			npc.set_current_jam_spot(self)
+
+	# Remove NPCs that are no longer actually inside the JamArea.
+	for npc in registered_npcs.duplicate():
+		if npc == null or not is_instance_valid(npc):
+			registered_npcs.erase(npc)
+			continue
+
+		if not found_npcs.has(npc):
+			unregister_npc(npc)
+
+	# Refresh the whole group together.
+	refresh_all_npc_activity()
+	_update_label()

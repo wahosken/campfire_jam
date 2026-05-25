@@ -99,8 +99,9 @@ func set_tracks_audible(rhythm_on: bool, melody_on: bool) -> void:
 	_apply_track_volumes(rhythm_on, melody_on)
 
 
-func set_track_volumes(rhythm_on: bool, melody_on: bool, rhythm_db := FULL_DB, melody_db := FULL_DB) -> void:
-	solo_override = false
+func set_track_volumes(rhythm_on: bool, melody_on: bool, rhythm_db := 0.0, melody_db := 0.0) -> void:
+	if solo_override:
+		return
 
 	if rhythm_player != null:
 		rhythm_player.volume_db = rhythm_db if rhythm_on else MUTED_DB
@@ -218,3 +219,7 @@ func _apply_song_streams() -> void:
 
 	_prepare_player(rhythm_player)
 	_prepare_player(melody_player)
+
+
+func force_jam_control() -> void:
+	solo_override = false
