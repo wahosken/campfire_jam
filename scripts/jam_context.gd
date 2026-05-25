@@ -129,14 +129,22 @@ func set_member_active(member: Node, should_be_active: bool) -> void:
 
 
 func _activate_member(member: Node) -> void:
-	if not active_members.has(member):
+	var was_already_active := active_members.has(member)
+
+	if not was_already_active:
 		active_members.append(member)
 
 	if not song_started:
 		_start_song()
-	else:
+		return
+
+	# If this member was already active, do NOT restart their audio.
+	# JamSpot refreshes can call set_member_active(member, true) repeatedly,
+	# and restarting synced audio every refresh causes audible sync fighting.
+	if not was_already_active:
 		_start_member_audio(member)
-		_update_arrangement()
+
+	_update_arrangement()
 
 
 func _deactivate_member(member: Node) -> void:

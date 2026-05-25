@@ -1,12 +1,8 @@
 extends Node
 
-@export var bpm := 100.0
-@export var beats_per_measure := 4
-@export var total_measures := 8
 @export var debug_logs := false
 
 var player_is_near_active_jam := false
-var current_song_id := "song_01"
 var jam_enabled := true
 
 var audio_sources := {
@@ -19,13 +15,9 @@ func _ready() -> void:
 	add_to_group("music_system")
 
 
-func set_current_song_id(new_song_id: String) -> void:
-	current_song_id = new_song_id
-
-
-func get_current_song_id() -> String:
-	return current_song_id
-
+# ------------------------------------------------------------
+# Player jam proximity flag
+# ------------------------------------------------------------
 
 func set_player_near_active_jam(is_near_jam: bool) -> void:
 	player_is_near_active_jam = is_near_jam
@@ -35,6 +27,10 @@ func is_player_near_active_jam() -> bool:
 	return player_is_near_active_jam
 
 
+# ------------------------------------------------------------
+# Global jam enabled flag
+# ------------------------------------------------------------
+
 func set_jam_enabled(is_enabled: bool) -> void:
 	jam_enabled = is_enabled
 
@@ -42,6 +38,10 @@ func set_jam_enabled(is_enabled: bool) -> void:
 func is_jam_enabled() -> bool:
 	return jam_enabled
 
+
+# ------------------------------------------------------------
+# Audio source registry
+# ------------------------------------------------------------
 
 func register_audio_source(instrument_name: String, owner_type: String, source: Node) -> void:
 	if source == null:
@@ -125,6 +125,10 @@ func stop_all_registered_audio() -> void:
 				source.stop_solo_jam()
 
 
+# ------------------------------------------------------------
+# Debug/UI helpers
+# ------------------------------------------------------------
+
 func get_registered_audio_debug_text() -> String:
 	var lines: Array[String] = []
 
@@ -142,16 +146,22 @@ func get_registered_audio_debug_text() -> String:
 	return "\n".join(lines)
 
 
+func get_arrangement_debug_text() -> String:
+	return "MusicSystem is a registry shell. JamContext owns arrangements."
+
+
+# ------------------------------------------------------------
+# Legacy compatibility no-ops
+# ------------------------------------------------------------
+# These exist so old scripts/UI do not crash while the project transitions.
+# Delete them later only after a project-wide search confirms there are no callers.
+
 func get_active_instruments_text() -> String:
 	return "None"
 
 
 func get_featured_instrument_text() -> String:
 	return "None"
-
-
-func get_arrangement_debug_text() -> String:
-	return "MusicSystem is now a compatibility shell. JamContext owns arrangements."
 
 
 func is_song_started() -> bool:
@@ -162,8 +172,6 @@ func get_featured_instrument() -> String:
 	return ""
 
 
-# Legacy compatibility.
-# These are intentionally no-ops now that JamContext owns arrangements.
 func set_npc_jam_enabled(_is_enabled: bool) -> void:
 	pass
 
@@ -199,6 +207,10 @@ func is_player_instrument_active_in_campfire(_instrument_name: String) -> bool:
 func update_player_jam_area(_player_position: Vector2) -> void:
 	pass
 
+
+# ------------------------------------------------------------
+# Debug
+# ------------------------------------------------------------
 
 func _debug_log(message: String) -> void:
 	if debug_logs:

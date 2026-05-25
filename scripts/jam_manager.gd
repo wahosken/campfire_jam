@@ -294,7 +294,9 @@ func _create_player_carried_freeform_context(player: Node) -> void:
 
 	var player_song_id := "song_01"
 
-	if player.has_method("get_selected_song_id"):
+	if player.has_method("get_current_playing_song_id"):
+		player_song_id = player.get_current_playing_song_id()
+	elif player.has_method("get_selected_song_id"):
 		player_song_id = player.get_selected_song_id()
 
 	if active_freeform_jam_context.has_method("apply_song_id"):
@@ -485,9 +487,11 @@ func start_manual_freeform_npc(npc: Node) -> bool:
 
 	var freeform_song_id := "song_01"
 
-	# If the player is already playing, the manual NPC joins the player's song.
+	# If the player is already playing, the manual NPC joins the player's current playing song.
 	if player != null and player_is_playing:
-		if player.has_method("get_selected_song_id"):
+		if player.has_method("get_current_playing_song_id"):
+			freeform_song_id = player.get_current_playing_song_id()
+		elif player.has_method("get_selected_song_id"):
 			freeform_song_id = player.get_selected_song_id()
 
 		if active_freeform_jam_context == null or not is_instance_valid(active_freeform_jam_context):

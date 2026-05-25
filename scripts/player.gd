@@ -44,6 +44,7 @@ var instrument_visual_tween: Tween = null
 var current_instrument_index := 0
 
 var selected_song_id := "song_01"
+var current_playing_song_id := "song_01"
 
 var instruments := [
 	{
@@ -98,6 +99,9 @@ func _physics_process(delta: float) -> void:
 	_check_for_jam_transition_while_playing()
 
 	if _is_npc_dialogue_prompt_open():
+		if is_playing_instrument:
+			stop_instrument()
+
 		velocity = Vector2.ZERO
 		move_and_slide()
 		return
@@ -223,6 +227,8 @@ func stop_instrument() -> void:
 
 
 func _join_current_jam_context() -> void:
+	current_playing_song_id = _get_song_id_from_context(current_jam_context)
+
 	started_in_synced_jam = true
 	is_playing_direct_solo = false
 	jam_attach_grace_timer = jam_attach_grace_time
@@ -242,6 +248,7 @@ func _join_current_jam_context() -> void:
 func _start_direct_solo() -> void:
 	is_playing_direct_solo = true
 	current_actual_part = current_requested_part
+	current_playing_song_id = selected_song_id
 
 	var current_audio_source: Node = get_current_audio_source()
 
@@ -249,7 +256,7 @@ func _start_direct_solo() -> void:
 		return
 
 	if current_audio_source.has_method("set_song_id"):
-		current_audio_source.set_song_id(selected_song_id)
+		current_audio_source.set_song_id(current_playing_song_id)
 
 	if current_audio_source.has_method("start_solo_tracks"):
 		current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
@@ -304,7 +311,14 @@ func detach_from_current_jam_to_carried_solo() -> void:
 	var saved_melody := wants_melody
 	var saved_requested_part := current_requested_part
 
+	# Important:
+	# Carry the song from the jam being left.
+	# Do not use selected_song_id here.
+	var saved_song_id := current_playing_song_id
+
 	if previous_context != null and is_instance_valid(previous_context):
+		saved_song_id = _get_song_id_from_context(previous_context)
+
 		if previous_context.has_method("detach_member_preserve_audio"):
 			previous_context.detach_member_preserve_audio(self)
 		else:
@@ -325,12 +339,13 @@ func detach_from_current_jam_to_carried_solo() -> void:
 	wants_melody = saved_melody
 	current_requested_part = saved_requested_part
 	current_actual_part = current_requested_part
+	current_playing_song_id = saved_song_id
 
 	var current_audio_source: Node = get_current_audio_source()
 
 	if current_audio_source != null:
 		if current_audio_source.has_method("set_song_id"):
-			current_audio_source.set_song_id(selected_song_id)
+			current_audio_source.set_song_id(current_playing_song_id)
 
 		if current_audio_source.has_method("start_solo_tracks"):
 			current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
@@ -474,7 +489,7 @@ func cycle_instrument() -> void:
 
 			if new_audio_source != null:
 				if new_audio_source.has_method("set_song_id"):
-					new_audio_source.set_song_id(selected_song_id)
+					new_audio_source.set_song_id(current_playing_song_id)
 
 				if new_audio_source.has_method("start_solo_tracks"):
 					new_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
@@ -495,6 +510,8 @@ func cycle_instrument() -> void:
 
 
 func cycle_song() -> void:
+	# Song selection only affects the next fresh start from silence.
+	# It should not change the song while the player is already playing/carrying a jam.
 	if is_playing_instrument:
 		return
 
@@ -503,7 +520,22 @@ func cycle_song() -> void:
 	else:
 		selected_song_id = "song_01"
 
+	current_playing_song_id = selected_song_id
+
 	print("Selected Song: ", selected_song_id)
+
+	_update_part_label()
+
+
+func _get_song_id_from_context(jam_context: Node) -> String:
+	if jam_context != null and is_instance_valid(jam_context):
+		if jam_context.has_method("get_song_id"):
+			return jam_context.get_song_id()
+
+		if "song_id" in jam_context:
+			return str(jam_context.song_id)
+
+	return selected_song_id
 
 
 # ------------------------------------------------------------
@@ -609,6 +641,9 @@ func get_closest_prompt_interactable() -> Node:
 func _open_npc_prompt(npc: Node) -> void:
 	if npc == null:
 		return
+
+	if is_playing_instrument:
+		stop_instrument()
 
 	if npc_dialogue_prompt == null:
 		npc_dialogue_prompt = get_tree().get_first_node_in_group("npc_dialogue_prompt")
@@ -771,6 +806,13 @@ func get_current_featured_instrument_text() -> String:
 
 
 func get_selected_song_id() -> String:
+	return selected_song_id
+
+
+func get_current_playing_song_id() -> String:
+	if is_playing_instrument:
+		return current_playing_song_id
+
 	return selected_song_id
 
 
