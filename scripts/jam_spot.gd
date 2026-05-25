@@ -131,7 +131,12 @@ func stop_jam() -> void:
 			if npc.has_method("set_current_part"):
 				npc.set_current_part("silent")
 
-		# Important: fully release physical JamSpot tracking too.
+		# Reset temporary JamSpot opt-out.
+		if npc.has_method("set_npc_enabled"):
+			npc.set_npc_enabled(true)
+		elif "npc_enabled" in npc:
+			npc.npc_enabled = true
+
 		if npc.has_method("set_current_jam_spot"):
 			npc.set_current_jam_spot(null)
 

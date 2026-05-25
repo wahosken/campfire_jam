@@ -215,3 +215,6 @@ func _apply_song_streams() -> void:
 
 			if melody_player != null:
 				melody_player.stream = song_01_melody_stream
+
+	_prepare_player(rhythm_player)
+	_prepare_player(melody_player)

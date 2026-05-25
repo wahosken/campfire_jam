@@ -82,12 +82,20 @@ func _ready() -> void:
 
 
 func interact() -> void:
-	if is_controlled_by_active_jam_spot():
-		set_npc_enabled(not npc_enabled)
-		return
+	if current_jam_spot != null:
+		if current_jam_spot.has_method("is_jam_active"):
+			if current_jam_spot.is_jam_active():
+				set_npc_enabled(not npc_enabled)
+
+				# If turned back on inside an active JamSpot,
+				# immediately rejoin/sync to that JamSpot instead of starting freeform.
+				if npc_enabled:
+					if current_jam_spot.has_method("refresh_npc_activity"):
+						current_jam_spot.refresh_npc_activity(self)
+
+				return
 
 	# AUTO follower becomes MANUAL / indefinite.
-	# This means the player has intentionally invited/locked this NPC into the jam.
 	if freeform_mode == FreeformMode.AUTO:
 		if jam_manager != null and jam_manager.has_method("promote_auto_npc_to_manual"):
 			jam_manager.promote_auto_npc_to_manual(self)
@@ -97,8 +105,6 @@ func interact() -> void:
 		return
 
 	# MANUAL NPC toggles off.
-	# JamManager decides whether they fully stop or fall back into AUTO
-	# because another manual/freeform leader is still active nearby.
 	if freeform_mode == FreeformMode.MANUAL:
 		if jam_manager != null and jam_manager.has_method("toggle_manual_npc_off"):
 			jam_manager.toggle_manual_npc_off(self)
@@ -240,10 +246,12 @@ func set_npc_enabled(is_enabled: bool) -> void:
 
 	npc_enabled = is_enabled
 
-	if current_jam_spot != null and current_jam_spot.has_method("refresh_npc_activity"):
-		current_jam_spot.refresh_npc_activity(self)
-	else:
-		set_actual_playing(npc_enabled)
+	if current_jam_spot != null:
+		if current_jam_spot.has_method("refresh_npc_activity"):
+			current_jam_spot.refresh_npc_activity(self)
+		return
+
+	set_actual_playing(npc_enabled)
 
 
 func is_npc_enabled() -> bool:

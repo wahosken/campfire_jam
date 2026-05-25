@@ -9,10 +9,10 @@ var songs := {
 		"key": "Unknown"
 	},
 	"song_02": {
-		"display_name": "Song 2",
+		"display_name": "Second Song",
 		"bpm": 90.0,
 		"beats_per_measure": 6,
-		"total_measures": 8,
+		"total_measures": 4,
 		"key": "Unknown"
 	}
 }
