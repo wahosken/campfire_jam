@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://d1ifhrg7vlxou"]
+
+[ext_resource type="Script" uid="uid://bka4w7flcv4xk" path="res://scripts/npc_dialogue_prompt.gd" id="1_o8rpa"]
+
+[node name="NPCDialoguePrompt" type="CanvasLayer" unique_id=1416366564]
+process_mode = 3
+script = ExtResource("1_o8rpa")
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=1408573504]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -29.5
+offset_right = 20.0
+offset_bottom = 29.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer" unique_id=1115383134]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer" unique_id=1266463386]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer" unique_id=2001209077]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1555436950]
+layout_mode = 2
+text = "Name"
+horizontal_alignment = 1
+
+[node name="PlayButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1119360975]
+layout_mode = 2
+text = "Play/Stop"
+
+[node name="FollowButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=520019822]
+layout_mode = 2
+text = "Follow/Unfollow"
+
+[node name="CloseButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=853271295]
+layout_mode = 2
+text = "Close"

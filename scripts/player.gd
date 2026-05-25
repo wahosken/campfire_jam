@@ -12,6 +12,8 @@ extends CharacterBody2D
 
 @onready var part_label: Label = $PlayerPartLabel
 
+var npc_dialogue_prompt: Node = null
+
 var current_jam_context: Node = null
 
 var current_requested_part := "silent"
@@ -63,6 +65,8 @@ const PLAYING_SCALE := Vector2(1.08, 0.94)
 func _ready() -> void:
 	add_to_group("player")
 
+	npc_dialogue_prompt = get_tree().get_first_node_in_group("npc_dialogue_prompt")
+
 	interaction_area.area_entered.connect(_on_interaction_area_entered)
 	interaction_area.area_exited.connect(_on_interaction_area_exited)
 
@@ -82,6 +86,11 @@ func _physics_process(_delta: float) -> void:
 		jam_manager.update_player_jam_proximity(global_position)
 
 	_check_for_jam_transition_while_playing()
+
+	if _is_npc_dialogue_prompt_open():
+		velocity = Vector2.ZERO
+		move_and_slide()
+		return
 
 	_handle_movement()
 	_handle_npc_interact_input()
@@ -191,13 +200,9 @@ func stop_instrument() -> void:
 		if current_jam_context.has_method("set_member_active"):
 			current_jam_context.set_member_active(self, false)
 
-	if jam_manager != null:
-		if jam_manager.has_method("handle_player_stopped_playing"):
-			jam_manager.handle_player_stopped_playing(previous_jam_context)
+	if jam_manager != null and jam_manager.has_method("handle_player_stopped_playing"):
+		jam_manager.handle_player_stopped_playing(previous_jam_context)
 
-	# Important:
-	# This is a true player stop, not a recategorization.
-	# Force the player's audio off after any JamManager/JamContext cleanup.
 	if current_audio_source != null:
 		if current_audio_source.has_method("stop_all"):
 			current_audio_source.stop_all()
@@ -250,8 +255,12 @@ func cycle_instrument() -> void:
 
 			var new_audio_source: Node = get_current_audio_source()
 
-			if new_audio_source != null and new_audio_source.has_method("start_solo_tracks"):
-				new_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
+			if new_audio_source != null:
+				if new_audio_source.has_method("set_song_id"):
+					new_audio_source.set_song_id(selected_song_id)
+
+				if new_audio_source.has_method("start_solo_tracks"):
+					new_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
 		else:
 			if current_jam_context != null and is_instance_valid(current_jam_context):
 				if current_jam_context.has_method("set_member_requested_parts"):
@@ -281,13 +290,6 @@ func _check_for_jam_transition_while_playing() -> void:
 
 			if jam_manager.has_method("is_freeform_jam_context"):
 				is_freeform = jam_manager.is_freeform_jam_context(current_jam_context)
-
-			if not is_freeform:
-				if jam_manager.has_method("is_player_near_current_jamspot_context"):
-					var still_near_jamspot: bool = jam_manager.is_player_near_current_jamspot_context(current_jam_context)
-
-					if not still_near_jamspot:
-						detach_from_current_jam_to_carried_solo()
 
 			if is_freeform:
 				var still_near_manual_freeform := true
@@ -427,10 +429,17 @@ func get_current_audio_source() -> Node:
 
 
 func get_closest_npc() -> Node:
-	return get_closest_interactable()
+	var closest: Node = get_closest_interactable()
+
+	if closest != null and closest.is_in_group("npc_musician"):
+		return closest
+
+	return null
 
 
 func get_closest_interactable() -> Node:
+	_clean_nearby_interactables()
+
 	if nearby_interactables.is_empty():
 		return null
 
@@ -438,7 +447,14 @@ func get_closest_interactable() -> Node:
 	var closest_distance := INF
 
 	for node in nearby_interactables:
-		if not is_instance_valid(node):
+		if node == null or not is_instance_valid(node):
+			continue
+
+		if node.has_method("is_interaction_temporarily_disabled"):
+			if node.is_interaction_temporarily_disabled():
+				continue
+
+		if not node is Node2D:
 			continue
 
 		var distance := global_position.distance_to(node.global_position)
@@ -451,6 +467,8 @@ func get_closest_interactable() -> Node:
 
 
 func get_closest_prompt_interactable() -> Node:
+	_clean_nearby_interactables()
+
 	if nearby_interactables.is_empty():
 		return null
 
@@ -458,10 +476,17 @@ func get_closest_prompt_interactable() -> Node:
 	var closest_distance := INF
 
 	for node in nearby_interactables:
-		if not is_instance_valid(node):
+		if node == null or not is_instance_valid(node):
 			continue
 
 		if node.is_in_group("jam_spot"):
+			continue
+
+		if node.has_method("is_interaction_temporarily_disabled"):
+			if node.is_interaction_temporarily_disabled():
+				continue
+
+		if not node is Node2D:
 			continue
 
 		var distance := global_position.distance_to(node.global_position)
@@ -506,6 +531,48 @@ func get_current_featured_instrument_text() -> String:
 	return ""
 
 
+func get_selected_song_id() -> String:
+	return selected_song_id
+
+
+func cycle_song() -> void:
+	if is_playing_instrument:
+		return
+
+	if selected_song_id == "song_01":
+		selected_song_id = "song_02"
+	else:
+		selected_song_id = "song_01"
+
+	print("Selected Song: ", selected_song_id)
+
+
+func clear_nearby_interactables() -> void:
+	nearby_interactables.clear()
+
+
+func refresh_nearby_interactables() -> void:
+	nearby_interactables.clear()
+
+	if interaction_area == null:
+		return
+
+	for area in interaction_area.get_overlapping_areas():
+		var possible_interactable: Node = _resolve_interactable_from_area(area)
+
+		if possible_interactable == null:
+			continue
+
+		_add_nearby_interactable(possible_interactable)
+
+	for body in interaction_area.get_overlapping_bodies():
+		if body == null or not is_instance_valid(body):
+			continue
+
+		if body.is_in_group("interactable") or body.is_in_group("npc_musician"):
+			_add_nearby_interactable(body)
+
+
 func _register_player_audio_sources() -> void:
 	if music_system == null:
 		return
@@ -518,6 +585,11 @@ func _register_player_audio_sources() -> void:
 
 
 func _handle_movement() -> void:
+	if _is_npc_dialogue_prompt_open():
+		velocity = Vector2.ZERO
+		move_and_slide()
+		return
+
 	var input_vector := Vector2.ZERO
 
 	input_vector.x = Input.get_axis("move_left", "move_right")
@@ -530,11 +602,37 @@ func _handle_movement() -> void:
 
 
 func _handle_npc_interact_input() -> void:
-	if Input.is_action_just_pressed("interact"):
-		var closest_interactable: Node = get_closest_interactable()
+	if not Input.is_action_just_pressed("interact"):
+		return
 
-		if closest_interactable != null and closest_interactable.has_method("interact"):
-			closest_interactable.interact()
+	if _is_npc_dialogue_prompt_open():
+		return
+
+	var closest_interactable: Node = get_closest_interactable()
+
+	if closest_interactable == null:
+		return
+
+	# NPCs never execute direct interact behavior from the player.
+	# They only open NPCDialoguePrompt.
+	if closest_interactable.is_in_group("npc_musician"):
+		_open_npc_prompt(closest_interactable)
+		return
+
+	# JamSpot interaction proxies and other non-NPC interactables can still use interact().
+	if closest_interactable.has_method("interact"):
+		closest_interactable.interact()
+
+
+func _open_npc_prompt(npc: Node) -> void:
+	if npc == null:
+		return
+
+	if npc_dialogue_prompt == null:
+		npc_dialogue_prompt = get_tree().get_first_node_in_group("npc_dialogue_prompt")
+
+	if npc_dialogue_prompt != null and npc_dialogue_prompt.has_method("open_for_npc"):
+		npc_dialogue_prompt.open_for_npc(npc)
 
 
 func _handle_instrument_cycle_input() -> void:
@@ -563,10 +661,6 @@ func _update_part_label() -> void:
 
 	var instrument_name := get_current_instrument_display_name()
 	var part_text := "silent"
-	
-	if part_text == "waiting":
-		part_label.text = "%s: Waiting" % instrument_name
-		return
 
 	if is_playing_direct_solo:
 		part_text = current_requested_part
@@ -576,6 +670,10 @@ func _update_part_label() -> void:
 		part_text = current_jam_context.get_current_part_for_member(self)
 	elif is_playing_instrument:
 		part_text = current_requested_part
+
+	if part_text == "waiting":
+		part_label.text = "%s: Waiting" % instrument_name
+		return
 
 	if part_text == "silent":
 		part_label.text = "%s: ----" % instrument_name
@@ -634,34 +732,77 @@ func _stop_instrument_visuals() -> void:
 
 
 func _on_interaction_area_entered(area: Area2D) -> void:
-	var possible_interactable: Node = area
+	var possible_interactable: Node = _resolve_interactable_from_area(area)
 
-	if not possible_interactable.is_in_group("interactable"):
-		possible_interactable = area.get_parent()
+	if possible_interactable == null:
+		return
 
-	if possible_interactable.is_in_group("interactable") or possible_interactable.is_in_group("npc_musician"):
-		if not nearby_interactables.has(possible_interactable):
-			nearby_interactables.append(possible_interactable)
+	_add_nearby_interactable(possible_interactable)
 
 
 func _on_interaction_area_exited(area: Area2D) -> void:
-	var possible_interactable: Node = area
+	var possible_interactable: Node = _resolve_interactable_from_area(area)
 
-	if not possible_interactable.is_in_group("interactable"):
-		possible_interactable = area.get_parent()
+	if possible_interactable == null:
+		return
 
 	if nearby_interactables.has(possible_interactable):
 		nearby_interactables.erase(possible_interactable)
 
 
-func get_selected_song_id() -> String:
-	return selected_song_id
+func _resolve_interactable_from_area(area: Area2D) -> Node:
+	if area == null or not is_instance_valid(area):
+		return null
+
+	# JamSpot interaction proxy areas are interactable themselves.
+	if area.is_in_group("interactable"):
+		return area
+
+	var parent: Node = area.get_parent()
+
+	if parent == null or not is_instance_valid(parent):
+		return null
+
+	if parent.is_in_group("interactable") or parent.is_in_group("npc_musician"):
+		return parent
+
+	return null
 
 
-func cycle_song() -> void:
-	if selected_song_id == "song_01":
-		selected_song_id = "song_02"
-	else:
-		selected_song_id = "song_01"
+func _add_nearby_interactable(node: Node) -> void:
+	if node == null or not is_instance_valid(node):
+		return
 
-	print("Selected Song: ", selected_song_id)
+	if node.has_method("is_interaction_temporarily_disabled"):
+		if node.is_interaction_temporarily_disabled():
+			return
+
+	if not node.is_in_group("interactable") and not node.is_in_group("npc_musician"):
+		return
+
+	if not nearby_interactables.has(node):
+		nearby_interactables.append(node)
+
+
+func _clean_nearby_interactables() -> void:
+	for node in nearby_interactables.duplicate():
+		if node == null or not is_instance_valid(node):
+			nearby_interactables.erase(node)
+			continue
+
+		if node.has_method("is_interaction_temporarily_disabled"):
+			if node.is_interaction_temporarily_disabled():
+				nearby_interactables.erase(node)
+
+
+func _is_npc_dialogue_prompt_open() -> bool:
+	if npc_dialogue_prompt == null:
+		npc_dialogue_prompt = get_tree().get_first_node_in_group("npc_dialogue_prompt")
+
+	if npc_dialogue_prompt == null:
+		return false
+
+	if "visible" in npc_dialogue_prompt:
+		return npc_dialogue_prompt.visible
+
+	return false

@@ -1315,3 +1315,42 @@ func _npc_should_rejoin_as_auto(npc: Node) -> bool:
 			return true
 
 	return false
+
+
+func try_add_manual_npc_to_nearby_jam(npc: Node) -> bool:
+	if npc == null:
+		return false
+
+	if not npc is Node2D:
+		return false
+
+	var npc_position: Vector2 = npc.global_position
+
+	# 1. Active JamSpot wins.
+	var nearby_jam_spot: Dictionary = _find_best_active_jam_spot(npc_position)
+
+	if not nearby_jam_spot.is_empty():
+		var jam_spot: Node = nearby_jam_spot["source"]
+
+		if jam_spot != null and is_instance_valid(jam_spot):
+			if jam_spot.has_method("register_npc"):
+				jam_spot.register_npc(npc)
+
+			if jam_spot.has_method("refresh_npc_activity"):
+				jam_spot.refresh_npc_activity(npc)
+
+			return true
+
+	# 2. Existing freeform jam nearby.
+	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+		var anchor: Node = active_freeform_anchor
+
+		if anchor != null and is_instance_valid(anchor) and anchor is Node2D:
+			var join_radius: float = _get_npc_join_radius(anchor)
+			var distance: float = npc_position.distance_to(anchor.global_position)
+
+			if distance <= join_radius:
+				_add_npc_to_active_freeform_jam(npc, true)
+				return true
+
+	return false

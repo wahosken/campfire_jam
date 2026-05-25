@@ -1,5 +1,7 @@
 extends Node2D
 
+@export var debug_npc_state := false
+
 @export var instrument_name := "bass"
 @export var display_name := ""
 
@@ -8,10 +10,15 @@ extends Node2D
 
 @export var primary_song_id := "song_01"
 
+@export var follow_speed := 120.0
+@export var follow_min_distance := 56.0
+@export var follow_max_distance := 96.0
+
 @onready var interaction_area: Area2D = $InteractionArea
 @onready var sprite: ColorRect = $ColorRect
 @onready var label: Label = $Label
 @onready var audio_source: Node = $InstrumentAudioSource
+
 
 enum BehaviorState {
 	IDLE,
@@ -22,11 +29,13 @@ enum BehaviorState {
 	TRAVELING
 }
 
+
 enum FreeformMode {
 	NONE,
 	AUTO,
 	MANUAL
 }
+
 
 enum MusicControlMode {
 	NONE,
@@ -36,11 +45,13 @@ enum MusicControlMode {
 	SCHEDULE
 }
 
-var music_control_mode := MusicControlMode.NONE
 
 var behavior_state := BehaviorState.IDLE
 var freeform_mode := FreeformMode.NONE
+var music_control_mode := MusicControlMode.NONE
+
 var proximity_blocked_until_reset := false
+var interaction_temporarily_disabled := false
 
 var jam_manager: Node = null
 
@@ -49,11 +60,13 @@ var current_jam_context: Node = null
 
 var npc_enabled := true
 var wants_to_play := false
-
 var wants_rhythm := false
 var wants_melody := false
 
 var current_part := "silent"
+
+var following_player := false
+var follow_target: Node = null
 
 var instrument_visual_tween: Tween = null
 
@@ -81,73 +94,33 @@ func _ready() -> void:
 	_update_label()
 
 
+func _process(delta: float) -> void:
+	_update_follow_player(delta)
+
+
+# Basic interact should ONLY open the prompt.
+# No music state should change from raw interaction anymore.
 func interact() -> void:
-	if current_jam_spot != null:
-		if current_jam_spot.has_method("is_jam_active"):
-			if current_jam_spot.is_jam_active():
-				set_npc_enabled(not npc_enabled)
-
-				# If turned back on inside an active JamSpot,
-				# immediately rejoin/sync to that JamSpot instead of starting freeform.
-				if npc_enabled:
-					if current_jam_spot.has_method("refresh_npc_activity"):
-						current_jam_spot.refresh_npc_activity(self)
-
-				return
-
-	# AUTO follower becomes MANUAL / indefinite.
-	if freeform_mode == FreeformMode.AUTO:
-		if jam_manager != null and jam_manager.has_method("promote_auto_npc_to_manual"):
-			jam_manager.promote_auto_npc_to_manual(self)
-		else:
-			start_manual_freeform()
-
+	if interaction_temporarily_disabled:
 		return
 
-	# MANUAL NPC toggles off.
-	if freeform_mode == FreeformMode.MANUAL:
-		if jam_manager != null and jam_manager.has_method("toggle_manual_npc_off"):
-			jam_manager.toggle_manual_npc_off(self)
-		elif jam_manager != null and jam_manager.has_method("stop_manual_freeform_for_npc"):
-			jam_manager.stop_manual_freeform_for_npc(self)
-		else:
-			stop_freeform_immediately()
+	var dialogue_prompt: Node = get_tree().get_first_node_in_group("npc_dialogue_prompt")
 
-		return
-
-	# Idle NPC starts an indefinite/manual freeform jam.
-	freeform_mode = FreeformMode.MANUAL
-	music_control_mode = MusicControlMode.FREEFORM_MANUAL
-	reset_auto_block()
-
-	var started_with_manager := false
-
-	if jam_manager != null and jam_manager.has_method("start_manual_freeform_npc"):
-		started_with_manager = jam_manager.start_manual_freeform_npc(self)
-
-	if not started_with_manager:
-		set_requested_parts(true, true)
-		set_actual_playing(true)
+	if dialogue_prompt != null and dialogue_prompt.has_method("open_for_npc"):
+		dialogue_prompt.open_for_npc(self)
 
 
+# Deprecated safety wrappers.
+# Keep these harmless so old accidental calls do not toggle music.
 func start_music() -> void:
-	if current_jam_spot != null:
-		set_npc_enabled(true)
-		return
-
-	freeform_mode = FreeformMode.MANUAL
-	set_requested_parts(true, true)
-	set_actual_playing(true)
+	pass
 
 
 func stop_music() -> void:
-	if current_jam_spot != null:
-		set_npc_enabled(false)
-		return
-
-	stop_freeform_immediately()
+	pass
 
 
+# Called by JamManager when this NPC auto-joins a freeform jam.
 func start_auto_freeform() -> void:
 	if not can_use_freeform_logic():
 		return
@@ -159,6 +132,7 @@ func start_auto_freeform() -> void:
 	set_actual_playing(true)
 
 
+# Called by JamManager when this NPC is committed/indefinite.
 func start_manual_freeform() -> void:
 	if not can_use_freeform_logic():
 		return
@@ -171,6 +145,8 @@ func start_manual_freeform() -> void:
 	set_actual_playing(true)
 
 
+# Internal control method used by JamManager.
+# This is allowed to stop music, but should not be called by raw interact.
 func stop_freeform_immediately() -> void:
 	if freeform_mode == FreeformMode.AUTO or freeform_mode == FreeformMode.MANUAL:
 		music_control_mode = MusicControlMode.NONE
@@ -225,8 +201,6 @@ func is_available_for_player_accompaniment() -> bool:
 	if wants_to_play:
 		return false
 
-	# Only block freeform if another non-inactive context is actually controlling this NPC.
-	# Being inside an inactive JamSpot should not count.
 	if current_jam_context != null:
 		if music_control_mode == MusicControlMode.JAM_SPOT:
 			return false
@@ -241,16 +215,19 @@ func is_available_for_player_accompaniment() -> bool:
 
 
 func set_npc_enabled(is_enabled: bool) -> void:
-	if npc_enabled == is_enabled:
-		return
+	_debug_state("set_npc_enabled -> " + str(is_enabled))
 
 	npc_enabled = is_enabled
 
-	if current_jam_spot != null:
-		if current_jam_spot.has_method("refresh_npc_activity"):
-			current_jam_spot.refresh_npc_activity(self)
-		return
+	# If inside an active JamSpot, JamSpot decides the actual music state.
+	if current_jam_spot != null and is_instance_valid(current_jam_spot):
+		if current_jam_spot.has_method("is_jam_active") and current_jam_spot.is_jam_active():
+			if current_jam_spot.has_method("refresh_npc_activity"):
+				current_jam_spot.refresh_npc_activity(self)
 
+			return
+
+	# Outside active JamSpot, this is a direct NPC play state.
 	set_actual_playing(npc_enabled)
 
 
@@ -258,7 +235,10 @@ func is_npc_enabled() -> bool:
 	return npc_enabled
 
 
+# Internal control method used by JamSpot/JamManager.
 func set_actual_playing(is_playing: bool) -> void:
+	_debug_state("set_actual_playing -> " + str(is_playing))
+
 	if wants_to_play == is_playing:
 		return
 
@@ -353,6 +333,8 @@ func set_current_jam_context(jam_context: Node) -> void:
 
 
 func begin_jam_spot_control(jam_spot: Node, jam_context: Node) -> void:
+	_debug_state("begin_jam_spot_control from " + str(jam_spot))
+
 	current_jam_spot = jam_spot
 	current_jam_context = jam_context
 
@@ -364,6 +346,8 @@ func begin_jam_spot_control(jam_spot: Node, jam_context: Node) -> void:
 
 
 func end_jam_spot_control(jam_spot: Node) -> void:
+	_debug_state("end_jam_spot_control from " + str(jam_spot))
+
 	if current_jam_spot != jam_spot:
 		return
 
@@ -462,6 +446,182 @@ func get_behavior_state() -> BehaviorState:
 	return behavior_state
 
 
+func set_music_control_mode(new_mode: MusicControlMode) -> void:
+	music_control_mode = new_mode
+
+
+func clear_music_control_mode() -> void:
+	music_control_mode = MusicControlMode.NONE
+
+
+func is_controlled_by_jam_spot() -> bool:
+	return music_control_mode == MusicControlMode.JAM_SPOT
+
+
+func is_controlled_by_active_jam_spot() -> bool:
+	if music_control_mode != MusicControlMode.JAM_SPOT:
+		return false
+
+	if current_jam_spot == null:
+		return false
+
+	if not is_instance_valid(current_jam_spot):
+		return false
+
+	if not current_jam_spot.has_method("is_jam_active"):
+		return false
+
+	return current_jam_spot.is_jam_active()
+
+
+func can_use_freeform_logic() -> bool:
+	return not is_controlled_by_active_jam_spot()
+
+
+func get_primary_song_id() -> String:
+	return primary_song_id
+
+
+# Called ONLY by NPCDialoguePrompt play button.
+func toggle_play_song_request() -> void:
+	_debug_state("toggle_play_song_request START")
+
+	# Active JamSpot owns this NPC.
+	# Prompt button means "sit out / rejoin this JamSpot", not freeform.
+	if current_jam_spot != null and is_instance_valid(current_jam_spot):
+		if current_jam_spot.has_method("is_jam_active") and current_jam_spot.is_jam_active():
+			if npc_enabled:
+				set_npc_enabled(false)
+			else:
+				npc_enabled = true
+
+				freeform_mode = FreeformMode.NONE
+				music_control_mode = MusicControlMode.NONE
+				proximity_blocked_until_reset = false
+
+				wants_to_play = true
+				wants_rhythm = true
+				wants_melody = true
+
+				if current_jam_spot.has_method("refresh_npc_activity"):
+					current_jam_spot.refresh_npc_activity(self)
+
+			return
+
+	# Idle NPC first tries to join any nearby active jam.
+	var joined_existing_jam := false
+
+	if jam_manager != null and jam_manager.has_method("try_add_manual_npc_to_nearby_jam"):
+		joined_existing_jam = jam_manager.try_add_manual_npc_to_nearby_jam(self)
+
+	if joined_existing_jam:
+		return
+
+	# AUTO follower becomes MANUAL / indefinite.
+	if freeform_mode == FreeformMode.AUTO:
+		if jam_manager != null and jam_manager.has_method("promote_auto_npc_to_manual"):
+			jam_manager.promote_auto_npc_to_manual(self)
+		else:
+			start_manual_freeform()
+
+		return
+
+	# MANUAL NPC toggles off/uncommits.
+	if freeform_mode == FreeformMode.MANUAL:
+		if jam_manager != null and jam_manager.has_method("toggle_manual_npc_off"):
+			jam_manager.toggle_manual_npc_off(self)
+		elif jam_manager != null and jam_manager.has_method("stop_manual_freeform_for_npc"):
+			jam_manager.stop_manual_freeform_for_npc(self)
+		else:
+			stop_freeform_immediately()
+
+		return
+
+	# No nearby jam exists, so start this NPC's primary song as manual freeform.
+	freeform_mode = FreeformMode.MANUAL
+	music_control_mode = MusicControlMode.FREEFORM_MANUAL
+	reset_auto_block()
+
+	var started_with_manager := false
+
+	if jam_manager != null and jam_manager.has_method("start_manual_freeform_npc"):
+		started_with_manager = jam_manager.start_manual_freeform_npc(self)
+
+	if not started_with_manager:
+		set_requested_parts(true, true)
+		set_actual_playing(true)
+
+
+func toggle_follow_player() -> void:
+	if following_player:
+		stop_following_player()
+	else:
+		start_following_player()
+
+
+func start_following_player() -> void:
+	var player: Node = get_tree().get_first_node_in_group("player")
+
+	if player == null:
+		return
+
+	follow_target = player
+	following_player = true
+	_update_label()
+
+
+func stop_following_player() -> void:
+	following_player = false
+	follow_target = null
+	_update_label()
+
+
+func is_following_player() -> bool:
+	return following_player
+
+
+func _update_follow_player(delta: float) -> void:
+	if not following_player:
+		return
+
+	if follow_target == null or not is_instance_valid(follow_target):
+		following_player = false
+		_update_label()
+		return
+
+	if not follow_target is Node2D:
+		return
+
+	var distance: float = global_position.distance_to(follow_target.global_position)
+
+	if distance <= follow_min_distance:
+		return
+
+	if distance <= follow_max_distance:
+		return
+
+	var direction: Vector2 = global_position.direction_to(follow_target.global_position)
+	global_position += direction * follow_speed * delta
+
+
+func set_interaction_enabled(is_enabled: bool) -> void:
+	# Do NOT disable Area2D monitoring/monitorable.
+	# JamSpots may use this area for overlap detection.
+	interaction_temporarily_disabled = not is_enabled
+
+
+func disable_interaction_temporarily() -> void:
+	set_interaction_enabled(false)
+
+
+func enable_interaction() -> void:
+	set_interaction_enabled(true)
+
+
+func is_interaction_temporarily_disabled() -> bool:
+	return interaction_temporarily_disabled
+
+
 func _update_label() -> void:
 	if label == null:
 		return
@@ -469,7 +629,10 @@ func _update_label() -> void:
 	var mode_text := ""
 
 	if freeform_mode == FreeformMode.MANUAL:
-		mode_text = " [ON]"
+		mode_text += " [ON]"
+
+	if following_player:
+		mode_text += " [FOLLOW]"
 
 	if current_part == "waiting":
 		label.text = "%s%s: Waiting" % [
@@ -549,40 +712,16 @@ func _set_visual_idle() -> void:
 		sprite.scale = NORMAL_SCALE
 
 
-func set_music_control_mode(new_mode: MusicControlMode) -> void:
-	music_control_mode = new_mode
-
-
-func clear_music_control_mode() -> void:
-	music_control_mode = MusicControlMode.NONE
-
-
-func is_controlled_by_jam_spot() -> bool:
-	return music_control_mode == MusicControlMode.JAM_SPOT
-
-
-func is_controlled_by_active_jam_spot() -> bool:
-	if music_control_mode != MusicControlMode.JAM_SPOT:
-		return false
-
-	if current_jam_spot == null:
-		return false
-
-	if not is_instance_valid(current_jam_spot):
-		return false
-
-	if not current_jam_spot.has_method("is_jam_active"):
-		return false
-
-	return current_jam_spot.is_jam_active()
-
-
-func can_use_freeform_logic() -> bool:
-	if is_controlled_by_active_jam_spot():
-		return false
-
-	return true
-
-
-func get_primary_song_id() -> String:
-	return primary_song_id
+func _debug_state(message: String) -> void:
+	if debug_npc_state:
+		print("[%s] %s | enabled=%s mode=%s freeform=%s jamspot=%s context=%s part=%s wants=%s" % [
+			name,
+			message,
+			str(npc_enabled),
+			str(music_control_mode),
+			str(freeform_mode),
+			str(current_jam_spot),
+			str(current_jam_context),
+			str(current_part),
+			str(wants_to_play)
+		])

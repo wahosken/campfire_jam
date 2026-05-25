@@ -1,5 +1,7 @@
 extends Node2D
 
+@export var debug_jamspot := false
+
 @export var jam_id := "campfire_jam"
 @export var display_name := "Campfire Jam"
 @export var song_id := "song_01"
@@ -196,24 +198,43 @@ func refresh_npc_activity(npc: Node) -> void:
 	var should_play: bool = jam_is_active and npc.is_npc_enabled()
 
 	if not should_play:
-		# JamSpot is off or NPC disabled.
-		# NPC remains physically registered inside the JamSpot,
-		# but the JamSpot must release musical control completely.
 		if jam_context != null and jam_context.has_method("set_member_active"):
 			jam_context.set_member_active(npc, false)
 
-		if npc.has_method("end_jam_spot_control"):
-			npc.end_jam_spot_control(self)
-		else:
+		if jam_is_active:
+			# JamSpot is still ON, but this NPC is sitting out.
+			# Keep current_jam_spot intact so they can rejoin this same JamSpot.
 			if npc.has_method("set_current_jam_context"):
 				npc.set_current_jam_context(null)
 
 			if npc.has_method("set_current_part"):
 				npc.set_current_part("silent")
 
+			if "wants_to_play" in npc:
+				npc.wants_to_play = false
+
+			if "wants_rhythm" in npc:
+				npc.wants_rhythm = false
+
+			if "wants_melody" in npc:
+				npc.wants_melody = false
+		else:
+			# JamSpot is OFF, so fully release JamSpot control.
+			if npc.has_method("end_jam_spot_control"):
+				npc.end_jam_spot_control(self)
+			else:
+				if npc.has_method("set_current_jam_context"):
+					npc.set_current_jam_context(null)
+
+				if npc.has_method("set_current_jam_spot"):
+					npc.set_current_jam_spot(null)
+
+				if npc.has_method("set_current_part"):
+					npc.set_current_part("silent")
+
 		return
 
-	# JamSpot is active, so it takes control.
+	# JamSpot is active and NPC is enabled, so JamSpot takes control.
 	if npc.has_method("begin_jam_spot_control"):
 		npc.begin_jam_spot_control(self, jam_context)
 	else:
@@ -234,6 +255,12 @@ func refresh_npc_activity(npc: Node) -> void:
 
 	if "wants_to_play" in npc:
 		npc.wants_to_play = true
+
+	if "wants_rhythm" in npc:
+		npc.wants_rhythm = true
+
+	if "wants_melody" in npc:
+		npc.wants_melody = true
 
 	if jam_context != null and jam_context.has_method("set_member_active"):
 		jam_context.set_member_active(npc, true)
@@ -374,3 +401,13 @@ func _update_label() -> void:
 		state_text,
 		registered_npcs.size()
 	]
+
+
+func _debug_spot(message: String) -> void:
+	if debug_jamspot:
+		print("[%s] %s | active=%s registered=%d" % [
+			name,
+			message,
+			str(jam_is_active),
+			registered_npcs.size()
+		])

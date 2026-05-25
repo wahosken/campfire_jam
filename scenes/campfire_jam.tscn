@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://025hsnsqi3wr" path="res://scenes/freeform_jam_context.tscn" id="10_bew7y"]
 [ext_resource type="PackedScene" uid="uid://d21e1vvxjrume" path="res://scenes/overlay.tscn" id="10_dp30u"]
 [ext_resource type="PackedScene" uid="uid://dtm7ryrpuv7qa" path="res://scenes/start_gate.tscn" id="15_x6ebq"]
+[ext_resource type="PackedScene" uid="uid://d1ifhrg7vlxou" path="res://scenes/npc_dialogue_prompt.tscn" id="17_s3408"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_bew7y"]
 radius = 500.0
@@ -227,5 +228,7 @@ text = "Featured Instrument:"
 [node name="InteractPromptLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=530178011]
 layout_mode = 2
 text = "Interact"
+
+[node name="NPCDialoguePrompt" parent="." unique_id=1416366564 instance=ExtResource("17_s3408")]
 
 [node name="StartGate" parent="." unique_id=185219785 instance=ExtResource("15_x6ebq")]

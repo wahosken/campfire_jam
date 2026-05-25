@@ -111,7 +111,7 @@ grow_vertical = 2
 
 [node name="PauseButton" type="TouchScreenButton" parent="UI/HBoxContainer3" unique_id=971477884]
 modulate = Color(1, 1, 1, 0.8)
-position = Vector2(546, -294)
+position = Vector2(562, -318)
 scale = Vector2(3, 3)
 texture_normal = ExtResource("9_p5rgw")
 texture_pressed = ExtResource("10_vg6n2")
