@@ -7,6 +7,10 @@ signal nearby_jam_changed(jam_source: Node, jam_type: String, jam_name: String)
 @export var freeform_player_leave_padding := 50.0
 @export var freeform_jam_context_scene: PackedScene
 
+@export var freeform_recruit_scan_interval := 0.25
+
+var freeform_recruit_scan_timer := 0.0
+
 const JAM_TYPE_NONE := "none"
 const JAM_TYPE_JAM_SPOT := "jam_spot"
 const JAM_TYPE_MUSICIAN := "musician"
@@ -34,8 +38,14 @@ func _ready() -> void:
 	music_system = get_tree().get_first_node_in_group("music_system")
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	update_following_npc_jam_priorities()
+	_update_active_freeform_recruitment(delta)
+
+	var player: Node = get_tree().get_first_node_in_group("player")
+
+	if player != null and player is Node2D:
+		_check_auto_freeform_leave(player.global_position)
 
 
 func update_player_jam_proximity(player_position: Vector2) -> void:
@@ -556,12 +566,17 @@ func _get_part_from_flags(rhythm_on: bool, melody_on: bool) -> String:
 	return "silent"
 
 
-func _check_auto_freeform_leave(player_position: Vector2) -> void:
-	var anchor: Node = active_freeform_anchor
-	var anchor_position: Vector2 = player_position
+func _check_auto_freeform_leave(_player_position: Vector2) -> void:
+	if active_freeform_jam_context == null:
+		return
 
-	if anchor != null and is_instance_valid(anchor) and anchor is Node2D:
-		anchor_position = anchor.global_position
+	if not is_instance_valid(active_freeform_jam_context):
+		return
+
+	var anchor_positions: Array[Vector2] = _get_active_freeform_anchor_positions()
+
+	if anchor_positions.is_empty():
+		return
 
 	var members_to_check: Array[Node] = active_freeform_members.duplicate()
 
@@ -581,15 +596,7 @@ func _check_auto_freeform_leave(player_position: Vector2) -> void:
 		if not member is Node2D:
 			continue
 
-		# If there is no valid NPC/player anchor, auto followers should stop.
-		if anchor == null or not is_instance_valid(anchor):
-			stop_auto_freeform_for_npc(member)
-			continue
-
-		var leave_distance: float = _get_npc_auto_stop_radius(member)
-		var current_distance: float = anchor_position.distance_to(member.global_position)
-
-		if current_distance > leave_distance:
+		if not _is_npc_near_any_freeform_anchor(member, anchor_positions):
 			stop_auto_freeform_for_npc(member)
 
 
@@ -1424,3 +1431,113 @@ func update_following_npc_jam_priorities() -> void:
 						npc.reset_temporary_music_state_for_jam_join()
 
 					_add_npc_to_active_freeform_jam(npc, false)
+
+
+func _update_active_freeform_recruitment(delta: float) -> void:
+	if active_freeform_jam_context == null:
+		return
+
+	if not is_instance_valid(active_freeform_jam_context):
+		return
+
+	freeform_recruit_scan_timer += delta
+
+	if freeform_recruit_scan_timer < freeform_recruit_scan_interval:
+		return
+
+	freeform_recruit_scan_timer = 0.0
+
+	_recruit_available_npcs_to_active_freeform_jam()
+
+
+func _recruit_available_npcs_to_active_freeform_jam() -> void:
+	if active_freeform_jam_context == null:
+		return
+
+	if not is_instance_valid(active_freeform_jam_context):
+		return
+
+	var anchor_positions: Array[Vector2] = _get_active_freeform_anchor_positions()
+
+	if anchor_positions.is_empty():
+		return
+
+	for npc in get_tree().get_nodes_in_group("npc_musician"):
+		if npc == null or not is_instance_valid(npc):
+			continue
+
+		if active_freeform_members.has(npc):
+			continue
+
+		if not npc is Node2D:
+			continue
+
+		if not npc.has_method("is_available_for_player_accompaniment"):
+			continue
+
+		if not npc.is_available_for_player_accompaniment():
+			continue
+
+		# Active JamSpot always wins. Do not recruit NPCs who are currently
+		# inside/controlled by an active JamSpot.
+		if npc.has_method("is_controlled_by_active_jam_spot"):
+			if npc.is_controlled_by_active_jam_spot():
+				continue
+
+		if _is_npc_near_any_freeform_anchor(npc, anchor_positions):
+			_add_npc_to_active_freeform_jam(npc, false)
+
+
+func _get_active_freeform_anchor_positions() -> Array[Vector2]:
+	var positions: Array[Vector2] = []
+
+	# Primary anchor first: player for player-led jams, NPC for NPC-led jams.
+	if active_freeform_anchor != null and is_instance_valid(active_freeform_anchor):
+		if active_freeform_anchor is Node2D:
+			positions.append(active_freeform_anchor.global_position)
+
+	# Any manual NPC also acts as a stable jam anchor.
+	for member in active_freeform_members:
+		if member == null or not is_instance_valid(member):
+			continue
+
+		if member.is_in_group("player"):
+			continue
+
+		if not member is Node2D:
+			continue
+
+		if member.has_method("is_manual_freeform"):
+			if member.is_manual_freeform():
+				if not positions.has(member.global_position):
+					positions.append(member.global_position)
+
+	# If player is actively part of the freeform jam, they can also recruit.
+	for member in active_freeform_members:
+		if member == null or not is_instance_valid(member):
+			continue
+
+		if not member.is_in_group("player"):
+			continue
+
+		if member is Node2D:
+			if not positions.has(member.global_position):
+				positions.append(member.global_position)
+
+	return positions
+
+
+func _is_npc_near_any_freeform_anchor(npc: Node, anchor_positions: Array[Vector2]) -> bool:
+	if npc == null:
+		return false
+
+	if not npc is Node2D:
+		return false
+
+	for anchor_position in anchor_positions:
+		var distance: float = npc.global_position.distance_to(anchor_position)
+
+		if distance <= _get_npc_join_radius(npc):
+			return true
+
+	return false
