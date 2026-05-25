@@ -32,6 +32,8 @@ var started_in_synced_jam := false
 var instrument_visual_tween: Tween = null
 var current_instrument_index := 0
 
+var selected_song_id := "song_01"
+
 var instruments := [
 	{
 		"id": "guitar",
@@ -84,6 +86,7 @@ func _physics_process(_delta: float) -> void:
 	_handle_movement()
 	_handle_npc_interact_input()
 	_handle_instrument_cycle_input()
+	_handle_song_cycle_input()
 	_handle_play_instrument_input()
 
 
@@ -107,8 +110,12 @@ func start_or_update_instrument_parts(rhythm: bool, melody: bool) -> void:
 
 			var current_audio_source: Node = get_current_audio_source()
 
-			if current_audio_source != null and current_audio_source.has_method("start_solo_tracks"):
-				current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
+			if current_audio_source != null:
+				if current_audio_source.has_method("set_song_id"):
+					current_audio_source.set_song_id(selected_song_id)
+
+				if current_audio_source.has_method("start_solo_tracks"):
+					current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
 		else:
 			if current_jam_context != null and is_instance_valid(current_jam_context):
 				if current_jam_context.has_method("set_member_requested_parts"):
@@ -159,8 +166,12 @@ func start_instrument_parts(rhythm := true, melody := false) -> void:
 
 		var current_audio_source: Node = get_current_audio_source()
 
-		if current_audio_source != null and current_audio_source.has_method("start_solo_tracks"):
-			current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
+		if current_audio_source != null:
+			if current_audio_source.has_method("set_song_id"):
+				current_audio_source.set_song_id(selected_song_id)
+
+			if current_audio_source.has_method("start_solo_tracks"):
+				current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
 
 	_start_instrument_visuals()
 	_update_part_label()
@@ -321,8 +332,12 @@ func detach_from_current_jam_to_carried_solo() -> void:
 
 	var current_audio_source: Node = get_current_audio_source()
 
-	if current_audio_source != null and current_audio_source.has_method("start_solo_tracks"):
-		current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
+	if current_audio_source != null:
+		if current_audio_source.has_method("set_song_id"):
+			current_audio_source.set_song_id(selected_song_id)
+
+		if current_audio_source.has_method("start_solo_tracks"):
+			current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
 
 	_update_part_label()
 
@@ -338,8 +353,12 @@ func return_to_carried_solo_from_freeform() -> void:
 
 	var current_audio_source: Node = get_current_audio_source()
 
-	if current_audio_source != null and current_audio_source.has_method("start_solo_tracks"):
-		current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
+	if current_audio_source != null:
+		if current_audio_source.has_method("set_song_id"):
+			current_audio_source.set_song_id(selected_song_id)
+
+		if current_audio_source.has_method("start_solo_tracks"):
+			current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
 
 	_update_part_label()
 
@@ -523,6 +542,11 @@ func _handle_instrument_cycle_input() -> void:
 		cycle_instrument()
 
 
+func _handle_song_cycle_input() -> void:
+	if Input.is_action_just_pressed("cycle_song"):
+		cycle_song()
+
+
 func _handle_play_instrument_input() -> void:
 	var melody_pressed := Input.is_action_pressed("play_melody")
 	var rhythm_pressed := Input.is_action_pressed("play_rhythm")
@@ -622,3 +646,16 @@ func _on_interaction_area_exited(area: Area2D) -> void:
 
 	if nearby_interactables.has(possible_interactable):
 		nearby_interactables.erase(possible_interactable)
+
+
+func get_selected_song_id() -> String:
+	return selected_song_id
+
+
+func cycle_song() -> void:
+	if selected_song_id == "song_01":
+		selected_song_id = "song_02"
+	else:
+		selected_song_id = "song_01"
+
+	print("Selected Song: ", selected_song_id)

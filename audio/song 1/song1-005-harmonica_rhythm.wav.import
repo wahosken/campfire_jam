@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://rfdwxfpr6ur1"
+path="res://.godot/imported/song1-005-harmonica_rhythm.wav-cb4b5ad2456bd2009888a044311e3479.sample"
+
+[deps]
+
+source_file="res://audio/song 1/song1-005-harmonica_rhythm.wav"
+dest_files=["res://.godot/imported/song1-005-harmonica_rhythm.wav-cb4b5ad2456bd2009888a044311e3479.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

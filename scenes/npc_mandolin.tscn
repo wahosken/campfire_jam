@@ -2,8 +2,10 @@
 
 [ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/npc_musician.gd" id="1_yt5au"]
 [ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/instrument_audio_source.gd" id="2_3dk46"]
-[ext_resource type="AudioStream" uid="uid://bf25nfq58en1s" path="res://audio/song 1/007_song1_mandolin_rhythm.wav" id="3_nbe3w"]
-[ext_resource type="AudioStream" uid="uid://drnhmtyfcbk3y" path="res://audio/song 1/008_song1_mandolin_lead.wav" id="4_ps8is"]
+[ext_resource type="AudioStream" uid="uid://cadhl0f7w4whj" path="res://audio/song 1/song1-007-mandolin_rhythm.wav" id="3_ps8is"]
+[ext_resource type="AudioStream" uid="uid://cfsa07ynnm60u" path="res://audio/song 1/song1-008-mandolin_lead.wav" id="4_r3l87"]
+[ext_resource type="AudioStream" uid="uid://di4x51xuio6a1" path="res://audio/song 2/song2-007-mandolin_rhythm.wav" id="5_mgt4s"]
+[ext_resource type="AudioStream" uid="uid://cbpremo70r8xi" path="res://audio/song 2/song2-008-mandolin_lead.wav" id="6_l3r6c"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_iubrl"]
 size = Vector2(60, 60)
@@ -58,8 +60,10 @@ horizontal_alignment = 1
 [node name="InstrumentAudioSource" type="Node2D" parent="." unique_id=1820311092]
 script = ExtResource("2_3dk46")
 instrument_name = "mandolin"
-rhythm_stream = ExtResource("3_nbe3w")
-melody_stream = ExtResource("4_ps8is")
+song_01_rhythm_stream = ExtResource("3_ps8is")
+song_01_melody_stream = ExtResource("4_r3l87")
+song_02_rhythm_stream = ExtResource("5_mgt4s")
+song_02_melody_stream = ExtResource("6_l3r6c")
 
 [node name="RhythmPlayer" type="AudioStreamPlayer2D" parent="InstrumentAudioSource" unique_id=1164932287]
 max_distance = 1000.0

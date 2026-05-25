@@ -2,8 +2,10 @@
 
 [ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/npc_musician.gd" id="1_iubrl"]
 [ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/instrument_audio_source.gd" id="2_58ipr"]
-[ext_resource type="AudioStream" uid="uid://buysytn1e57lf" path="res://audio/song 1/003_song1_bass_rhythm.wav" id="3_uq81o"]
-[ext_resource type="AudioStream" uid="uid://da2xgs26eeq1j" path="res://audio/song 1/004_song1_bass_lead.wav" id="4_uqgcj"]
+[ext_resource type="AudioStream" uid="uid://b1x2boy27xxja" path="res://audio/song 1/song1-003-bass_rhythm.wav" id="3_s00xo"]
+[ext_resource type="AudioStream" uid="uid://d2t5mdol561us" path="res://audio/song 1/song1-004-bass_lead.wav" id="4_1pmlb"]
+[ext_resource type="AudioStream" uid="uid://26yo666jqypi" path="res://audio/song 2/song2-003-bass_rhythm.wav" id="5_4jck1"]
+[ext_resource type="AudioStream" uid="uid://dgm72bsip4rv7" path="res://audio/song 2/song2-004-bass_lead.wav" id="6_kfjlm"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_uq81o"]
 size = Vector2(60, 60)
@@ -57,8 +59,10 @@ horizontal_alignment = 1
 [node name="InstrumentAudioSource" type="Node2D" parent="." unique_id=2006424832]
 script = ExtResource("2_58ipr")
 instrument_name = "bass"
-rhythm_stream = ExtResource("3_uq81o")
-melody_stream = ExtResource("4_uqgcj")
+song_01_rhythm_stream = ExtResource("3_s00xo")
+song_01_melody_stream = ExtResource("4_1pmlb")
+song_02_rhythm_stream = ExtResource("5_4jck1")
+song_02_melody_stream = ExtResource("6_kfjlm")
 
 [node name="RhythmPlayer" type="AudioStreamPlayer2D" parent="InstrumentAudioSource" unique_id=1485252885]
 max_distance = 1000.0

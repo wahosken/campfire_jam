@@ -2,8 +2,10 @@
 
 [ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/npc_musician.gd" id="1_khbeg"]
 [ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/instrument_audio_source.gd" id="2_1qbbg"]
-[ext_resource type="AudioStream" uid="uid://bu3iwdsfvre0l" path="res://audio/song 1/005_song1_harmonica_rhythm.wav" id="3_piaih"]
-[ext_resource type="AudioStream" uid="uid://b7uvt238a5bkk" path="res://audio/song 1/006_song1_harmonica_lead.wav" id="4_e5rru"]
+[ext_resource type="AudioStream" uid="uid://rfdwxfpr6ur1" path="res://audio/song 1/song1-005-harmonica_rhythm.wav" id="3_e5rru"]
+[ext_resource type="AudioStream" uid="uid://b8jfefgc2no43" path="res://audio/song 1/song1-006-harmonica_lead.wav" id="4_fco0b"]
+[ext_resource type="AudioStream" uid="uid://dqc34kbx2ly41" path="res://audio/song 2/song2-005-harmonica_rhythm.wav" id="5_y4ir2"]
+[ext_resource type="AudioStream" uid="uid://cijbrfxnev2g3" path="res://audio/song 2/song2-006-harmonica_lead.wav" id="6_1lae6"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_iubrl"]
 size = Vector2(60, 60)
@@ -58,8 +60,10 @@ horizontal_alignment = 1
 [node name="InstrumentAudioSource" type="Node2D" parent="." unique_id=798115895]
 script = ExtResource("2_1qbbg")
 instrument_name = "harmonica"
-rhythm_stream = ExtResource("3_piaih")
-melody_stream = ExtResource("4_e5rru")
+song_01_rhythm_stream = ExtResource("3_e5rru")
+song_01_melody_stream = ExtResource("4_fco0b")
+song_02_rhythm_stream = ExtResource("5_y4ir2")
+song_02_melody_stream = ExtResource("6_1lae6")
 
 [node name="RhythmPlayer" type="AudioStreamPlayer2D" parent="InstrumentAudioSource" unique_id=754703140]
 max_distance = 1000.0

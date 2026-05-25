@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://b8jfefgc2no43"
+path="res://.godot/imported/song1-006-harmonica_lead.wav-99792343dcec48b115b19ad8f87cee1a.sample"
+
+[deps]
+
+source_file="res://audio/song 1/song1-006-harmonica_lead.wav"
+dest_files=["res://.godot/imported/song1-006-harmonica_lead.wav-99792343dcec48b115b19ad8f87cee1a.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://d2t5mdol561us"
+path="res://.godot/imported/song1-004-bass_lead.wav-9e2be748d115937b6c00c0adab18e808.sample"
+
+[deps]
+
+source_file="res://audio/song 1/song1-004-bass_lead.wav"
+dest_files=["res://.godot/imported/song1-004-bass_lead.wav-9e2be748d115937b6c00c0adab18e808.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

@@ -75,15 +75,17 @@ shape = SubResource("RectangleShape2D_bew7y")
 
 [node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("2_q2hrs")]
 position = Vector2(354, -370)
-
-[node name="NPC_Harmonica" parent="." unique_id=1800832853 instance=ExtResource("4_65sn3")]
-position = Vector2(587, -367)
-
-[node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("5_mcuth")]
-position = Vector2(482, -271)
+primary_song_id = "song_02"
 
 [node name="NPC_Bass" parent="." unique_id=718845583 instance=ExtResource("3_mcuth")]
 position = Vector2(-847, -1511)
+
+[node name="NPC_Harmonica" parent="." unique_id=1800832853 instance=ExtResource("4_65sn3")]
+position = Vector2(587, -367)
+primary_song_id = "song_02"
+
+[node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("5_mcuth")]
+position = Vector2(482, -271)
 
 [node name="House" parent="." unique_id=1834173392 instance=ExtResource("4_mcuth")]
 position = Vector2(527, -914)
@@ -120,6 +122,10 @@ offset_bottom = 131.0
 [node name="CurrentInstrumentLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=1934273161]
 layout_mode = 2
 text = "Current instrument:"
+
+[node name="SelectedSongLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=1338824815]
+layout_mode = 2
+text = "Song:"
 
 [node name="NearbyJamLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=1227413359]
 layout_mode = 2

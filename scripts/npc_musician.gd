@@ -6,6 +6,8 @@ extends Node2D
 @export var can_auto_accompany_player := true
 @export var auto_accompany_radius := 300.0
 
+@export var primary_song_id := "song_01"
+
 @onready var interaction_area: Area2D = $InteractionArea
 @onready var sprite: ColorRect = $ColorRect
 @onready var label: Label = $Label
@@ -572,3 +574,7 @@ func can_use_freeform_logic() -> bool:
 		return false
 
 	return true
+
+
+func get_primary_song_id() -> String:
+	return primary_song_id

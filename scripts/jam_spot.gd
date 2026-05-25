@@ -301,9 +301,13 @@ func is_position_inside_leave_radius(world_position: Vector2) -> bool:
 
 
 func _sync_jam_context_song() -> void:
-	if jam_context != null:
-		if "song_id" in jam_context:
-			jam_context.song_id = song_id
+	if jam_context == null:
+		return
+
+	if jam_context.has_method("apply_song_id"):
+		jam_context.apply_song_id(song_id)
+	elif "song_id" in jam_context:
+		jam_context.song_id = song_id
 
 
 func _on_jam_area_area_entered(area: Area2D) -> void:

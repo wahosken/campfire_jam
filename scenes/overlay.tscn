@@ -125,35 +125,11 @@ anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
 offset_left = -236.0
-offset_top = -152.0
+offset_top = -258.0
 offset_right = -20.0
 offset_bottom = 42.0
 grow_horizontal = 0
 grow_vertical = 2
-
-[node name="MelodyButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=2070411827]
-modulate = Color(1, 1, 1, 0.8)
-position = Vector2(50, 96)
-scale = Vector2(2, 2)
-texture_normal = ExtResource("11_vkldo")
-texture_pressed = ExtResource("12_2m6gh")
-action = "play_melody"
-
-[node name="RhythmButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=734656703]
-modulate = Color(1, 1, 1, 0.8)
-position = Vector2(138, 96)
-scale = Vector2(2, 2)
-texture_normal = ExtResource("11_vkldo")
-texture_pressed = ExtResource("12_2m6gh")
-action = "play_rhythm"
-
-[node name="CycleInstrumentsButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=1807431339]
-modulate = Color(1, 1, 1, 0.8)
-position = Vector2(50, 12)
-scale = Vector2(2, 2)
-texture_normal = ExtResource("11_vkldo")
-texture_pressed = ExtResource("12_2m6gh")
-action = "cycle_instrument"
 
 [node name="InteractButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=554425371]
 modulate = Color(1, 1, 1, 0.8)
@@ -162,3 +138,35 @@ scale = Vector2(2, 2)
 texture_normal = ExtResource("11_vkldo")
 texture_pressed = ExtResource("12_2m6gh")
 action = "interact"
+
+[node name="CycleInstrumentsButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=1807431339]
+modulate = Color(1, 1, 1, 0.8)
+position = Vector2(50, 94)
+scale = Vector2(2, 2)
+texture_normal = ExtResource("11_vkldo")
+texture_pressed = ExtResource("12_2m6gh")
+action = "cycle_instrument"
+
+[node name="CycleSongsButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=1882277219]
+modulate = Color(1, 1, 1, 0.8)
+position = Vector2(138, 94)
+scale = Vector2(2, 2)
+texture_normal = ExtResource("11_vkldo")
+texture_pressed = ExtResource("12_2m6gh")
+action = "cycle_song"
+
+[node name="RhythmButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=734656703]
+modulate = Color(1, 1, 1, 0.8)
+position = Vector2(52, 178)
+scale = Vector2(2, 2)
+texture_normal = ExtResource("11_vkldo")
+texture_pressed = ExtResource("12_2m6gh")
+action = "play_rhythm"
+
+[node name="MelodyButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=2070411827]
+modulate = Color(1, 1, 1, 0.8)
+position = Vector2(138, 178)
+scale = Vector2(2, 2)
+texture_normal = ExtResource("11_vkldo")
+texture_pressed = ExtResource("12_2m6gh")
+action = "play_melody"

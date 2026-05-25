@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c6t4bk6fhp4f2"]
+
+[ext_resource type="Script" uid="uid://bvj4n2a272kku" path="res://scripts/song_library.gd" id="1_bmvmk"]
+
+[node name="SongLibrary" type="Node" unique_id=1365068863]
+script = ExtResource("1_bmvmk")

@@ -2,14 +2,21 @@
 
 [ext_resource type="Script" uid="uid://d0me22e12st41" path="res://scripts/player.gd" id="1_lttm1"]
 [ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/instrument_audio_source.gd" id="2_g2els"]
-[ext_resource type="AudioStream" uid="uid://bp4m25g3cyl1j" path="res://audio/song 1/001_song1_guitar_rhythm.wav" id="3_dqkch"]
-[ext_resource type="AudioStream" uid="uid://dopob82cdybje" path="res://audio/song 1/002_song1_guitar_lead.wav" id="4_qlg0r"]
-[ext_resource type="AudioStream" uid="uid://buysytn1e57lf" path="res://audio/song 1/003_song1_bass_rhythm.wav" id="5_y4r1p"]
-[ext_resource type="AudioStream" uid="uid://da2xgs26eeq1j" path="res://audio/song 1/004_song1_bass_lead.wav" id="6_d2wvv"]
-[ext_resource type="AudioStream" uid="uid://bu3iwdsfvre0l" path="res://audio/song 1/005_song1_harmonica_rhythm.wav" id="7_3v2ag"]
-[ext_resource type="AudioStream" uid="uid://b7uvt238a5bkk" path="res://audio/song 1/006_song1_harmonica_lead.wav" id="8_jej6c"]
-[ext_resource type="AudioStream" uid="uid://bf25nfq58en1s" path="res://audio/song 1/007_song1_mandolin_rhythm.wav" id="9_f1ej7"]
-[ext_resource type="AudioStream" uid="uid://drnhmtyfcbk3y" path="res://audio/song 1/008_song1_mandolin_lead.wav" id="10_oprun"]
+[ext_resource type="AudioStream" uid="uid://cc4y5lg137oam" path="res://audio/song 1/song1-001-guitar_rhythm.wav" id="3_qfm1y"]
+[ext_resource type="AudioStream" uid="uid://cir28v33uqdmo" path="res://audio/song 1/song1-002-guitar_lead.wav" id="4_fulsm"]
+[ext_resource type="AudioStream" uid="uid://x654xn2eyq6f" path="res://audio/song 2/song2-001-guitar_rhythm.wav" id="5_4r5pv"]
+[ext_resource type="AudioStream" uid="uid://tmin5vxqlo6m" path="res://audio/song 2/song2-002-guitar_lead.wav" id="6_60mlk"]
+[ext_resource type="AudioStream" uid="uid://b1x2boy27xxja" path="res://audio/song 1/song1-003-bass_rhythm.wav" id="7_i4ail"]
+[ext_resource type="AudioStream" uid="uid://d2t5mdol561us" path="res://audio/song 1/song1-004-bass_lead.wav" id="8_a38lo"]
+[ext_resource type="AudioStream" uid="uid://26yo666jqypi" path="res://audio/song 2/song2-003-bass_rhythm.wav" id="9_4ni07"]
+[ext_resource type="AudioStream" uid="uid://rfdwxfpr6ur1" path="res://audio/song 1/song1-005-harmonica_rhythm.wav" id="10_l71n6"]
+[ext_resource type="AudioStream" uid="uid://b8jfefgc2no43" path="res://audio/song 1/song1-006-harmonica_lead.wav" id="11_ke2ow"]
+[ext_resource type="AudioStream" uid="uid://dqc34kbx2ly41" path="res://audio/song 2/song2-005-harmonica_rhythm.wav" id="12_ujl30"]
+[ext_resource type="AudioStream" uid="uid://cijbrfxnev2g3" path="res://audio/song 2/song2-006-harmonica_lead.wav" id="13_31cv2"]
+[ext_resource type="AudioStream" uid="uid://cadhl0f7w4whj" path="res://audio/song 1/song1-007-mandolin_rhythm.wav" id="14_pf23h"]
+[ext_resource type="AudioStream" uid="uid://cfsa07ynnm60u" path="res://audio/song 1/song1-008-mandolin_lead.wav" id="15_dt7fs"]
+[ext_resource type="AudioStream" uid="uid://di4x51xuio6a1" path="res://audio/song 2/song2-007-mandolin_rhythm.wav" id="16_wqfne"]
+[ext_resource type="AudioStream" uid="uid://cbpremo70r8xi" path="res://audio/song 2/song2-008-mandolin_lead.wav" id="17_wnwbv"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_u8vuu"]
 size = Vector2(60, 60)
@@ -58,8 +65,10 @@ text = "Player"
 [node name="GuitarAudioSource" type="Node2D" parent="PlayerAudioSources" unique_id=227617750]
 script = ExtResource("2_g2els")
 owner_type = "player"
-rhythm_stream = ExtResource("3_dqkch")
-melody_stream = ExtResource("4_qlg0r")
+song_01_rhythm_stream = ExtResource("3_qfm1y")
+song_01_melody_stream = ExtResource("4_fulsm")
+song_02_rhythm_stream = ExtResource("5_4r5pv")
+song_02_melody_stream = ExtResource("6_60mlk")
 
 [node name="RhythmPlayer" type="AudioStreamPlayer2D" parent="PlayerAudioSources/GuitarAudioSource" unique_id=1986632379]
 max_distance = 1000.0
@@ -71,8 +80,10 @@ attenuation = 0.75
 script = ExtResource("2_g2els")
 instrument_name = "bass"
 owner_type = "player"
-rhythm_stream = ExtResource("5_y4r1p")
-melody_stream = ExtResource("6_d2wvv")
+song_01_rhythm_stream = ExtResource("7_i4ail")
+song_01_melody_stream = ExtResource("8_a38lo")
+song_02_rhythm_stream = ExtResource("9_4ni07")
+song_02_melody_stream = ExtResource("6_60mlk")
 
 [node name="RhythmPlayer" type="AudioStreamPlayer2D" parent="PlayerAudioSources/BassAudioSource" unique_id=277897051]
 max_distance = 1000.0
@@ -84,8 +95,10 @@ attenuation = 0.75
 script = ExtResource("2_g2els")
 instrument_name = "harmonica"
 owner_type = "player"
-rhythm_stream = ExtResource("7_3v2ag")
-melody_stream = ExtResource("8_jej6c")
+song_01_rhythm_stream = ExtResource("10_l71n6")
+song_01_melody_stream = ExtResource("11_ke2ow")
+song_02_rhythm_stream = ExtResource("12_ujl30")
+song_02_melody_stream = ExtResource("13_31cv2")
 
 [node name="RhythmPlayer" type="AudioStreamPlayer2D" parent="PlayerAudioSources/HarmonicaAudioSource" unique_id=916178659]
 max_distance = 1000.0
@@ -97,8 +110,10 @@ attenuation = 0.75
 script = ExtResource("2_g2els")
 instrument_name = "mandolin"
 owner_type = "player"
-rhythm_stream = ExtResource("9_f1ej7")
-melody_stream = ExtResource("10_oprun")
+song_01_rhythm_stream = ExtResource("14_pf23h")
+song_01_melody_stream = ExtResource("15_dt7fs")
+song_02_rhythm_stream = ExtResource("16_wqfne")
+song_02_melody_stream = ExtResource("17_wnwbv")
 
 [node name="RhythmPlayer" type="AudioStreamPlayer2D" parent="PlayerAudioSources/MandolinAudioSource" unique_id=832505453]
 max_distance = 1000.0

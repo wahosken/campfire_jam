@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://cadhl0f7w4whj"
+path="res://.godot/imported/song1-007-mandolin_rhythm.wav-40b91211d4903b057d31855797f6a554.sample"
+
+[deps]
+
+source_file="res://audio/song 1/song1-007-mandolin_rhythm.wav"
+dest_files=["res://.godot/imported/song1-007-mandolin_rhythm.wav-40b91211d4903b057d31855797f6a554.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

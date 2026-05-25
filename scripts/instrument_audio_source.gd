@@ -3,14 +3,19 @@ extends Node2D
 @export var instrument_name := "guitar"
 @export var owner_type := "npc"
 
-@export var rhythm_stream: AudioStream
-@export var melody_stream: AudioStream
+@export var song_01_rhythm_stream: AudioStream
+@export var song_01_melody_stream: AudioStream
+
+@export var song_02_rhythm_stream: AudioStream
+@export var song_02_melody_stream: AudioStream
 
 @onready var rhythm_player: AudioStreamPlayer2D = $RhythmPlayer
 @onready var melody_player: AudioStreamPlayer2D = $MelodyPlayer
 
 const MUTED_DB := -80.0
 const FULL_DB := 0.0
+
+var current_song_id := "song_01"
 
 var solo_override := false
 
@@ -25,8 +30,7 @@ func _ready() -> void:
 		push_warning(name + " is missing child AudioStreamPlayer2D: MelodyPlayer")
 		return
 
-	rhythm_player.stream = rhythm_stream
-	melody_player.stream = melody_stream
+	_apply_song_streams()
 
 	_prepare_player(rhythm_player)
 	_prepare_player(melody_player)
@@ -187,3 +191,27 @@ func ensure_synced_playing(from_position := 0.0) -> void:
 	if melody_player != null and melody_player.stream != null:
 		if not melody_player.playing:
 			melody_player.play(safe_position)
+
+
+func set_song_id(new_song_id: String) -> void:
+	if current_song_id == new_song_id:
+		return
+
+	current_song_id = new_song_id
+	_apply_song_streams()
+
+
+func _apply_song_streams() -> void:
+	match current_song_id:
+		"song_02":
+			if rhythm_player != null:
+				rhythm_player.stream = song_02_rhythm_stream
+
+			if melody_player != null:
+				melody_player.stream = song_02_melody_stream
+		_:
+			if rhythm_player != null:
+				rhythm_player.stream = song_01_rhythm_stream
+
+			if melody_player != null:
+				melody_player.stream = song_01_melody_stream

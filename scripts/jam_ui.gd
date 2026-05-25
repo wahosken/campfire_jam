@@ -1,6 +1,7 @@
 extends Control
 
 @onready var current_instrument_label: Label = $HBoxContainer/CurrentInstrumentLabel
+@onready var selected_song_label: Label = $HBoxContainer/SelectedSongLabel
 @onready var nearby_jam_label: Label = $HBoxContainer/NearbyJamLabel
 @onready var active_instruments_label: Label = $HBoxContainer/ActiveInstrumentsLabel
 @onready var featured_instrument_label: Label = $HBoxContainer/FeaturedInstrumentLabel
@@ -20,7 +21,11 @@ func setup_ui(player_ref: Node, music_system_ref: Node) -> void:
 
 
 func update_ui() -> void:
+	if jam_manager == null:
+		jam_manager = get_tree().get_first_node_in_group("jam_manager")
+
 	_update_equipped_label()
+	_update_selected_song_label()
 	_update_nearby_jam_label()
 	_update_active_instruments_label()
 	_update_featured_instrument_label()
@@ -182,3 +187,26 @@ func _player_is_direct_solo() -> bool:
 		return player.is_currently_playing_solo_jam()
 
 	return false
+
+
+func _update_selected_song_label() -> void:
+	if selected_song_label == null:
+		return
+
+	if player == null:
+		selected_song_label.text = "Song: ----"
+		return
+
+	var song_id := "song_01"
+
+	if player.has_method("get_selected_song_id"):
+		song_id = player.get_selected_song_id()
+
+	var song_name := song_id
+
+	var song_library: Node = get_node_or_null("/root/SongLibrary")
+
+	if song_library != null and song_library.has_method("get_song_display_name"):
+		song_name = song_library.get_song_display_name(song_id)
+
+	selected_song_label.text = "Song: %s" % song_name

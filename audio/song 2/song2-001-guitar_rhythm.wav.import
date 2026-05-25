@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://x654xn2eyq6f"
+path="res://.godot/imported/song2-001-guitar_rhythm.wav-6ea7bb92d865eb115c31bdf88bc5d8e7.sample"
+
+[deps]
+
+source_file="res://audio/song 2/song2-001-guitar_rhythm.wav"
+dest_files=["res://.godot/imported/song2-001-guitar_rhythm.wav-6ea7bb92d865eb115c31bdf88bc5d8e7.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

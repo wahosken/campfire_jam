@@ -42,7 +42,7 @@ var preserve_existing_audio_member: Node = null
 
 
 func _ready() -> void:
-	seconds_per_beat = 60.0 / bpm
+	apply_song_id(song_id)
 	rng.randomize()
 
 
@@ -726,6 +726,9 @@ func _play_all_active_members_synced(from_position := 0.0) -> void:
 		if member == preserve_existing_audio_member:
 			continue
 
+		if audio_source.has_method("set_song_id"):
+			audio_source.set_song_id(song_id)
+
 		if audio_source.has_method("play_synced"):
 			audio_source.play_synced(from_position)
 
@@ -734,7 +737,13 @@ func _restart_all_active_members_synced() -> void:
 	for member in active_members:
 		var audio_source: Node = _get_member_audio_source(member)
 
-		if audio_source != null and audio_source.has_method("restart_synced"):
+		if audio_source == null:
+			continue
+
+		if audio_source.has_method("set_song_id"):
+			audio_source.set_song_id(song_id)
+
+		if audio_source.has_method("restart_synced"):
 			audio_source.restart_synced()
 
 
@@ -744,6 +753,9 @@ func _start_member_audio(member: Node) -> void:
 	if audio_source == null:
 		push_warning("JamContext: No audio source found for member: " + str(member.name))
 		return
+
+	if audio_source.has_method("set_song_id"):
+		audio_source.set_song_id(song_id)
 
 	var sync_position: float = _get_best_live_sync_position(member)
 
@@ -825,3 +837,34 @@ func _debug_log(message: String) -> void:
 
 func refresh_arrangement() -> void:
 	_update_arrangement()
+
+
+func apply_song_id(new_song_id: String) -> void:
+	song_id = new_song_id
+
+	if Engine.has_singleton("SongLibrary"):
+		pass
+
+	if typeof(SongLibrary) != TYPE_NIL:
+		var song_data: Dictionary = SongLibrary.get_song(song_id)
+
+		if song_data.has("bpm"):
+			bpm = float(song_data["bpm"])
+
+		if song_data.has("beats_per_measure"):
+			beats_per_measure = int(song_data["beats_per_measure"])
+
+		if song_data.has("total_measures"):
+			total_measures = int(song_data["total_measures"])
+
+	seconds_per_beat = 60.0 / bpm
+
+
+func _set_member_audio_song(member: Node) -> void:
+	var audio_source: Node = _get_member_audio_source(member)
+
+	if audio_source == null:
+		return
+
+	if audio_source.has_method("set_song_id"):
+		audio_source.set_song_id(song_id)
