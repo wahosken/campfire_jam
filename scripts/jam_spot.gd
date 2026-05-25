@@ -18,7 +18,6 @@ var jam_is_active := false
 
 func _ready() -> void:
 	add_to_group("jam_spot")
-	add_to_group("interactable")
 
 	if jam_area != null:
 		if not jam_area.area_entered.is_connected(_on_jam_area_area_entered):

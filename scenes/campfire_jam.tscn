@@ -9,6 +9,7 @@
 [ext_resource type="AudioStream" uid="uid://wnyybsp2f1ks" path="res://audio/Campfire-Sound-Effect_youtube.com_channe_lUC8GNHHbLg6ByCN1DZcUjylQvideos.mp3" id="4_aw4pt"]
 [ext_resource type="PackedScene" uid="uid://80o547y8x4gj" path="res://scenes/house.tscn" id="4_mcuth"]
 [ext_resource type="PackedScene" uid="uid://8cj1uwe35wqt" path="res://scenes/npc_mandolin.tscn" id="5_mcuth"]
+[ext_resource type="Script" uid="uid://wh7pmh1icp2" path="res://scripts/jam_spot_interaction_area.gd" id="5_xcp83"]
 [ext_resource type="PackedScene" uid="uid://tu61b7d68xgv" path="res://scenes/music_system.tscn" id="6_wu1ak"]
 [ext_resource type="Script" uid="uid://cevh1omjrnc6a" path="res://scripts/jam_ui.gd" id="7_41670"]
 [ext_resource type="PackedScene" uid="uid://cuy8oa3i1e11g" path="res://scenes/jam_spot.tscn" id="8_gpqwk"]
@@ -68,7 +69,7 @@ offset_right = 39.0
 offset_bottom = 40.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(1, 0.14509805, 0, 1)
+color = Color(0, 0.3647059, 0.9137255, 1)
 
 [node name="Label" type="Label" parent="FountainJamSpot" unique_id=158522758]
 anchors_preset = 8
@@ -94,6 +95,7 @@ metadata/_edit_use_anchors_ = true
 shape = SubResource("CircleShape2D_bew7y")
 
 [node name="InteractionArea" type="Area2D" parent="FountainJamSpot" unique_id=1968245359 groups=["interactable"]]
+script = ExtResource("5_xcp83")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FountainJamSpot/InteractionArea" unique_id=913577813]
 position = Vector2(4, 8.5)
@@ -150,6 +152,7 @@ metadata/_edit_use_anchors_ = true
 shape = SubResource("CircleShape2D_bew7y")
 
 [node name="InteractionArea" type="Area2D" parent="CampfireJamSpot" unique_id=1262593958 groups=["interactable"]]
+script = ExtResource("5_xcp83")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CampfireJamSpot/InteractionArea" unique_id=1194296035]
 position = Vector2(3.5, 7)

@@ -634,7 +634,10 @@ func _stop_instrument_visuals() -> void:
 
 
 func _on_interaction_area_entered(area: Area2D) -> void:
-	var possible_interactable: Node = area.get_parent()
+	var possible_interactable: Node = area
+
+	if not possible_interactable.is_in_group("interactable"):
+		possible_interactable = area.get_parent()
 
 	if possible_interactable.is_in_group("interactable") or possible_interactable.is_in_group("npc_musician"):
 		if not nearby_interactables.has(possible_interactable):
@@ -642,7 +645,10 @@ func _on_interaction_area_entered(area: Area2D) -> void:
 
 
 func _on_interaction_area_exited(area: Area2D) -> void:
-	var possible_interactable: Node = area.get_parent()
+	var possible_interactable: Node = area
+
+	if not possible_interactable.is_in_group("interactable"):
+		possible_interactable = area.get_parent()
 
 	if nearby_interactables.has(possible_interactable):
 		nearby_interactables.erase(possible_interactable)
