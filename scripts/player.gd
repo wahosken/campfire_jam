@@ -458,54 +458,80 @@ func _handle_play_instrument_input() -> void:
 
 func cycle_instrument() -> void:
 	var was_playing := is_playing_instrument
-	var previous_direct_solo := is_playing_direct_solo
+	var was_direct_solo := is_playing_direct_solo
 	var previous_audio_source: Node = get_current_audio_source()
 
-	var previous_wants_rhythm := wants_rhythm
-	var previous_wants_melody := wants_melody
+	var saved_rhythm := wants_rhythm
+	var saved_melody := wants_melody
+	var saved_requested_part := current_requested_part
+	var saved_actual_part := current_actual_part
+	var saved_context: Node = current_jam_context
+	var saved_song_id := current_playing_song_id
+
+	var playback_position := 0.0
 
 	if was_playing and previous_audio_source != null:
-		if previous_audio_source.has_method("stop_solo_jam"):
-			previous_audio_source.stop_solo_jam()
-		elif previous_audio_source.has_method("stop_all"):
+		if previous_audio_source.has_method("get_playback_position"):
+			playback_position = previous_audio_source.get_playback_position()
+
+		if previous_audio_source.has_method("stop_all"):
 			previous_audio_source.stop_all()
+		elif previous_audio_source.has_method("stop_solo_jam"):
+			previous_audio_source.stop_solo_jam()
 
 	current_instrument_index += 1
 
 	if current_instrument_index >= instruments.size():
 		current_instrument_index = 0
 
-	wants_rhythm = previous_wants_rhythm
-	wants_melody = previous_wants_melody
-	current_requested_part = get_requested_part_from_flags(wants_rhythm, wants_melody)
-	current_actual_part = "silent"
+	wants_rhythm = saved_rhythm
+	wants_melody = saved_melody
+	current_requested_part = saved_requested_part
+	current_actual_part = saved_actual_part
+	current_jam_context = saved_context
+	current_playing_song_id = saved_song_id
 
 	if was_playing:
-		if previous_direct_solo:
-			is_playing_direct_solo = true
-			current_actual_part = current_requested_part
+		var new_audio_source: Node = get_current_audio_source()
 
-			var new_audio_source: Node = get_current_audio_source()
+		if new_audio_source != null:
+			if new_audio_source.has_method("set_song_id"):
+				new_audio_source.set_song_id(current_playing_song_id)
 
-			if new_audio_source != null:
-				if new_audio_source.has_method("set_song_id"):
-					new_audio_source.set_song_id(current_playing_song_id)
+			if was_direct_solo:
+				is_playing_direct_solo = true
+				started_in_synced_jam = false
+				current_actual_part = current_requested_part
 
-				if new_audio_source.has_method("start_solo_tracks"):
+				if new_audio_source.has_method("play_synced"):
+					new_audio_source.play_synced(playback_position)
+
+				if new_audio_source.has_method("set_track_volumes"):
+					new_audio_source.set_track_volumes(wants_rhythm, wants_melody)
+				elif new_audio_source.has_method("set_tracks_audible"):
+					new_audio_source.set_tracks_audible(wants_rhythm, wants_melody)
+				elif new_audio_source.has_method("start_solo_tracks"):
 					new_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
-		else:
-			if current_jam_context != null and is_instance_valid(current_jam_context):
-				if current_jam_context.has_method("set_member_requested_parts"):
-					current_jam_context.set_member_requested_parts(self, wants_rhythm, wants_melody)
-				elif current_jam_context.has_method("set_member_requested_part"):
-					current_jam_context.set_member_requested_part(self, current_requested_part)
+			else:
+				is_playing_direct_solo = false
+				started_in_synced_jam = true
 
-				if current_jam_context.has_method("set_member_active"):
-					current_jam_context.set_member_active(self, true)
+				if current_jam_context != null and is_instance_valid(current_jam_context):
+					if current_jam_context.has_method("set_member_requested_parts"):
+						current_jam_context.set_member_requested_parts(self, wants_rhythm, wants_melody)
+					elif current_jam_context.has_method("set_member_requested_part"):
+						current_jam_context.set_member_requested_part(self, current_requested_part)
 
-				if current_jam_context.has_method("refresh_arrangement"):
-					current_jam_context.refresh_arrangement()
+					if current_jam_context.has_method("set_member_active"):
+						current_jam_context.set_member_active(self, true)
 
+					if new_audio_source.has_method("play_synced"):
+						new_audio_source.play_synced(playback_position)
+
+					if current_jam_context.has_method("refresh_arrangement"):
+						current_jam_context.refresh_arrangement()
+
+	_start_instrument_visuals()
 	_update_part_label()
 
 
