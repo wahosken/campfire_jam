@@ -2,6 +2,8 @@ extends Node
 
 signal nearby_jam_changed(jam_source: Node, jam_type: String, jam_name: String)
 
+@export var debug_player_freeform := false
+
 @export var fallback_accompanist_radius := 100.0
 @export var freeform_leave_padding := 50.0
 @export var freeform_player_leave_padding := 50.0
@@ -49,43 +51,73 @@ func _process(delta: float) -> void:
 
 
 func update_player_jam_proximity(player_position: Vector2) -> void:
-	_detach_player_from_freeform_if_too_far(player_position)
-	update_proximity_blocks(player_position)
 	_check_auto_freeform_leave(player_position)
 
-	var best_jam: Dictionary = _find_best_active_jam_source(player_position)
+	# 1. Active JamSpots always have priority.
+	var nearby_jam_spot: Dictionary = _find_best_active_jam_spot(player_position)
 
-	var new_source: Node = best_jam.get("source", null)
-	var new_type: String = best_jam.get("type", JAM_TYPE_NONE)
-	var new_name: String = best_jam.get("name", "None")
-	var new_distance: float = best_jam.get("distance", INF)
+	if not nearby_jam_spot.is_empty():
+		current_nearby_jam_source = nearby_jam_spot["source"]
+		current_nearby_jam_type = JAM_TYPE_JAM_SPOT
+		current_nearby_jam_name = nearby_jam_spot["name"]
+		current_nearby_jam_distance = nearby_jam_spot["distance"]
+		player_is_near_active_jam = true
 
-	var new_is_near := new_source != null
-	var source_changed := new_source != current_nearby_jam_source
-	var type_changed := new_type != current_nearby_jam_type
-	var near_state_changed := new_is_near != player_is_near_active_jam
+		if music_system != null and music_system.has_method("set_player_near_active_jam"):
+			music_system.set_player_near_active_jam(true)
 
-	current_nearby_jam_source = new_source
-	current_nearby_jam_type = new_type
-	current_nearby_jam_name = new_name
-	current_nearby_jam_distance = new_distance
-	player_is_near_active_jam = new_is_near
-
-	if source_changed or type_changed:
 		nearby_jam_changed.emit(
 			current_nearby_jam_source,
 			current_nearby_jam_type,
 			current_nearby_jam_name
 		)
 
-	if near_state_changed or not has_reported_to_music_system:
-		has_reported_to_music_system = true
+		return
+
+	# Only detach from freeform after we know no JamSpot currently owns the player area.
+	_detach_player_from_freeform_if_too_far(player_position)
+
+	# 2. Only check freeform if no active JamSpot was found.
+	var nearby_freeform: Dictionary = _find_best_active_musician(player_position)
+
+	if not nearby_freeform.is_empty():
+		current_nearby_jam_source = nearby_freeform["source"]
+		current_nearby_jam_type = JAM_TYPE_MUSICIAN
+		current_nearby_jam_name = nearby_freeform["name"]
+		current_nearby_jam_distance = nearby_freeform["distance"]
+		player_is_near_active_jam = true
 
 		if music_system != null and music_system.has_method("set_player_near_active_jam"):
-			music_system.set_player_near_active_jam(player_is_near_active_jam)
+			music_system.set_player_near_active_jam(true)
+
+		nearby_jam_changed.emit(
+			current_nearby_jam_source,
+			current_nearby_jam_type,
+			current_nearby_jam_name
+		)
+
+		return
+
+	# 3. Nothing nearby.
+	current_nearby_jam_source = null
+	current_nearby_jam_type = JAM_TYPE_NONE
+	current_nearby_jam_name = "None"
+	current_nearby_jam_distance = INF
+	player_is_near_active_jam = false
+
+	if music_system != null and music_system.has_method("set_player_near_active_jam"):
+		music_system.set_player_near_active_jam(false)
+
+	nearby_jam_changed.emit(
+		current_nearby_jam_source,
+		current_nearby_jam_type,
+		current_nearby_jam_name
+	)
 
 
 func try_auto_attach_npc_to_player(player: Node, player_position: Vector2) -> void:
+	_debug_player_freeform("try_auto_attach_npc_to_player START player_playing=" + str(player.is_playing_instrument if "is_playing_instrument" in player else "unknown"))
+	
 	if player == null:
 		return
 
@@ -104,6 +136,8 @@ func try_auto_attach_npc_to_player(player: Node, player_position: Vector2) -> vo
 
 	if nearby_npcs.is_empty():
 		return
+
+	_debug_player_freeform("try_auto_attach_npc_to_player attaching NPCs")
 
 	if active_freeform_jam_context == null or not is_instance_valid(active_freeform_jam_context):
 		_create_player_carried_freeform_context(player)
@@ -301,6 +335,8 @@ func stop_all_auto_freeform_npcs() -> void:
 
 
 func handle_player_stopped_playing(previous_context: Node) -> void:
+	_debug_player_freeform("handle_player_stopped_playing START previous_context=" + str(previous_context))
+	
 	reset_all_auto_blocks()
 
 	if previous_context == null:
@@ -348,6 +384,8 @@ func handle_player_stopped_playing(previous_context: Node) -> void:
 	# No NPC anchor remains, so this was player-led.
 	stop_all_auto_freeform_npcs()
 	_cleanup_freeform_context_if_only_player_left(false)
+	
+	_debug_player_freeform("handle_player_stopped_playing END")
 
 
 func is_freeform_jam_context(jam_context: Node) -> bool:
@@ -405,18 +443,56 @@ func is_player_near_current_jamspot_context(jam_context: Node) -> bool:
 func get_current_nearby_jam_context() -> Node:
 	var player: Node = get_tree().get_first_node_in_group("player")
 
-	if current_nearby_jam_source != null and current_nearby_jam_type == JAM_TYPE_JAM_SPOT:
-		if current_nearby_jam_source.has_method("get_jam_context"):
-			return current_nearby_jam_source.get_jam_context()
+	if player == null:
+		return null
 
+	if not player is Node2D:
+		return null
+
+	var player_position: Vector2 = player.global_position
+
+	# JamSpot always wins.
+	var nearby_jam_spot: Dictionary = _find_best_active_jam_spot(player_position)
+
+	if not nearby_jam_spot.is_empty():
+		var jam_spot: Node = nearby_jam_spot["source"]
+
+		if jam_spot != null and is_instance_valid(jam_spot):
+			if jam_spot.has_method("get_jam_context"):
+				return jam_spot.get_jam_context()
+
+	# Freeform only matters if no JamSpot is valid.
 	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		if player != null and player is Node2D:
-			var freeform_info: Dictionary = _get_active_freeform_npc_info(player.global_position, false)
-
-			if not freeform_info.is_empty():
-				return active_freeform_jam_context
+		if _is_player_near_any_freeform_anchor(player_position):
+			return active_freeform_jam_context
 
 	return null
+
+
+func _is_player_near_any_freeform_anchor(player_position: Vector2) -> bool:
+	var anchor_positions: Array[Vector2] = _get_active_freeform_anchor_positions()
+
+	if anchor_positions.is_empty():
+		return false
+
+	for anchor_position in anchor_positions:
+		var distance: float = player_position.distance_to(anchor_position)
+
+		if distance <= 300.0:
+			return true
+
+	return false
+
+
+func _get_player_freeform_join_radius() -> float:
+	var fallback_radius := 300.0
+
+	var player: Node = get_tree().get_first_node_in_group("player")
+
+	if player != null and "auto_accompany_radius" in player:
+		return float(player.auto_accompany_radius)
+
+	return fallback_radius
 
 
 func get_current_nearby_jam_source() -> Node:
@@ -464,6 +540,9 @@ func get_nearby_jam_debug_text() -> String:
 
 
 func _create_player_carried_freeform_context(player: Node) -> void:
+	_debug_player_freeform("_create_player_carried_freeform_context START")
+	
+	
 	if player == null:
 		return
 
@@ -523,6 +602,8 @@ func _create_player_carried_freeform_context(player: Node) -> void:
 
 	if player.has_method("mark_as_freeform_jam_context"):
 		player.mark_as_freeform_jam_context(active_freeform_jam_context)
+		
+	_debug_player_freeform("_create_player_carried_freeform_context END")
 
 
 func _set_player_request_on_context(player: Node, jam_context: Node) -> void:
@@ -646,7 +727,10 @@ func _cleanup_freeform_context_if_no_freeform_members() -> void:
 				active_freeform_jam_context.detach_member_preserve_audio(player)
 
 		if player.has_method("return_to_carried_solo_from_freeform"):
-			player.return_to_carried_solo_from_freeform()
+			if player != null and is_instance_valid(player):
+				if "is_playing_instrument" in player and player.is_playing_instrument:
+					if player.has_method("return_to_carried_solo_from_freeform"):
+						player.return_to_carried_solo_from_freeform()
 
 	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
 		active_freeform_jam_context.queue_free()
@@ -687,8 +771,10 @@ func _cleanup_freeform_context_if_only_player_left(return_player_to_solo := true
 	var player: Node = get_tree().get_first_node_in_group("player")
 
 	if return_player_to_solo:
-		if player != null and player.has_method("return_to_carried_solo_from_freeform"):
-			player.return_to_carried_solo_from_freeform()
+		if player != null and is_instance_valid(player):
+			if "is_playing_instrument" in player and player.is_playing_instrument:
+				if player.has_method("return_to_carried_solo_from_freeform"):
+					player.return_to_carried_solo_from_freeform()
 
 	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
 		active_freeform_jam_context.queue_free()
@@ -859,77 +945,9 @@ func reset_all_auto_blocks() -> void:
 		if npc.has_method("reset_auto_block"):
 			npc.reset_auto_block()
 
+
 func detach_player_from_freeform_if_too_far(player_position: Vector2) -> void:
-	if active_freeform_jam_context == null:
-		return
-
-	if not is_instance_valid(active_freeform_jam_context):
-		return
-
-	var player: Node = get_tree().get_first_node_in_group("player")
-
-	if player == null:
-		return
-
-	if not player is Node2D:
-		return
-
-	# Only detach if the player believes they are currently in this freeform context.
-	var player_context: Node = null
-
-	if "current_jam_context" in player:
-		player_context = player.current_jam_context
-
-	if player_context != active_freeform_jam_context:
-		return
-
-	var closest_npc_distance := INF
-	var closest_npc: Node = null
-
-	for member in active_freeform_members:
-		if member == null or not is_instance_valid(member):
-			continue
-
-		if member.is_in_group("player"):
-			continue
-
-		if not member is Node2D:
-			continue
-
-		var distance: float = player_position.distance_to(member.global_position)
-
-		if distance < closest_npc_distance:
-			closest_npc_distance = distance
-			closest_npc = member
-
-	if closest_npc == null:
-		return
-
-	var leave_distance: float = _get_player_freeform_leave_radius(closest_npc)
-
-	if closest_npc_distance <= leave_distance:
-		return
-
-	# Detach only the player. Keep NPC/manual context alive.
-	if active_freeform_jam_context.has_method("detach_member_preserve_audio"):
-		active_freeform_jam_context.detach_member_preserve_audio(player)
-	elif active_freeform_jam_context.has_method("set_member_active"):
-		active_freeform_jam_context.set_member_active(player, false)
-
-	if active_freeform_members.has(player):
-		active_freeform_members.erase(player)
-
-	if player.has_method("return_to_carried_solo_from_freeform"):
-		player.return_to_carried_solo_from_freeform()
-
-	current_nearby_jam_source = null
-	current_nearby_jam_type = JAM_TYPE_NONE
-	current_nearby_jam_name = "None"
-	current_nearby_jam_distance = INF
-	player_is_near_active_jam = false
-
-	if music_system != null and music_system.has_method("set_player_near_active_jam"):
-		music_system.set_player_near_active_jam(false)
+	_detach_player_from_freeform_if_too_far(player_position)
 
 
 func _detach_player_from_freeform_if_too_far(player_position: Vector2) -> void:
@@ -947,24 +965,29 @@ func _detach_player_from_freeform_if_too_far(player_position: Vector2) -> void:
 	if not player is Node2D:
 		return
 
+	if not "current_jam_context" in player:
+		return
+
+	# Critical guard:
+	# Only detach the player if they are actually currently attached
+	# to this active freeform context.
+	if player.current_jam_context != active_freeform_jam_context:
+		return
+
+	# If the player is not tracked as a freeform member, do not detach them.
+	if not active_freeform_members.has(player):
+		return
+
 	var freeform_info: Dictionary = _get_active_freeform_npc_info(player_position, true)
 
 	# Still inside at least one active freeform NPC leave radius.
 	if not freeform_info.is_empty():
 		return
 
-	# Player is outside all active freeform NPC leave radii.
-	# Detach only the player. Keep the NPC/context alive.
-	if active_freeform_jam_context.has_method("detach_member_preserve_audio"):
-		active_freeform_jam_context.detach_member_preserve_audio(player)
-	elif active_freeform_jam_context.has_method("set_member_active"):
-		active_freeform_jam_context.set_member_active(player, false)
-
-	if active_freeform_members.has(player):
-		active_freeform_members.erase(player)
-
-	if player.has_method("return_to_carried_solo_from_freeform"):
-		player.return_to_carried_solo_from_freeform()
+	# Player is outside the active freeform area.
+	# Let the PLAYER own the detach-to-carried-solo transition.
+	if player.has_method("detach_from_current_jam_to_carried_solo"):
+		player.detach_from_current_jam_to_carried_solo()
 
 	current_nearby_jam_source = null
 	current_nearby_jam_type = JAM_TYPE_NONE
@@ -1541,3 +1564,68 @@ func _is_npc_near_any_freeform_anchor(npc: Node, anchor_positions: Array[Vector2
 			return true
 
 	return false
+
+
+func force_detach_player_from_freeform(player: Node) -> void:
+	_debug_player_freeform("force_detach_player_from_freeform START")
+	
+	if player == null:
+		return
+
+	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+		if active_freeform_jam_context.has_method("set_member_active"):
+			active_freeform_jam_context.set_member_active(player, false)
+
+		if active_freeform_jam_context.has_method("clear_member_requested_part"):
+			active_freeform_jam_context.clear_member_requested_part(player)
+
+		if active_freeform_jam_context.has_method("detach_member_preserve_audio"):
+			active_freeform_jam_context.detach_member_preserve_audio(player)
+
+	if active_freeform_members.has(player):
+		active_freeform_members.erase(player)
+
+	if active_freeform_anchor == player:
+		active_freeform_anchor = null
+
+	if active_freeform_leader == player:
+		_refresh_freeform_leader()
+
+	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+		if active_freeform_jam_context.has_method("refresh_arrangement"):
+			active_freeform_jam_context.refresh_arrangement()
+
+	_debug_player_freeform("force_detach_player_from_freeform END")
+
+func _debug_player_freeform(message: String) -> void:
+	if debug_player_freeform:
+		print("[JAM_MANAGER_PLAYER] %s | freeform_context=%s anchor=%s leader=%s members=%s" % [
+			message,
+			str(active_freeform_jam_context),
+			str(active_freeform_anchor),
+			str(active_freeform_leader),
+			str(active_freeform_members)
+		])
+
+
+func remove_player_from_freeform_members(player: Node, context: Node = null) -> void:
+	if player == null:
+		return
+
+	if context != null:
+		if not is_freeform_jam_context(context):
+			return
+
+	if active_freeform_members.has(player):
+		active_freeform_members.erase(player)
+
+	if active_freeform_anchor == player:
+		active_freeform_anchor = null
+
+	if active_freeform_leader == player:
+		active_freeform_leader = null
+		_refresh_freeform_leader()
+
+	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+		if active_freeform_jam_context.has_method("refresh_arrangement"):
+			active_freeform_jam_context.refresh_arrangement()
