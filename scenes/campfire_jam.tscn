@@ -74,16 +74,13 @@ position = Vector2(5, 8)
 shape = SubResource("RectangleShape2D_bew7y")
 
 [node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("2_q2hrs")]
-position = Vector2(305, -371)
-starting_jam_spot_path = NodePath("../CampfireJamSpot")
+position = Vector2(354, -370)
 
 [node name="NPC_Harmonica" parent="." unique_id=1800832853 instance=ExtResource("4_65sn3")]
-position = Vector2(628, -390)
-starting_jam_spot_path = NodePath("../CampfireJamSpot")
+position = Vector2(587, -367)
 
 [node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("5_mcuth")]
-position = Vector2(474, -207)
-starting_jam_spot_path = NodePath("../CampfireJamSpot")
+position = Vector2(482, -271)
 
 [node name="NPC_Bass" parent="." unique_id=718845583 instance=ExtResource("3_mcuth")]
 position = Vector2(-847, -1511)

@@ -85,9 +85,9 @@ func try_auto_attach_npc_to_player(player: Node, player_position: Vector2) -> vo
 	if not nearby_jam_spot.is_empty():
 		return
 
-	var npc: Node = _find_best_available_accompanist(player_position)
+	var nearby_npcs: Array[Node] = _find_available_accompanists_near_position(player_position, [player])
 
-	if npc == null:
+	if nearby_npcs.is_empty():
 		return
 
 	if active_freeform_jam_context == null or not is_instance_valid(active_freeform_jam_context):
@@ -96,26 +96,23 @@ func try_auto_attach_npc_to_player(player: Node, player_position: Vector2) -> vo
 	if active_freeform_jam_context == null:
 		return
 
-	if active_freeform_jam_context.has_method("add_member"):
-		active_freeform_jam_context.add_member(npc)
+	for npc in nearby_npcs:
+		_add_npc_to_active_freeform_jam(npc, false)
 
-	_set_npc_freeform_request_on_context(npc, active_freeform_jam_context)
+	var closest_npc: Node = nearby_npcs[0]
+	var closest_distance: float = player_position.distance_to(closest_npc.global_position)
 
-	if active_freeform_jam_context.has_method("set_member_active"):
-		active_freeform_jam_context.set_member_active(npc, true)
+	for npc in nearby_npcs:
+		var distance: float = player_position.distance_to(npc.global_position)
 
-	if npc.has_method("start_auto_freeform"):
-		npc.start_auto_freeform()
-	elif npc.has_method("set_actual_playing"):
-		npc.set_actual_playing(true)
+		if distance < closest_distance:
+			closest_npc = npc
+			closest_distance = distance
 
-	if not active_freeform_members.has(npc):
-		active_freeform_members.append(npc)
-
-	current_nearby_jam_source = npc
+	current_nearby_jam_source = closest_npc
 	current_nearby_jam_type = JAM_TYPE_PLAYER_FREEFORM
-	current_nearby_jam_name = _get_jam_source_display_name(npc, "Freeform Jam")
-	current_nearby_jam_distance = player_position.distance_to(npc.global_position)
+	current_nearby_jam_name = _get_jam_source_display_name(closest_npc, "Freeform Jam")
+	current_nearby_jam_distance = closest_distance
 	player_is_near_active_jam = true
 
 	if music_system != null and music_system.has_method("set_player_near_active_jam"):
@@ -132,86 +129,64 @@ func start_manual_freeform_npc(npc: Node) -> bool:
 	if npc == null:
 		return false
 
-	var player: Node = get_tree().get_first_node_in_group("player")
+	if not npc is Node2D:
+		return false
 
-	# If player is currently playing, attach this manual NPC to the player's carried song.
-	if player != null and "is_playing_instrument" in player and player.is_playing_instrument:
+	var player: Node = get_tree().get_first_node_in_group("player")
+	var player_is_playing := false
+
+	if player != null:
+		if "is_playing_instrument" in player:
+			player_is_playing = player.is_playing_instrument
+
+	# If player is playing, use the player's carried song/context.
+	if player != null and player_is_playing:
 		if active_freeform_jam_context == null or not is_instance_valid(active_freeform_jam_context):
 			_create_player_carried_freeform_context(player)
 
-		if active_freeform_jam_context == null:
-			return false
-
-		if active_freeform_jam_context.has_method("add_member"):
-			active_freeform_jam_context.add_member(npc)
-
-		_set_npc_freeform_request_on_context(npc, active_freeform_jam_context)
-
-		if active_freeform_jam_context.has_method("set_member_active"):
-			active_freeform_jam_context.set_member_active(npc, true)
-
-		if npc.has_method("start_manual_freeform"):
-			npc.start_manual_freeform()
-		else:
-			if npc.has_method("set_actual_playing"):
-				npc.set_actual_playing(true)
-
-		if not active_freeform_members.has(npc):
-			active_freeform_members.append(npc)
-
-		current_nearby_jam_source = npc
-		current_nearby_jam_type = JAM_TYPE_PLAYER_FREEFORM
-		current_nearby_jam_name = _get_jam_source_display_name(npc, "Manual Freeform Jam")
-
-		if player is Node2D:
-			current_nearby_jam_distance = player.global_position.distance_to(npc.global_position)
-
-		player_is_near_active_jam = true
-
-		if music_system != null and music_system.has_method("set_player_near_active_jam"):
-			music_system.set_player_near_active_jam(true)
-
-		nearby_jam_changed.emit(
-			current_nearby_jam_source,
-			current_nearby_jam_type,
-			current_nearby_jam_name
-		)
-
-		return true
-
-	# If player is not playing, let the NPC start alone.
-	# Create a freeform context with the NPC as the timing source so later the player can join
-	# and JamContext can pass melody correctly.
-	if freeform_jam_context_scene == null:
-		npc.start_manual_freeform()
-		return true
-
+	# If player is not playing, create an NPC-led freeform context.
 	if active_freeform_jam_context == null or not is_instance_valid(active_freeform_jam_context):
+		if freeform_jam_context_scene == null:
+			npc.start_manual_freeform()
+			return true
+
 		active_freeform_jam_context = freeform_jam_context_scene.instantiate()
 		add_child(active_freeform_jam_context)
-		active_freeform_leader = npc
+
 		active_freeform_members.clear()
+		active_freeform_leader = npc
 
-	if active_freeform_jam_context.has_method("add_member"):
-		active_freeform_jam_context.add_member(npc)
+	if active_freeform_jam_context == null:
+		return false
 
-	_set_npc_freeform_request_on_context(npc, active_freeform_jam_context)
+	# Interacted NPC becomes indefinite/manual.
+	_add_npc_to_active_freeform_jam(npc, true)
 
-	if active_freeform_jam_context.has_method("set_member_active"):
-		active_freeform_jam_context.set_member_active(npc, true)
+	# Other nearby available NPCs join as auto/freeform followers.
+	var nearby_npcs: Array[Node] = _find_available_accompanists_near_position(npc.global_position, [npc])
 
-	if npc.has_method("start_manual_freeform"):
-		npc.start_manual_freeform()
-	else:
-		npc.set_actual_playing(true)
-
-	if not active_freeform_members.has(npc):
-		active_freeform_members.append(npc)
+	for nearby_npc in nearby_npcs:
+		_add_npc_to_active_freeform_jam(nearby_npc, false)
 
 	current_nearby_jam_source = npc
 	current_nearby_jam_type = JAM_TYPE_PLAYER_FREEFORM
 	current_nearby_jam_name = _get_jam_source_display_name(npc, "Manual Freeform Jam")
+
+	if player != null and player is Node2D:
+		current_nearby_jam_distance = player.global_position.distance_to(npc.global_position)
+	else:
+		current_nearby_jam_distance = 0.0
+
 	player_is_near_active_jam = true
+
+	if music_system != null and music_system.has_method("set_player_near_active_jam"):
+		music_system.set_player_near_active_jam(true)
+
+	nearby_jam_changed.emit(
+		current_nearby_jam_source,
+		current_nearby_jam_type,
+		current_nearby_jam_name
+	)
 
 	return true
 
@@ -237,6 +212,7 @@ func stop_manual_freeform_for_npc(npc: Node) -> void:
 	if npc == null:
 		return
 
+	# First remove the manually toggled NPC.
 	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
 		if active_freeform_jam_context.has_method("set_member_active"):
 			active_freeform_jam_context.set_member_active(npc, false)
@@ -247,7 +223,24 @@ func stop_manual_freeform_for_npc(npc: Node) -> void:
 	if active_freeform_members.has(npc):
 		active_freeform_members.erase(npc)
 
-	_cleanup_freeform_context_if_only_player_left()
+	# Now check if any manual/interaction-started NPCs remain.
+	var remaining_manual_npcs: Array[Node] = _get_active_manual_freeform_npcs()
+
+	if remaining_manual_npcs.is_empty():
+		# No manual anchor remains.
+		# All auto followers should stop too.
+		_stop_all_auto_freeform_followers()
+	else:
+		# Another manually activated NPC becomes the leader.
+		active_freeform_leader = remaining_manual_npcs[0]
+
+	_refresh_freeform_leader()
+
+	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+		if active_freeform_jam_context.has_method("refresh_arrangement"):
+			active_freeform_jam_context.refresh_arrangement()
+
+	_cleanup_freeform_context_if_no_freeform_members()
 
 
 func stop_all_auto_freeform_npcs() -> void:
@@ -276,8 +269,9 @@ func handle_player_stopped_playing(previous_context: Node) -> void:
 	if not is_freeform_jam_context(previous_context):
 		return
 
-	stop_all_auto_freeform_npcs()
+	var remaining_manual_npcs: Array[Node] = _get_active_manual_freeform_npcs()
 
+	# Remove player from the freeform context.
 	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
 		var player: Node = get_tree().get_first_node_in_group("player")
 
@@ -288,6 +282,21 @@ func handle_player_stopped_playing(previous_context: Node) -> void:
 			if active_freeform_members.has(player):
 				active_freeform_members.erase(player)
 
+	# Important:
+	# If a manual NPC is still active, the freeform jam is NPC-led.
+	# Auto followers should continue following that NPC.
+	if not remaining_manual_npcs.is_empty():
+		active_freeform_leader = remaining_manual_npcs[0]
+
+		if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+			if active_freeform_jam_context.has_method("refresh_arrangement"):
+				active_freeform_jam_context.refresh_arrangement()
+
+		return
+
+	# No manual NPC anchor remains.
+	# This was player-led auto freeform, so auto followers should stop.
+	stop_all_auto_freeform_npcs()
 	_cleanup_freeform_context_if_only_player_left(false)
 
 
@@ -538,6 +547,49 @@ func update_proximity_blocks(player_position: Vector2) -> void:
 		if distance > unblock_distance:
 			if npc.has_method("reset_auto_block"):
 				npc.reset_auto_block()
+
+
+func _cleanup_freeform_context_if_no_freeform_members() -> void:
+	var has_npc_member := false
+
+	for member in active_freeform_members:
+		if member == null or not is_instance_valid(member):
+			continue
+
+		if member.is_in_group("player"):
+			continue
+
+		has_npc_member = true
+		break
+
+	if has_npc_member:
+		return
+
+	var player: Node = get_tree().get_first_node_in_group("player")
+
+	if player != null:
+		if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+			if active_freeform_jam_context.has_method("detach_member_preserve_audio"):
+				active_freeform_jam_context.detach_member_preserve_audio(player)
+
+		if player.has_method("return_to_carried_solo_from_freeform"):
+			player.return_to_carried_solo_from_freeform()
+
+	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+		active_freeform_jam_context.queue_free()
+
+	active_freeform_jam_context = null
+	active_freeform_leader = null
+	active_freeform_members.clear()
+
+	current_nearby_jam_source = null
+	current_nearby_jam_type = JAM_TYPE_NONE
+	current_nearby_jam_name = "None"
+	current_nearby_jam_distance = INF
+	player_is_near_active_jam = false
+
+	if music_system != null and music_system.has_method("set_player_near_active_jam"):
+		music_system.set_player_near_active_jam(false)
 
 
 func _cleanup_freeform_context_if_only_player_left(return_player_to_solo := true) -> void:
@@ -932,3 +984,257 @@ func get_player_jam_label_text() -> String:
 
 func on_game_started() -> void:
 	print("JamManager received game start.")
+
+
+func _find_available_accompanists_near_position(center_position: Vector2, excluded_members: Array[Node] = []) -> Array[Node]:
+	var found_npcs: Array[Node] = []
+
+	for npc in get_tree().get_nodes_in_group("npc_musician"):
+		if not is_instance_valid(npc):
+			continue
+
+		if excluded_members.has(npc):
+			continue
+
+		if active_freeform_members.has(npc):
+			continue
+
+		if not npc.has_method("is_available_for_player_accompaniment"):
+			continue
+
+		if not npc.is_available_for_player_accompaniment():
+			continue
+
+		if not npc is Node2D:
+			continue
+
+		var npc_radius: float = _get_npc_join_radius(npc)
+		var distance: float = center_position.distance_to(npc.global_position)
+
+		if distance <= npc_radius:
+			found_npcs.append(npc)
+
+	return found_npcs
+
+
+func _add_npc_to_active_freeform_jam(npc: Node, make_manual := false) -> bool:
+	if npc == null:
+		return false
+
+	if active_freeform_jam_context == null:
+		return false
+
+	if not is_instance_valid(active_freeform_jam_context):
+		return false
+
+	if active_freeform_jam_context.has_method("add_member"):
+		active_freeform_jam_context.add_member(npc)
+
+	_set_npc_freeform_request_on_context(npc, active_freeform_jam_context)
+
+	if active_freeform_jam_context.has_method("set_member_active"):
+		active_freeform_jam_context.set_member_active(npc, true)
+
+	if make_manual:
+		if npc.has_method("start_manual_freeform"):
+			npc.start_manual_freeform()
+		elif npc.has_method("set_actual_playing"):
+			npc.set_actual_playing(true)
+	else:
+		if npc.has_method("start_auto_freeform"):
+			npc.start_auto_freeform()
+		elif npc.has_method("set_actual_playing"):
+			npc.set_actual_playing(true)
+
+	if not active_freeform_members.has(npc):
+		active_freeform_members.append(npc)
+
+	_refresh_freeform_leader()
+
+	return true
+
+
+func _refresh_freeform_leader() -> void:
+	active_freeform_leader = null
+
+	# Prefer manual NPCs as leaders.
+	for member in active_freeform_members:
+		if member == null or not is_instance_valid(member):
+			continue
+
+		if member.is_in_group("player"):
+			continue
+
+		if member.has_method("is_manual_freeform"):
+			if member.is_manual_freeform():
+				active_freeform_leader = member
+				return
+
+	# Then prefer player if present.
+	for member in active_freeform_members:
+		if member == null or not is_instance_valid(member):
+			continue
+
+		if member.is_in_group("player"):
+			active_freeform_leader = member
+			return
+
+	# Last fallback: any active NPC.
+	for member in active_freeform_members:
+		if member == null or not is_instance_valid(member):
+			continue
+
+		if not member.is_in_group("player"):
+			active_freeform_leader = member
+			return
+
+
+func _get_active_manual_freeform_npcs() -> Array[Node]:
+	var manual_npcs: Array[Node] = []
+
+	for member in active_freeform_members:
+		if member == null or not is_instance_valid(member):
+			continue
+
+		if member.is_in_group("player"):
+			continue
+
+		if not member.has_method("is_manual_freeform"):
+			continue
+
+		if member.is_manual_freeform():
+			manual_npcs.append(member)
+
+	return manual_npcs
+
+
+func _stop_all_auto_freeform_followers() -> void:
+	var members_to_check: Array[Node] = active_freeform_members.duplicate()
+
+	for member in members_to_check:
+		if member == null or not is_instance_valid(member):
+			continue
+
+		if member.is_in_group("player"):
+			continue
+
+		if not member.has_method("is_auto_freeform"):
+			continue
+
+		if not member.is_auto_freeform():
+			continue
+
+		if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+			if active_freeform_jam_context.has_method("set_member_active"):
+				active_freeform_jam_context.set_member_active(member, false)
+
+		if member.has_method("stop_freeform_immediately"):
+			member.stop_freeform_immediately()
+
+		if active_freeform_members.has(member):
+			active_freeform_members.erase(member)
+
+
+func promote_auto_npc_to_manual(npc: Node) -> void:
+	if npc == null:
+		return
+
+	if not active_freeform_members.has(npc):
+		return
+
+	if npc.has_method("start_manual_freeform"):
+		npc.start_manual_freeform()
+	else:
+		if "freeform_mode" in npc:
+			npc.freeform_mode = npc.FreeformMode.MANUAL
+
+		if "music_control_mode" in npc:
+			npc.music_control_mode = npc.MusicControlMode.FREEFORM_MANUAL
+
+		if npc.has_method("set_actual_playing"):
+			npc.set_actual_playing(true)
+
+	_refresh_freeform_leader()
+
+	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+		if active_freeform_jam_context.has_method("refresh_arrangement"):
+			active_freeform_jam_context.refresh_arrangement()
+
+
+func toggle_manual_npc_off(npc: Node) -> void:
+	if npc == null:
+		return
+
+	# First remove manual ownership from this NPC.
+	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+		if active_freeform_jam_context.has_method("set_member_active"):
+			active_freeform_jam_context.set_member_active(npc, false)
+
+	if active_freeform_members.has(npc):
+		active_freeform_members.erase(npc)
+
+	if npc.has_method("stop_freeform_immediately"):
+		npc.stop_freeform_immediately()
+
+	# If another manual NPC still anchors the jam, this NPC may fall back to AUTO
+	# if they are still close enough to that active jam.
+	var remaining_manual_npcs: Array[Node] = _get_active_manual_freeform_npcs()
+
+	if remaining_manual_npcs.is_empty():
+		# No manual anchor remains.
+		# This was the last committed NPC, so auto followers should stop too.
+		_stop_all_auto_freeform_followers()
+		_cleanup_freeform_context_if_no_freeform_members()
+		return
+
+	active_freeform_leader = remaining_manual_npcs[0]
+
+	if _npc_should_rejoin_as_auto(npc):
+		_add_npc_to_active_freeform_jam(npc, false)
+
+	_refresh_freeform_leader()
+
+	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+		if active_freeform_jam_context.has_method("refresh_arrangement"):
+			active_freeform_jam_context.refresh_arrangement()
+
+
+func _npc_should_rejoin_as_auto(npc: Node) -> bool:
+	if npc == null:
+		return false
+
+	if active_freeform_jam_context == null:
+		return false
+
+	if not is_instance_valid(active_freeform_jam_context):
+		return false
+
+	if not npc is Node2D:
+		return false
+
+	if not npc.has_method("is_available_for_player_accompaniment"):
+		return false
+
+	if not npc.is_available_for_player_accompaniment():
+		return false
+
+	for member in active_freeform_members:
+		if member == null or not is_instance_valid(member):
+			continue
+
+		if member == npc:
+			continue
+
+		if member.is_in_group("player"):
+			continue
+
+		if not member is Node2D:
+			continue
+
+		var radius: float = _get_npc_join_radius(member)
+		var distance: float = npc.global_position.distance_to(member.global_position)
+
+		if distance <= radius:
+			return true
+
+	return false

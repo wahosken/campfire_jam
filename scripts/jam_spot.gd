@@ -4,17 +4,13 @@ extends Node2D
 @export var display_name := "Campfire Jam"
 @export var song_id := "song_01"
 
-# For now this is useful for testing.
-# Later, schedules/story events can call activate_jam() and deactivate_jam().
 @export var auto_start_on_ready := true
-
 @export var leave_radius_padding := 50.0
-
-@onready var jam_area: Area2D = $JamArea
-@onready var jam_collision_shape: CollisionShape2D = $JamArea/CollisionShape2D
 
 @onready var label: Label = $Label
 @onready var jam_context: Node = $JamContext
+@onready var jam_area: Area2D = $JamArea
+@onready var jam_collision_shape: CollisionShape2D = $JamArea/CollisionShape2D
 
 var registered_npcs: Array[Node] = []
 var jam_is_active := false
@@ -24,7 +20,26 @@ func _ready() -> void:
 	add_to_group("jam_spot")
 	add_to_group("interactable")
 
+	if jam_area != null:
+		if not jam_area.area_entered.is_connected(_on_jam_area_area_entered):
+			jam_area.area_entered.connect(_on_jam_area_area_entered)
+
+		if not jam_area.area_exited.is_connected(_on_jam_area_area_exited):
+			jam_area.area_exited.connect(_on_jam_area_area_exited)
+
+		if not jam_area.body_entered.is_connected(_on_jam_area_body_entered):
+			jam_area.body_entered.connect(_on_jam_area_body_entered)
+
+		if not jam_area.body_exited.is_connected(_on_jam_area_body_exited):
+			jam_area.body_exited.connect(_on_jam_area_body_exited)
+
+	_sync_jam_context_song()
 	_update_label()
+
+	# For browser builds, you may still prefer StartGate calling start_if_auto_enabled()
+	# instead of starting directly in _ready().
+	# if auto_start_on_ready:
+	#	call_deferred("start_jam")
 
 
 func start_if_auto_enabled() -> void:
@@ -33,15 +48,14 @@ func start_if_auto_enabled() -> void:
 
 
 func interact() -> void:
-	# Placeholder/debug behavior.
-	# Later, jam spots probably should not be directly toggled by player input.
-	# Schedules, quests, dialogue, or story events should call activate_jam()
-	# and deactivate_jam() instead.
 	toggle_jam()
 
 
 func register_npc(npc: Node) -> void:
 	if npc == null:
+		return
+
+	if not is_instance_valid(npc):
 		return
 
 	if not registered_npcs.has(npc):
@@ -50,12 +64,9 @@ func register_npc(npc: Node) -> void:
 	if npc.has_method("set_current_jam_spot"):
 		npc.set_current_jam_spot(self)
 
-	if npc.has_method("set_current_jam_context"):
-		npc.set_current_jam_context(jam_context)
-
-	if jam_context != null and jam_context.has_method("add_member"):
-		jam_context.add_member(npc)
-
+	# Important:
+	# Merely being inside the JamSpot does not mean JamSpot controls the NPC.
+	# Only active JamSpots take control.
 	refresh_npc_activity(npc)
 	_update_label()
 
@@ -67,17 +78,18 @@ func unregister_npc(npc: Node) -> void:
 	if registered_npcs.has(npc):
 		registered_npcs.erase(npc)
 
-	if npc.has_method("set_actual_playing"):
-		npc.set_actual_playing(false)
+	# If this JamSpot currently controls the NPC, release it.
+	if npc.has_method("end_jam_spot_control"):
+		npc.end_jam_spot_control(self)
+	else:
+		if jam_context != null and jam_context.has_method("set_member_active"):
+			jam_context.set_member_active(npc, false)
 
-	if jam_context != null and jam_context.has_method("remove_member"):
-		jam_context.remove_member(npc)
+		if npc.has_method("set_current_jam_context"):
+			npc.set_current_jam_context(null)
 
 	if npc.has_method("set_current_jam_spot"):
 		npc.set_current_jam_spot(null)
-
-	if npc.has_method("set_current_jam_context"):
-		npc.set_current_jam_context(null)
 
 	_update_label()
 
@@ -87,8 +99,9 @@ func start_jam() -> void:
 		return
 
 	jam_is_active = true
-
 	_sync_jam_context_song()
+
+	_rescan_npcs_inside_jam_area()
 	refresh_all_npc_activity()
 	_update_label()
 
@@ -99,23 +112,52 @@ func stop_jam() -> void:
 
 	jam_is_active = false
 
-	refresh_all_npc_activity()
+	for npc in registered_npcs.duplicate():
+		if npc == null or not is_instance_valid(npc):
+			continue
+
+		if jam_context != null and jam_context.has_method("set_member_active"):
+			jam_context.set_member_active(npc, false)
+
+		if npc.has_method("end_jam_spot_control"):
+			npc.end_jam_spot_control(self)
+		else:
+			if npc.has_method("set_current_jam_context"):
+				npc.set_current_jam_context(null)
+
+			if npc.has_method("set_current_jam_spot"):
+				npc.set_current_jam_spot(null)
+
+			if npc.has_method("set_current_part"):
+				npc.set_current_part("silent")
+
+		# Important: fully release physical JamSpot tracking too.
+		if npc.has_method("set_current_jam_spot"):
+			npc.set_current_jam_spot(null)
+
+	registered_npcs.clear()
+
+	if jam_context != null and jam_context.has_method("stop_all_members"):
+		jam_context.stop_all_members()
+
 	_update_label()
 
 
-func toggle_jam() -> void:
-	if jam_is_active:
-		stop_jam()
-	else:
-		start_jam()
+func _rescan_npcs_inside_jam_area() -> void:
+	registered_npcs.clear()
 
+	if jam_area == null:
+		return
 
-func activate_jam() -> void:
-	start_jam()
+	for area in jam_area.get_overlapping_areas():
+		var possible_npc: Node = area.get_parent()
 
+		if possible_npc != null and possible_npc.is_in_group("npc_musician"):
+			register_npc(possible_npc)
 
-func deactivate_jam() -> void:
-	stop_jam()
+	for body in jam_area.get_overlapping_bodies():
+		if body != null and body.is_in_group("npc_musician"):
+			register_npc(body)
 
 
 func set_jam_active(should_be_active: bool) -> void:
@@ -125,8 +167,15 @@ func set_jam_active(should_be_active: bool) -> void:
 		stop_jam()
 
 
+func toggle_jam() -> void:
+	if jam_is_active:
+		stop_jam()
+	else:
+		start_jam()
+
+
 func refresh_all_npc_activity() -> void:
-	for npc in registered_npcs:
+	for npc in registered_npcs.duplicate():
 		refresh_npc_activity(npc)
 
 
@@ -142,38 +191,48 @@ func refresh_npc_activity(npc: Node) -> void:
 
 	var should_play: bool = jam_is_active and npc.is_npc_enabled()
 
-	if npc.has_method("set_current_jam_spot"):
-		npc.set_current_jam_spot(self)
+	if not should_play:
+		# JamSpot is off or NPC disabled.
+		# NPC remains physically registered inside the JamSpot,
+		# but the JamSpot must release musical control completely.
+		if jam_context != null and jam_context.has_method("set_member_active"):
+			jam_context.set_member_active(npc, false)
 
-	if npc.has_method("set_current_jam_context"):
-		npc.set_current_jam_context(jam_context)
+		if npc.has_method("end_jam_spot_control"):
+			npc.end_jam_spot_control(self)
+		else:
+			if npc.has_method("set_current_jam_context"):
+				npc.set_current_jam_context(null)
+
+			if npc.has_method("set_current_part"):
+				npc.set_current_part("silent")
+
+		return
+
+	# JamSpot is active, so it takes control.
+	if npc.has_method("begin_jam_spot_control"):
+		npc.begin_jam_spot_control(self, jam_context)
+	else:
+		if npc.has_method("set_current_jam_spot"):
+			npc.set_current_jam_spot(self)
+
+		if npc.has_method("set_current_jam_context"):
+			npc.set_current_jam_context(jam_context)
 
 	if jam_context != null and jam_context.has_method("add_member"):
 		jam_context.add_member(npc)
 
-	if should_play:
-		# JamSpot NPCs are fully available.
-		# JamContext decides who is rhythm/melody.
-		if jam_context != null:
-			if jam_context.has_method("set_member_requested_parts"):
-				jam_context.set_member_requested_parts(npc, true, true)
-			elif jam_context.has_method("set_member_requested_part"):
-				jam_context.set_member_requested_part(npc, "both")
+	if jam_context != null:
+		if jam_context.has_method("set_member_requested_parts"):
+			jam_context.set_member_requested_parts(npc, true, true)
+		elif jam_context.has_method("set_member_requested_part"):
+			jam_context.set_member_requested_part(npc, "both")
 
-		if "wants_to_play" in npc:
-			npc.wants_to_play = true
+	if "wants_to_play" in npc:
+		npc.wants_to_play = true
 
-		if jam_context != null and jam_context.has_method("set_member_active"):
-			jam_context.set_member_active(npc, true)
-	else:
-		if jam_context != null and jam_context.has_method("set_member_active"):
-			jam_context.set_member_active(npc, false)
-
-		if "wants_to_play" in npc:
-			npc.wants_to_play = false
-
-		if npc.has_method("set_current_part"):
-			npc.set_current_part("silent")
+	if jam_context != null and jam_context.has_method("set_member_active"):
+		jam_context.set_member_active(npc, true)
 
 
 func is_jam_active() -> bool:
@@ -181,15 +240,11 @@ func is_jam_active() -> bool:
 
 
 func is_active() -> bool:
-	return is_jam_active()
+	return jam_is_active
 
 
 func get_display_name() -> String:
 	return display_name
-
-
-func get_jam_id() -> String:
-	return jam_id
 
 
 func get_song_id() -> String:
@@ -245,16 +300,58 @@ func is_position_inside_leave_radius(world_position: Vector2) -> bool:
 	return global_position.distance_to(world_position) <= get_leave_radius()
 
 
-func can_player_join() -> bool:
-	return jam_is_active and jam_context != null
-
-
 func _sync_jam_context_song() -> void:
-	if jam_context == null:
+	if jam_context != null:
+		if "song_id" in jam_context:
+			jam_context.song_id = song_id
+
+
+func _on_jam_area_area_entered(area: Area2D) -> void:
+	var possible_npc: Node = area.get_parent()
+	_try_register_possible_npc(possible_npc)
+
+
+func _on_jam_area_area_exited(area: Area2D) -> void:
+	var possible_npc: Node = area.get_parent()
+	_try_unregister_possible_npc(possible_npc)
+
+
+func _on_jam_area_body_entered(body: Node) -> void:
+	_try_register_possible_npc(body)
+
+
+func _on_jam_area_body_exited(body: Node) -> void:
+	_try_unregister_possible_npc(body)
+
+
+func _try_register_possible_npc(node: Node) -> void:
+	if not jam_is_active:
 		return
 
-	if "song_id" in jam_context:
-		jam_context.song_id = song_id
+	if node == null:
+		return
+
+	if not is_instance_valid(node):
+		return
+
+	if not node.is_in_group("npc_musician"):
+		return
+
+	register_npc(node)
+
+
+func _try_unregister_possible_npc(node: Node) -> void:
+	if node == null:
+		return
+
+	if not is_instance_valid(node):
+		return
+
+	if not node.is_in_group("npc_musician"):
+		return
+
+	if registered_npcs.has(node):
+		unregister_npc(node)
 
 
 func _update_label() -> void:
@@ -263,8 +360,9 @@ func _update_label() -> void:
 
 	var state_text := "On" if jam_is_active else "Off"
 
-	label.text = "%s\nSong: %s\n%s" % [
+	label.text = "%s\nSong: %s\n%s\nNPCs: %d" % [
 		display_name,
 		song_id,
-		state_text
+		state_text,
+		registered_npcs.size()
 	]
