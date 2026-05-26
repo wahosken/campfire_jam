@@ -1,4 +1,4 @@
-extends Node2D
+extends CharacterBody2D
 
 @export var debug_npc_state := false
 
@@ -777,13 +777,29 @@ func _update_jam_formation_movement(delta: float) -> void:
 
 	var speed := jam_formation_move_speed
 
-	# Smooth approach as NPC gets near the target area.
 	if distance < jam_formation_slow_radius:
 		var t := inverse_lerp(jam_formation_max_distance, jam_formation_slow_radius, distance)
 		speed = lerp(jam_formation_move_speed * 0.35, jam_formation_move_speed, t)
 
-	var direction: Vector2 = global_position.direction_to(jam_formation_target_position)
-	global_position += direction * speed * delta
+	_move_toward_world_position(
+		jam_formation_target_position,
+		speed,
+		jam_formation_max_distance,
+		delta
+	)
+
+
+func _move_toward_world_position(target_position: Vector2, move_speed: float, stop_distance: float, _delta: float) -> void:
+	var distance: float = global_position.distance_to(target_position)
+
+	if distance <= stop_distance:
+		velocity = Vector2.ZERO
+		move_and_slide()
+		return
+
+	var direction: Vector2 = global_position.direction_to(target_position)
+	velocity = direction * move_speed
+	move_and_slide()
 
 
 # ------------------------------------------------------------
@@ -841,8 +857,12 @@ func _update_follow_player(delta: float) -> void:
 	if distance <= follow_max_distance:
 		return
 
-	var direction: Vector2 = global_position.direction_to(follow_target.global_position)
-	global_position += direction * follow_speed * delta
+	_move_toward_world_position(
+		follow_target.global_position,
+		follow_speed,
+		follow_max_distance,
+		delta
+	)
 
 
 # ------------------------------------------------------------
