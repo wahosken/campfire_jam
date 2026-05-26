@@ -1001,24 +1001,21 @@ func _check_auto_freeform_leave(_player_position: Vector2) -> void:
 		if not member is Node2D:
 			continue
 
-		# JamSpot buffer wins over all freeform chains.
+		# JamSpot buffer wins over all freeform behavior.
 		if _is_position_inside_active_jamspot_buffer(member.global_position):
 			stop_auto_freeform_for_npc(member)
 			continue
 
 		var leave_anchor_positions: Array[Vector2] = _get_freeform_leave_anchor_positions_for_member(member)
 
-		_debug_player_freeform(
-			"leave check member=%s anchors=%d" % [
-				str(member.name),
-				leave_anchor_positions.size()
-			]
-		)
-
+		# If there are no valid anchors other than this NPC,
+		# this NPC is no longer truly inside a jam bubble.
 		if leave_anchor_positions.is_empty():
 			stop_auto_freeform_for_npc(member)
 			continue
 
+		# If the NPC is no longer near any valid bubble anchor,
+		# stop it and clear its join timer through stop_auto_freeform_for_npc().
 		if not _is_npc_near_any_freeform_anchor(member, leave_anchor_positions):
 			stop_auto_freeform_for_npc(member)
 
@@ -1399,6 +1396,7 @@ func _get_freeform_leave_anchor_positions_for_member(member: Node) -> Array[Vect
 			if not positions.has(delayed_position):
 				positions.append(delayed_position)
 
+	# Important:
 	# Prevent an auto NPC from keeping itself alive as its own only anchor.
 	if member != null and member is Node2D:
 		var member_position: Vector2 = member.global_position
