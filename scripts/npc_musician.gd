@@ -14,6 +14,10 @@ extends Node2D
 @export var follow_min_distance := 56.0
 @export var follow_max_distance := 96.0
 
+@export var jam_formation_move_speed := 90.0
+@export var jam_formation_min_distance := 75.0
+@export var jam_formation_max_distance := 100.0
+
 @onready var interaction_area: Area2D = $InteractionArea
 @onready var sprite: ColorRect = $ColorRect
 @onready var label: Label = $Label
@@ -68,6 +72,9 @@ var current_part := "silent"
 var following_player := false
 var follow_target: Node = null
 
+var jam_formation_target_position := Vector2.ZERO
+var has_jam_formation_target := false
+
 var instrument_visual_tween: Tween = null
 
 const IDLE_COLOR := Color(1, 1, 1, 1)
@@ -99,6 +106,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_update_jam_formation_movement(delta)
 	_update_follow_player(delta)
 
 
@@ -359,6 +367,29 @@ func is_available_for_player_accompaniment() -> bool:
 
 func can_use_freeform_logic() -> bool:
 	return not is_controlled_by_active_jam_spot()
+
+
+func set_jam_formation_target(target_position: Vector2) -> void:
+	if has_jam_formation_target:
+		if jam_formation_target_position.distance_to(target_position) < 0.5:
+			return
+
+	jam_formation_target_position = target_position
+	has_jam_formation_target = true
+
+	if debug_npc_state:
+		print("[%s] formation target: %s" % [name, jam_formation_target_position])
+
+
+func clear_jam_formation_target() -> void:
+	if not has_jam_formation_target:
+		return
+
+	has_jam_formation_target = false
+	jam_formation_target_position = Vector2.ZERO
+
+	if debug_npc_state:
+		print("[%s] cleared formation target" % name)
 
 
 # ------------------------------------------------------------
@@ -671,6 +702,34 @@ func clear_music_control_mode() -> void:
 
 
 # ------------------------------------------------------------
+# Jam formation movement
+# ------------------------------------------------------------
+
+func _update_jam_formation_movement(delta: float) -> void:
+	if not has_jam_formation_target:
+		return
+
+	if is_controlled_by_active_jam_spot():
+		return
+
+	if freeform_mode == FreeformMode.NONE:
+		return
+
+	var distance: float = global_position.distance_to(jam_formation_target_position)
+
+	# Already close enough. Do not micro-adjust.
+	if distance <= jam_formation_min_distance:
+		return
+
+	# Soft arrival zone. This prevents constant tiny corrections.
+	if distance <= jam_formation_max_distance:
+		return
+
+	var direction: Vector2 = global_position.direction_to(jam_formation_target_position)
+	global_position += direction * jam_formation_move_speed * delta
+
+
+# ------------------------------------------------------------
 # Following
 # ------------------------------------------------------------
 
@@ -704,6 +763,9 @@ func is_following_player() -> bool:
 
 func _update_follow_player(delta: float) -> void:
 	if not following_player:
+		return
+
+	if has_jam_formation_target and freeform_mode != FreeformMode.NONE:
 		return
 
 	if follow_target == null or not is_instance_valid(follow_target):

@@ -2,6 +2,8 @@ extends Node
 
 signal nearby_jam_changed(jam_source: Node, jam_type: String, jam_name: String)
 
+@onready var jam_formation: Node = $JamFormation
+
 @export var debug_player_freeform := false
 
 @export var fallback_accompanist_radius := 100.0
@@ -62,11 +64,11 @@ func _ready() -> void:
 
 	music_system = get_tree().get_first_node_in_group("music_system")
 
-
 func _process(delta: float) -> void:
 	update_following_npc_jam_priorities()
 	_update_pending_freeform_auto_joins(delta)
 	_update_active_freeform_recruitment(delta)
+	_update_active_jam_formation_targets()
 
 	var player: Node = get_tree().get_first_node_in_group("player")
 
@@ -613,6 +615,7 @@ func stop_auto_freeform_for_npc(npc: Node) -> void:
 	_clear_freeform_member_join_time(npc)
 
 	_cleanup_freeform_context_if_only_player_left()
+	_sync_jam_formation_to_active_freeform()
 
 
 func stop_manual_freeform_for_npc(npc: Node) -> void:
@@ -646,6 +649,7 @@ func stop_manual_freeform_for_npc(npc: Node) -> void:
 		if active_freeform_jam_context.has_method("refresh_arrangement"):
 			active_freeform_jam_context.refresh_arrangement()
 
+	_sync_jam_formation_to_active_freeform()
 	_cleanup_freeform_context_if_no_freeform_members()
 
 
@@ -975,6 +979,7 @@ func _add_npc_to_active_freeform_jam(npc: Node, make_manual := false) -> bool:
 		active_freeform_jam_context.refresh_arrangement()
 
 	_refresh_freeform_leader()
+	_sync_jam_formation_to_active_freeform()
 
 	return true
 
@@ -1131,6 +1136,7 @@ func remove_npc_from_freeform_members_for_jamspot(npc: Node) -> void:
 		if active_freeform_jam_context.has_method("refresh_arrangement"):
 			active_freeform_jam_context.refresh_arrangement()
 
+	_sync_jam_formation_to_active_freeform()
 	_cleanup_freeform_context_if_no_freeform_members()
 
 
@@ -1205,6 +1211,9 @@ func _destroy_active_freeform_context() -> void:
 	active_freeform_members.clear()
 	freeform_member_join_times.clear()
 	pending_freeform_auto_joins.clear()
+
+	if jam_formation != null and jam_formation.has_method("clear"):
+		jam_formation.clear()
 
 	_clear_current_nearby_jam()
 
@@ -1729,6 +1738,75 @@ func _has_freeform_member_anchor_delay_passed(member: Node) -> bool:
 	var now: float = Time.get_ticks_msec() / 1000.0
 
 	return now - joined_at >= auto_freeform_anchor_delay
+
+
+func _sync_jam_formation_to_active_freeform() -> void:
+	if jam_formation == null:
+		return
+
+	if active_freeform_jam_context == null or not is_instance_valid(active_freeform_jam_context):
+		if jam_formation.has_method("clear"):
+			jam_formation.clear()
+		return
+
+	if active_freeform_anchor == null or not is_instance_valid(active_freeform_anchor):
+		if jam_formation.has_method("clear"):
+			jam_formation.clear()
+		return
+
+	if not active_freeform_anchor is Node2D:
+		if jam_formation.has_method("clear"):
+			jam_formation.clear()
+		return
+
+	var formation_members: Array[Node] = []
+
+	for member in active_freeform_members:
+		if member == null or not is_instance_valid(member):
+			continue
+
+		if member == active_freeform_anchor:
+			continue
+
+		if member.is_in_group("player"):
+			continue
+
+		if not member is Node2D:
+			continue
+
+		formation_members.append(member)
+
+	if jam_formation.has_method("set_leader"):
+		jam_formation.set_leader(active_freeform_anchor)
+
+	if jam_formation.has_method("set_members"):
+		jam_formation.set_members(formation_members)
+
+	if jam_formation.has_method("apply_targets_to_members"):
+		jam_formation.apply_targets_to_members()
+
+
+func _update_active_jam_formation_targets() -> void:
+	if jam_formation == null:
+		return
+
+	if active_freeform_jam_context == null:
+		return
+
+	if not is_instance_valid(active_freeform_jam_context):
+		return
+
+	if active_freeform_anchor == null:
+		return
+
+	if not is_instance_valid(active_freeform_anchor):
+		return
+
+	if not active_freeform_anchor is Node2D:
+		return
+
+	if jam_formation.has_method("apply_targets_to_members"):
+		jam_formation.apply_targets_to_members()
 
 
 # ------------------------------------------------------------
