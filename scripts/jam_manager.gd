@@ -448,9 +448,15 @@ func remove_player_from_freeform_members(player: Node, context: Node = null) -> 
 	if player == null:
 		return
 
+	var was_active_freeform_context := false
+
 	if context != null:
 		if not is_freeform_jam_context(context):
 			return
+
+		was_active_freeform_context = context == active_freeform_jam_context
+	else:
+		was_active_freeform_context = true
 
 	if active_freeform_members.has(player):
 		active_freeform_members.erase(player)
@@ -460,7 +466,21 @@ func remove_player_from_freeform_members(player: Node, context: Node = null) -> 
 
 	if active_freeform_leader == player:
 		active_freeform_leader = null
-		_refresh_freeform_leader()
+
+	_refresh_freeform_leader()
+
+	# If the player left a player-led freeform jam and no manual NPC remains,
+	# auto followers should not continue as an accidental freeform jam.
+	if was_active_freeform_context:
+		var remaining_manual_npcs: Array[Node] = _get_active_manual_freeform_npcs()
+
+		if remaining_manual_npcs.is_empty():
+			_stop_all_auto_freeform_followers()
+			_cleanup_freeform_context_if_no_freeform_members(false)
+			return
+
+		active_freeform_anchor = remaining_manual_npcs[0]
+		active_freeform_leader = remaining_manual_npcs[0]
 
 	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
 		if active_freeform_jam_context.has_method("refresh_arrangement"):
@@ -968,7 +988,7 @@ func remove_npc_from_freeform_members_for_jamspot(npc: Node) -> void:
 # Freeform cleanup
 # ------------------------------------------------------------
 
-func _cleanup_freeform_context_if_no_freeform_members() -> void:
+func _cleanup_freeform_context_if_no_freeform_members(return_player_to_solo := true) -> void:
 	var has_npc_member := false
 
 	for member in active_freeform_members:
@@ -986,15 +1006,16 @@ func _cleanup_freeform_context_if_no_freeform_members() -> void:
 
 	var player: Node = get_tree().get_first_node_in_group("player")
 
-	# Only return the player to carried solo if the player is actually still
-	# attached to this active freeform context.
-	# Do NOT pull the player out of a JamSpot just because an NPC left freeform.
-	if player != null and is_instance_valid(player):
-		if "is_playing_instrument" in player and player.is_playing_instrument:
-			if "current_jam_context" in player:
-				if player.current_jam_context == active_freeform_jam_context:
-					if player.has_method("return_to_carried_solo_from_freeform"):
-						player.return_to_carried_solo_from_freeform()
+	if return_player_to_solo:
+		# Only return the player to carried solo if the player is actually still
+		# attached to this active freeform context.
+		# Do NOT pull the player out of a JamSpot or recurse during player-owned detach.
+		if player != null and is_instance_valid(player):
+			if "is_playing_instrument" in player and player.is_playing_instrument:
+				if "current_jam_context" in player:
+					if player.current_jam_context == active_freeform_jam_context:
+						if player.has_method("return_to_carried_solo_from_freeform"):
+							player.return_to_carried_solo_from_freeform()
 
 	_destroy_active_freeform_context()
 
