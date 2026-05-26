@@ -938,6 +938,32 @@ func _check_auto_freeform_leave(_player_position: Vector2) -> void:
 			stop_auto_freeform_for_npc(member)
 
 
+func remove_npc_from_freeform_members_for_jamspot(npc: Node) -> void:
+	if npc == null:
+		return
+
+	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+		if active_freeform_jam_context.has_method("set_member_active"):
+			active_freeform_jam_context.set_member_active(npc, false)
+
+	if active_freeform_members.has(npc):
+		active_freeform_members.erase(npc)
+
+	if active_freeform_anchor == npc:
+		active_freeform_anchor = null
+
+	if active_freeform_leader == npc:
+		active_freeform_leader = null
+		_refresh_freeform_leader()
+
+	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+		if active_freeform_jam_context.has_method("refresh_arrangement"):
+			active_freeform_jam_context.refresh_arrangement()
+
+	_cleanup_freeform_context_if_no_freeform_members()
+
+
+
 # ------------------------------------------------------------
 # Freeform cleanup
 # ------------------------------------------------------------
