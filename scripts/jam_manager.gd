@@ -986,10 +986,15 @@ func _cleanup_freeform_context_if_no_freeform_members() -> void:
 
 	var player: Node = get_tree().get_first_node_in_group("player")
 
+	# Only return the player to carried solo if the player is actually still
+	# attached to this active freeform context.
+	# Do NOT pull the player out of a JamSpot just because an NPC left freeform.
 	if player != null and is_instance_valid(player):
 		if "is_playing_instrument" in player and player.is_playing_instrument:
-			if player.has_method("return_to_carried_solo_from_freeform"):
-				player.return_to_carried_solo_from_freeform()
+			if "current_jam_context" in player:
+				if player.current_jam_context == active_freeform_jam_context:
+					if player.has_method("return_to_carried_solo_from_freeform"):
+						player.return_to_carried_solo_from_freeform()
 
 	_destroy_active_freeform_context()
 
@@ -1014,8 +1019,10 @@ func _cleanup_freeform_context_if_only_player_left(return_player_to_solo := true
 	if return_player_to_solo:
 		if player != null and is_instance_valid(player):
 			if "is_playing_instrument" in player and player.is_playing_instrument:
-				if player.has_method("return_to_carried_solo_from_freeform"):
-					player.return_to_carried_solo_from_freeform()
+				if "current_jam_context" in player:
+					if player.current_jam_context == active_freeform_jam_context:
+						if player.has_method("return_to_carried_solo_from_freeform"):
+							player.return_to_carried_solo_from_freeform()
 
 	_destroy_active_freeform_context()
 
