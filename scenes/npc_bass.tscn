@@ -32,11 +32,14 @@ grow_vertical = 2
 color = Color(0.19076231, 0.19076234, 0.19076231, 1)
 
 [node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=809637847]
+collision_layer = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1899097799]
 shape = SubResource("RectangleShape2D_uq81o")
 
 [node name="InteractionArea" type="Area2D" parent="." unique_id=392024863]
+collision_layer = 8
+collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=532288306]
 shape = SubResource("CircleShape2D_uqgcj")

@@ -91,11 +91,15 @@ vertical_alignment = 1
 metadata/_edit_use_anchors_ = true
 
 [node name="JamArea" type="Area2D" parent="FountainJamSpot" unique_id=1393016306]
+collision_layer = 16
+collision_mask = 14
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FountainJamSpot/JamArea" unique_id=1695306177]
 shape = SubResource("CircleShape2D_bew7y")
 
 [node name="InteractionArea" type="Area2D" parent="FountainJamSpot" unique_id=1968245359 groups=["interactable"]]
+collision_layer = 8
+collision_mask = 2
 script = ExtResource("5_xcp83")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FountainJamSpot/InteractionArea" unique_id=913577813]
@@ -148,11 +152,15 @@ vertical_alignment = 1
 metadata/_edit_use_anchors_ = true
 
 [node name="JamArea" type="Area2D" parent="CampfireJamSpot" unique_id=804260112]
+collision_layer = 16
+collision_mask = 14
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CampfireJamSpot/JamArea" unique_id=445197964]
 shape = SubResource("CircleShape2D_bew7y")
 
 [node name="InteractionArea" type="Area2D" parent="CampfireJamSpot" unique_id=1262593958 groups=["interactable"]]
+collision_layer = 8
+collision_mask = 2
 script = ExtResource("5_xcp83")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CampfireJamSpot/InteractionArea" unique_id=1194296035]

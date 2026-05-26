@@ -10,13 +10,14 @@ extends Node2D
 
 @export var primary_song_id := "song_01"
 
-@export var follow_speed := 120.0
+@export var follow_speed := 180.0
 @export var follow_min_distance := 56.0
 @export var follow_max_distance := 96.0
 
 @export var jam_formation_move_speed := 90.0
 @export var jam_formation_min_distance := 75.0
 @export var jam_formation_max_distance := 100.0
+@export var jam_formation_slow_radius := 140.0
 
 @onready var interaction_area: Area2D = $InteractionArea
 @onready var sprite: ColorRect = $ColorRect
@@ -638,6 +639,59 @@ func reset_temporary_music_state_for_jam_join() -> void:
 	_update_label()
 
 
+func reset_freeform_state_for_jamspot_buffer() -> void:
+	# Used when JamManager cancels freeform because this NPC entered
+	# an active JamSpot etiquette buffer.
+	# This should NOT proximity-block the NPC forever.
+	# It simply clears temporary freeform/jam state.
+
+	if current_jam_context != null and is_instance_valid(current_jam_context):
+		if current_jam_context.has_method("clear_member_requested_part"):
+			current_jam_context.clear_member_requested_part(self)
+
+		if current_jam_context.has_method("set_member_active"):
+			current_jam_context.set_member_active(self, false)
+
+	_stop_current_audio_source()
+
+	freeform_mode = FreeformMode.NONE
+
+	if music_control_mode == MusicControlMode.FREEFORM_AUTO \
+		or music_control_mode == MusicControlMode.FREEFORM_MANUAL:
+		music_control_mode = MusicControlMode.NONE
+
+	current_jam_context = null
+
+	proximity_blocked_until_reset = false
+
+	clear_jam_formation_target()
+
+	_clear_playing_state()
+
+
+func suppress_freeform_audio_for_jamspot_buffer() -> void:
+	# Used when a player-led freeform follower enters an active JamSpot buffer.
+	# The NPC should stay in the formation so the player can lead them back out,
+	# but they should not play or compete with the JamSpot.
+
+	if current_jam_context != null and is_instance_valid(current_jam_context):
+		if current_jam_context.has_method("clear_member_requested_part"):
+			current_jam_context.clear_member_requested_part(self)
+
+		if current_jam_context.has_method("set_member_active"):
+			current_jam_context.set_member_active(self, false)
+
+	_stop_current_audio_source()
+
+	wants_to_play = false
+	wants_rhythm = false
+	wants_melody = false
+	current_part = "silent"
+
+	_update_visual_from_current_part()
+	_update_label()
+
+
 func _clear_playing_state() -> void:
 	wants_to_play = false
 	wants_rhythm = false
@@ -717,16 +771,19 @@ func _update_jam_formation_movement(delta: float) -> void:
 
 	var distance: float = global_position.distance_to(jam_formation_target_position)
 
-	# Already close enough. Do not micro-adjust.
-	if distance <= jam_formation_min_distance:
-		return
-
-	# Soft arrival zone. This prevents constant tiny corrections.
+	# Comfortable zone. Do not micro-adjust.
 	if distance <= jam_formation_max_distance:
 		return
 
+	var speed := jam_formation_move_speed
+
+	# Smooth approach as NPC gets near the target area.
+	if distance < jam_formation_slow_radius:
+		var t := inverse_lerp(jam_formation_max_distance, jam_formation_slow_radius, distance)
+		speed = lerp(jam_formation_move_speed * 0.35, jam_formation_move_speed, t)
+
 	var direction: Vector2 = global_position.direction_to(jam_formation_target_position)
-	global_position += direction * jam_formation_move_speed * delta
+	global_position += direction * speed * delta
 
 
 # ------------------------------------------------------------
