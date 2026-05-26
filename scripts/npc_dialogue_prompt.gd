@@ -9,7 +9,6 @@ signal closed
 
 @export var input_open_grace_time := 0.2
 @export var joystick_deadzone := 0.55
-
 @export var menu_nav_deadzone := 0.5
 
 var menu_nav_locked := false
@@ -22,6 +21,10 @@ var selected_button_index := 0
 var input_cooldown := 0.0
 var menu_axis_locked := false
 
+
+# ------------------------------------------------------------
+# Lifecycle
+# ------------------------------------------------------------
 
 func _ready() -> void:
 	add_to_group("npc_dialogue_prompt")
@@ -73,6 +76,16 @@ func _process(delta: float) -> void:
 		_move_selection(nav_direction)
 
 
+func _exit_tree() -> void:
+	if current_npc != null:
+		if current_npc.has_method("enable_interaction"):
+			current_npc.enable_interaction()
+
+
+# ------------------------------------------------------------
+# Open / close
+# ------------------------------------------------------------
+
 func open_for_npc(npc: Node) -> void:
 	current_npc = npc
 
@@ -89,16 +102,7 @@ func open_for_npc(npc: Node) -> void:
 
 	visible = true
 
-	var npc_name := "Musician"
-
-	if current_npc.has_method("get_display_name"):
-		npc_name = current_npc.get_display_name()
-	elif "display_name" in current_npc:
-		npc_name = str(current_npc.display_name)
-	elif current_npc.name != "":
-		npc_name = current_npc.name
-
-	name_label.text = npc_name
+	name_label.text = _get_npc_display_name(current_npc)
 
 	_refresh_buttons()
 	_select_button(0)
@@ -125,46 +129,77 @@ func close() -> void:
 		player.refresh_nearby_interactables()
 
 
+# ------------------------------------------------------------
+# Button text
+# ------------------------------------------------------------
+
 func _refresh_buttons() -> void:
 	if current_npc == null:
 		return
 
-	var is_playing := false
-	var is_following := false
-
-	if current_npc.has_method("is_actively_playing_jam"):
-		is_playing = current_npc.is_actively_playing_jam()
-
-	if current_npc.has_method("is_following_player"):
-		is_following = current_npc.is_following_player()
-
-	play_button.text = "Stop Playing" if is_playing else "Play Song"
-	follow_button.text = "Stop Following" if is_following else "Follow Me"
+	play_button.text = _get_play_button_text(current_npc)
+	follow_button.text = _get_follow_button_text(current_npc)
 
 	_update_button_visuals()
 
 
-func _move_selection(direction: int) -> void:
-	if menu_buttons.is_empty():
-		return
+func _get_play_button_text(npc: Node) -> String:
+	if npc == null:
+		return "Start Playing"
 
-	selected_button_index += direction
+	# Manual freeform means the player intentionally told this NPC to play.
+	if npc.has_method("is_manual_freeform"):
+		if npc.is_manual_freeform():
+			return "Stop Playing"
 
-	if selected_button_index < 0:
-		selected_button_index = menu_buttons.size() - 1
-	elif selected_button_index >= menu_buttons.size():
-		selected_button_index = 0
+	# Auto freeform means they are already temporarily participating.
+	# Pressing the button commits them to keep playing.
+	if npc.has_method("is_auto_freeform"):
+		if npc.is_auto_freeform():
+			return "Keep Playing"
 
-	_update_button_visuals()
+	# JamSpot controlled NPCs use enabled/sitting-out state.
+	if npc.has_method("is_controlled_by_active_jam_spot"):
+		if npc.is_controlled_by_active_jam_spot():
+			if npc.has_method("is_npc_enabled"):
+				if npc.is_npc_enabled():
+					return "Stop Playing"
+
+			return "Start Playing"
+
+	return "Start Playing"
 
 
-func _select_button(index: int) -> void:
-	if menu_buttons.is_empty():
-		return
+func _get_follow_button_text(npc: Node) -> String:
+	if npc == null:
+		return "Follow Me"
 
-	selected_button_index = clampi(index, 0, menu_buttons.size() - 1)
-	_update_button_visuals()
+	if npc.has_method("is_following_player"):
+		if npc.is_following_player():
+			return "Stop Following"
 
+	return "Follow Me"
+
+
+func _get_npc_display_name(npc: Node) -> String:
+	if npc == null:
+		return "Musician"
+
+	if npc.has_method("get_display_name"):
+		return npc.get_display_name()
+
+	if "display_name" in npc:
+		return str(npc.display_name)
+
+	if npc.name != "":
+		return npc.name
+
+	return "Musician"
+
+
+# ------------------------------------------------------------
+# Actions
+# ------------------------------------------------------------
 
 func _activate_selected_option() -> void:
 	match selected_button_index:
@@ -218,6 +253,32 @@ func _on_close_button_clicked() -> void:
 	close()
 
 
+# ------------------------------------------------------------
+# Menu selection / visuals
+# ------------------------------------------------------------
+
+func _move_selection(direction: int) -> void:
+	if menu_buttons.is_empty():
+		return
+
+	selected_button_index += direction
+
+	if selected_button_index < 0:
+		selected_button_index = menu_buttons.size() - 1
+	elif selected_button_index >= menu_buttons.size():
+		selected_button_index = 0
+
+	_update_button_visuals()
+
+
+func _select_button(index: int) -> void:
+	if menu_buttons.is_empty():
+		return
+
+	selected_button_index = clampi(index, 0, menu_buttons.size() - 1)
+	_update_button_visuals()
+
+
 func _update_button_visuals() -> void:
 	for i in menu_buttons.size():
 		var button: Button = menu_buttons[i]
@@ -241,11 +302,9 @@ func _set_buttons_focus_mode(can_focus: bool) -> void:
 			button.focus_mode = focus_mode
 
 
-func _exit_tree() -> void:
-	if current_npc != null:
-		if current_npc.has_method("enable_interaction"):
-			current_npc.enable_interaction()
-
+# ------------------------------------------------------------
+# Menu navigation input
+# ------------------------------------------------------------
 
 func _get_single_menu_nav_direction() -> int:
 	var down_strength: float = Input.get_action_strength("move_down") + Input.get_action_strength("ui_down")
@@ -261,18 +320,15 @@ func _get_single_menu_nav_direction() -> int:
 	if abs(horizontal) > abs(vertical):
 		strongest_value = horizontal
 
-	# Neutral zone: unlock navigation only after the player releases the stick/key.
 	if abs(strongest_value) < menu_nav_deadzone:
 		menu_nav_locked = false
 		return 0
 
-	# Direction is still held, so do not move again.
 	if menu_nav_locked:
 		return 0
 
 	menu_nav_locked = true
 
-	# Use your corrected direction mapping.
 	if strongest_value > 0.0:
 		return 1
 

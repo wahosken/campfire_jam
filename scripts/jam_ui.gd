@@ -12,6 +12,10 @@ var music_system: Node = null
 var jam_manager: Node = null
 
 
+# ------------------------------------------------------------
+# Setup / refresh
+# ------------------------------------------------------------
+
 func setup_ui(player_ref: Node, music_system_ref: Node) -> void:
 	player = player_ref
 	music_system = music_system_ref
@@ -32,6 +36,10 @@ func update_ui() -> void:
 	_update_interact_prompt()
 
 
+# ------------------------------------------------------------
+# Main labels
+# ------------------------------------------------------------
+
 func _update_equipped_label() -> void:
 	if current_instrument_label == null:
 		return
@@ -46,46 +54,49 @@ func _update_equipped_label() -> void:
 		current_instrument_label.text = "Equipped: ----"
 
 
+func _update_selected_song_label() -> void:
+	if selected_song_label == null:
+		return
+
+	if player == null:
+		selected_song_label.text = "Song: ----"
+		return
+
+	var song_id := "song_01"
+
+	if player.has_method("get_selected_song_id"):
+		song_id = player.get_selected_song_id()
+
+	var song_name := song_id
+
+	var song_library: Node = get_node_or_null("/root/SongLibrary")
+
+	if song_library != null and song_library.has_method("get_song_display_name"):
+		song_name = song_library.get_song_display_name(song_id)
+
+	selected_song_label.text = "Song: %s" % song_name
+
+
 func _update_nearby_jam_label() -> void:
 	if nearby_jam_label == null:
 		return
 
+	if jam_manager == null:
+		jam_manager = get_tree().get_first_node_in_group("jam_manager")
+
+	# Preferred path:
+	# JamManager owns the authoritative display text so JamSpot/freeform/solo
+	# priority stays consistent.
+	if jam_manager != null and jam_manager.has_method("get_player_jam_label_text"):
+		nearby_jam_label.text = jam_manager.get_player_jam_label_text()
+		return
+
+	# Fallback if JamManager is unavailable.
 	if _player_is_direct_solo():
 		nearby_jam_label.text = "Current Jam: Player Solo"
 		return
 
-	if jam_manager == null:
-		nearby_jam_label.text = "Current Jam: None"
-		return
-
-	var jam_source: Node = null
-	var jam_type := "none"
-	var jam_name := "None"
-
-	if jam_manager.has_method("get_current_nearby_jam_source"):
-		jam_source = jam_manager.get_current_nearby_jam_source()
-
-	if jam_manager.has_method("get_current_nearby_jam_type"):
-		jam_type = jam_manager.get_current_nearby_jam_type()
-
-	if jam_manager.has_method("get_current_nearby_jam_name"):
-		jam_name = jam_manager.get_current_nearby_jam_name()
-
-	if jam_source == null:
-		nearby_jam_label.text = "Current Jam: None"
-		return
-
-	match jam_type:
-		"jam_spot":
-			nearby_jam_label.text = "Current Jam: %s" % jam_name
-		"player_freeform":
-			nearby_jam_label.text = "Current Jam: Player-led Jam"
-		"npc_freeform":
-			nearby_jam_label.text = "Current Jam: %s's Jam" % jam_name
-		"musician":
-			nearby_jam_label.text = "Nearby Musician: %s" % jam_name
-		_:
-			nearby_jam_label.text = "Current Jam: %s" % jam_name
+	nearby_jam_label.text = "Current Jam: None"
 
 
 func _update_active_instruments_label() -> void:
@@ -137,6 +148,10 @@ func _update_interact_prompt() -> void:
 	interact_prompt_label.text = "Interact: %s" % interact_name
 
 
+# ------------------------------------------------------------
+# Jam info helpers
+# ------------------------------------------------------------
+
 func _get_current_active_instruments_text() -> String:
 	var jam_context := _get_current_jam_context()
 
@@ -171,6 +186,9 @@ func _get_current_featured_instrument_text() -> String:
 
 func _get_current_jam_context() -> Node:
 	if jam_manager == null:
+		jam_manager = get_tree().get_first_node_in_group("jam_manager")
+
+	if jam_manager == null:
 		return null
 
 	if jam_manager.has_method("get_current_nearby_jam_context"):
@@ -187,26 +205,3 @@ func _player_is_direct_solo() -> bool:
 		return player.is_currently_playing_solo_jam()
 
 	return false
-
-
-func _update_selected_song_label() -> void:
-	if selected_song_label == null:
-		return
-
-	if player == null:
-		selected_song_label.text = "Song: ----"
-		return
-
-	var song_id := "song_01"
-
-	if player.has_method("get_selected_song_id"):
-		song_id = player.get_selected_song_id()
-
-	var song_name := song_id
-
-	var song_library: Node = get_node_or_null("/root/SongLibrary")
-
-	if song_library != null and song_library.has_method("get_song_display_name"):
-		song_name = song_library.get_song_display_name(song_id)
-
-	selected_song_label.text = "Song: %s" % song_name
