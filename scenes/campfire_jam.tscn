@@ -160,18 +160,18 @@ position = Vector2(3.5, 7)
 shape = SubResource("RectangleShape2D_bew7y")
 
 [node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("2_q2hrs")]
-position = Vector2(712, -382)
+position = Vector2(461, -562)
 primary_song_id = "song_02"
 
 [node name="NPC_Bass" parent="." unique_id=718845583 instance=ExtResource("3_mcuth")]
-position = Vector2(247, -1131)
+position = Vector2(62, -613)
 
 [node name="NPC_Harmonica" parent="." unique_id=1800832853 instance=ExtResource("4_65sn3")]
-position = Vector2(959, -386)
+position = Vector2(653, -528)
 primary_song_id = "song_02"
 
 [node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("5_mcuth")]
-position = Vector2(-418, -406)
+position = Vector2(278, -605)
 
 [node name="House" parent="." unique_id=1834173392 instance=ExtResource("4_mcuth")]
 position = Vector2(527, -914)
