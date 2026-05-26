@@ -739,6 +739,12 @@ func try_add_manual_npc_to_nearby_jam(npc: Node) -> bool:
 
 			return true
 
+	# 1.5. JamSpot etiquette buffer.
+	# NPC is close enough to a JamSpot that starting a competing freeform song feels wrong.
+	# Later this can trigger dialogue: "Let's join the nearby jam, or go somewhere quieter."
+	if _is_position_inside_active_jamspot_buffer(npc_position):
+		return true
+
 	# 2. Existing freeform jam nearby.
 	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
 		var anchor: Node = active_freeform_anchor
@@ -862,12 +868,17 @@ func _recruit_available_npcs_to_active_freeform_jam() -> void:
 
 		# Active JamSpot always wins. Do not recruit NPCs who are currently
 		# inside/controlled by an active JamSpot.
-		if npc.has_method("is_controlled_by_active_jam_spot"):
-			if npc.is_controlled_by_active_jam_spot():
+			if npc.has_method("is_controlled_by_active_jam_spot"):
+				if npc.is_controlled_by_active_jam_spot():
+					continue
+
+			# JamSpot etiquette buffer:
+			# Auto freeform should not recruit NPCs near an active JamSpot.
+			if _is_position_inside_active_jamspot_buffer(npc.global_position):
 				continue
 
-		if _is_npc_near_any_freeform_anchor(npc, anchor_positions):
-			_add_npc_to_active_freeform_jam(npc, false)
+			if _is_npc_near_any_freeform_anchor(npc, anchor_positions):
+				_add_npc_to_active_freeform_jam(npc, false)
 
 
 func _add_npc_to_active_freeform_jam(npc: Node, make_manual := false) -> bool:
@@ -1226,6 +1237,11 @@ func _find_available_accompanists_near_position(center_position: Vector2, exclud
 		if not npc is Node2D:
 			continue
 
+		# JamSpot etiquette buffer:
+		# NPCs near an active JamSpot should not be pulled into a separate freeform jam.
+		if _is_position_inside_active_jamspot_buffer(npc.global_position):
+			continue
+
 		var npc_radius: float = _get_npc_join_radius(npc)
 		var distance: float = center_position.distance_to(npc.global_position)
 
@@ -1427,6 +1443,22 @@ func _get_active_freeform_npc_info(player_position: Vector2, use_leave_radius :=
 		"distance": best_distance,
 		"radius": best_radius
 	}
+
+
+func _is_position_inside_active_jamspot_buffer(world_position: Vector2) -> bool:
+	for jam_spot in get_tree().get_nodes_in_group("jam_spot"):
+		if jam_spot == null or not is_instance_valid(jam_spot):
+			continue
+
+		if jam_spot.has_method("is_jam_active"):
+			if not jam_spot.is_jam_active():
+				continue
+
+		if jam_spot.has_method("is_position_inside_buffer_radius"):
+			if jam_spot.is_position_inside_buffer_radius(world_position):
+				return true
+
+	return false
 
 
 # ------------------------------------------------------------

@@ -8,6 +8,7 @@ extends Node2D
 
 @export var auto_start_on_ready := true
 @export var leave_radius_padding := 50.0
+@export var buffer_radius_padding := 150.0
 @export var active_refresh_interval := 0.25
 
 @onready var label: Label = $Label
@@ -482,6 +483,14 @@ func is_position_inside_join_radius(world_position: Vector2) -> bool:
 
 func is_position_inside_leave_radius(world_position: Vector2) -> bool:
 	return global_position.distance_to(world_position) <= get_leave_radius()
+
+
+func get_buffer_radius() -> float:
+	return get_join_radius() + buffer_radius_padding
+
+
+func is_position_inside_buffer_radius(world_position: Vector2) -> bool:
+	return global_position.distance_to(world_position) <= get_buffer_radius()
 
 
 # ------------------------------------------------------------

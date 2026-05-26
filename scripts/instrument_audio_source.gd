@@ -223,3 +223,13 @@ func _apply_song_streams() -> void:
 
 func force_jam_control() -> void:
 	solo_override = false
+
+
+func is_audio_playing() -> bool:
+	if rhythm_player != null and rhythm_player.playing:
+		return true
+
+	if melody_player != null and melody_player.playing:
+		return true
+
+	return false

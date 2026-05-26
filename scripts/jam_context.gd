@@ -138,11 +138,13 @@ func _activate_member(member: Node) -> void:
 		_start_song()
 		return
 
-	# If this member was already active, do NOT restart their audio.
-	# JamSpot refreshes can call set_member_active(member, true) repeatedly,
-	# and restarting synced audio every refresh causes audible sync fighting.
 	if not was_already_active:
 		_start_member_audio(member)
+	else:
+		# JamSpot refreshes call set_member_active(member, true) repeatedly.
+		# Do not restart active audio unless it never actually started.
+		if not _is_member_audio_playing(member):
+			_start_member_audio(member)
 
 	_update_arrangement()
 
@@ -947,6 +949,24 @@ func _is_valid_requested_part(requested_part: String) -> bool:
 		or requested_part == "rhythm" \
 		or requested_part == "melody" \
 		or requested_part == "both"
+
+
+func _is_member_audio_playing(member: Node) -> bool:
+	var audio_source: Node = _get_member_audio_source(member)
+
+	if audio_source == null:
+		return false
+
+	if audio_source.has_method("is_audio_playing"):
+		return audio_source.is_audio_playing()
+
+	if audio_source.has_method("is_playing"):
+		return audio_source.is_playing()
+
+	if "playing" in audio_source:
+		return bool(audio_source.playing)
+
+	return true
 
 
 # ------------------------------------------------------------
