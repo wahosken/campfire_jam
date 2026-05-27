@@ -19,6 +19,11 @@ extends CharacterBody2D
 @export var jam_formation_max_distance := 100.0
 @export var jam_formation_slow_radius := 140.0
 
+@export var use_navigation_agent := true
+@export var navigation_target_update_distance := 8.0
+
+@onready var navigation_agent: NavigationAgent2D = $NavigationAgent2D
+
 @onready var interaction_area: Area2D = $InteractionArea
 @onready var sprite: ColorRect = $ColorRect
 @onready var label: Label = $Label
@@ -106,7 +111,7 @@ func _ready() -> void:
 	_update_label()
 
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	_update_jam_formation_movement(delta)
 	_update_follow_player(delta)
 
@@ -773,12 +778,13 @@ func _update_jam_formation_movement(delta: float) -> void:
 
 	# Comfortable zone. Do not micro-adjust.
 	if distance <= jam_formation_max_distance:
+		velocity = Vector2.ZERO
 		return
 
-	var speed := jam_formation_move_speed
+	var speed: float = jam_formation_move_speed
 
 	if distance < jam_formation_slow_radius:
-		var t := inverse_lerp(jam_formation_max_distance, jam_formation_slow_radius, distance)
+		var t: float = inverse_lerp(jam_formation_max_distance, jam_formation_slow_radius, distance)
 		speed = lerp(jam_formation_move_speed * 0.35, jam_formation_move_speed, t)
 
 	_move_toward_world_position(
@@ -797,8 +803,22 @@ func _move_toward_world_position(target_position: Vector2, move_speed: float, st
 		move_and_slide()
 		return
 
-	var direction: Vector2 = global_position.direction_to(target_position)
-	velocity = direction * move_speed
+	var move_target: Vector2 = target_position
+
+	if use_navigation_agent and navigation_agent != null:
+		if navigation_agent.target_position.distance_to(target_position) > navigation_target_update_distance:
+			navigation_agent.target_position = target_position
+
+		if not navigation_agent.is_navigation_finished():
+			move_target = navigation_agent.get_next_path_position()
+
+	var direction: Vector2 = global_position.direction_to(move_target)
+
+	if direction.length() <= 0.01:
+		velocity = Vector2.ZERO
+	else:
+		velocity = direction * move_speed
+
 	move_and_slide()
 
 

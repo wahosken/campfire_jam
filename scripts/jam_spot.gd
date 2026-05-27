@@ -306,11 +306,18 @@ func _release_npc_from_inactive_jam(npc: Node) -> void:
 
 func _claim_npc_for_active_jam(npc: Node) -> void:
 	# JamSpot is active and NPC is enabled, so JamSpot takes priority.
-	# Any freeform/manual state should reset before the fixed JamSpot controls it.
+	# Auto freeform followers get a short handoff delay so they can enter
+	# the JamSpot safely instead of snapping off at the edge.
 
 	var jam_manager: Node = get_tree().get_first_node_in_group("jam_manager")
 
 	if jam_manager != null:
+		if jam_manager.has_method("request_jamspot_handoff_if_needed"):
+			var handoff_started: bool = jam_manager.request_jamspot_handoff_if_needed(npc, self)
+
+			if handoff_started:
+				return
+
 		if jam_manager.has_method("remove_npc_from_freeform_members_for_jamspot"):
 			jam_manager.remove_npc_from_freeform_members_for_jamspot(npc)
 

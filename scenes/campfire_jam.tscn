@@ -19,6 +19,11 @@
 [ext_resource type="PackedScene" uid="uid://dtm7ryrpuv7qa" path="res://scenes/start_gate.tscn" id="15_x6ebq"]
 [ext_resource type="PackedScene" uid="uid://d1ifhrg7vlxou" path="res://scenes/npc_dialogue_prompt.tscn" id="17_s3408"]
 
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_s3408"]
+vertices = PackedVector2Array(-975.9922, -1617, 1362.9922, -1617, 700.03906, -1203, 354.9297, -1203, 1362, -47.992188, 698.97656, -900, -975, -47, 357.0703, -900)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(2, 1, 4, 5), PackedInt32Array(5, 4, 6, 7), PackedInt32Array(7, 6, 0, 3)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(-986, -1627, 1373, -1627, 1372, -38, -985, -37)])
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_s3408"]
 radius = 400.0
 
@@ -30,6 +35,14 @@ radius = 400.0
 
 [node name="campfire_jam" type="Node2D" unique_id=163281152]
 script = ExtResource("1_qtvd6")
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=2082799229]
+navigation_polygon = SubResource("NavigationPolygon_s3408")
+
+[node name="Polygon2D" type="Polygon2D" parent="NavigationRegion2D" unique_id=1807826442]
+position = Vector2(4.246155, 0)
+scale = Vector2(0.9938462, 1)
+polygon = PackedVector2Array(362.9876, -1193, 690, -1193, 689, -910, 365, -910)
 
 [node name="Ground" type="ColorRect" parent="." unique_id=53549327]
 anchors_preset = 8

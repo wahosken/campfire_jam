@@ -7,14 +7,16 @@
 [ext_resource type="AudioStream" uid="uid://x654xn2eyq6f" path="res://audio/song 2/song2-001-guitar_rhythm.wav" id="5_8mojk"]
 [ext_resource type="AudioStream" uid="uid://tmin5vxqlo6m" path="res://audio/song 2/song2-002-guitar_lead.wav" id="6_b1ygu"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_iubrl"]
-size = Vector2(48, 48)
+[sub_resource type="CircleShape2D" id="CircleShape2D_csoos"]
+radius = 24.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_uqgcj"]
 radius = 50.0
 
 [node name="NPC_Guitar" type="CharacterBody2D" unique_id=1894937099 groups=["npc_musician"]]
 collision_layer = 4
+motion_mode = 1
+wall_min_slide_angle = 0.0
 script = ExtResource("1_njmx8")
 instrument_name = "guitar"
 display_name = "Guitar"
@@ -34,7 +36,7 @@ grow_vertical = 2
 color = Color(0.19076231, 0.19076234, 0.19076231, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1899097799]
-shape = SubResource("RectangleShape2D_iubrl")
+shape = SubResource("CircleShape2D_csoos")
 
 [node name="InteractionArea" type="Area2D" parent="." unique_id=392024863]
 collision_layer = 8
@@ -72,3 +74,8 @@ attenuation = 0.75
 [node name="MelodyPlayer" type="AudioStreamPlayer2D" parent="InstrumentAudioSource" unique_id=1894801425]
 max_distance = 1000.0
 attenuation = 0.75
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1442055383]
+path_desired_distance = 16.0
+target_desired_distance = 16.0
+debug_path_custom_color = Color(0.7806942, 4.548356e-06, 4.813075e-07, 1)
