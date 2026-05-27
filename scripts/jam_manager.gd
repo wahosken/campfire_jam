@@ -1318,6 +1318,35 @@ func _update_pending_jamspot_handoffs(delta: float) -> void:
 		_release_freeform_npc_for_actual_jamspot(npc, jam_spot)
 
 
+func cancel_jamspot_handoff_for_npc(npc: Node) -> void:
+	if npc == null:
+		return
+
+	if not pending_jamspot_handoffs.has(npc):
+		return
+
+	pending_jamspot_handoffs.erase(npc)
+
+	# If this NPC still belongs to the active freeform group, restore normal
+	# freeform behavior. If they are still in the buffer, keep them silent;
+	# if they are outside the buffer, let them play again.
+	if active_freeform_members.has(npc):
+		if npc is Node2D:
+			if _is_position_inside_buffer_but_not_jamspot(npc.global_position):
+				_silence_freeform_follower_without_waiting(npc)
+			else:
+				_set_npc_freeform_request_on_context(npc, active_freeform_jam_context)
+
+		if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+			if active_freeform_jam_context.has_method("set_member_active"):
+				active_freeform_jam_context.set_member_active(npc, true)
+
+			if active_freeform_jam_context.has_method("refresh_arrangement"):
+				active_freeform_jam_context.refresh_arrangement()
+
+	_sync_jam_formation_to_active_freeform()
+
+
 # ------------------------------------------------------------
 # Freeform cleanup
 # ------------------------------------------------------------

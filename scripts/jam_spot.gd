@@ -161,14 +161,30 @@ func unregister_npc(npc: Node) -> void:
 	if registered_npcs.has(npc):
 		registered_npcs.erase(npc)
 
-	# If this JamSpot currently controls the NPC, release it.
-	if npc.has_method("end_jam_spot_control"):
-		npc.end_jam_spot_control(self)
-	else:
-		_fallback_release_npc(npc)
+	var jam_manager: Node = get_tree().get_first_node_in_group("jam_manager")
 
-	if npc.has_method("set_current_jam_spot"):
-		npc.set_current_jam_spot(null)
+	if jam_manager != null:
+		if jam_manager.has_method("cancel_jamspot_handoff_for_npc"):
+			jam_manager.cancel_jamspot_handoff_for_npc(npc)
+
+	# Only end JamSpot control if the NPC was actually claimed by this JamSpot.
+	# Pending handoff NPCs should NOT run end_jam_spot_control(), because they
+	# may still be in a player-led freeform context.
+	var should_end_jamspot_control := false
+
+	if npc.has_method("is_controlled_by_jam_spot"):
+		if npc.is_controlled_by_jam_spot():
+			should_end_jamspot_control = true
+
+	if should_end_jamspot_control:
+		if npc.has_method("end_jam_spot_control"):
+			npc.end_jam_spot_control(self)
+		else:
+			_fallback_release_npc(npc)
+	else:
+		# They were only pending/nearby, so just clear this JamSpot reference.
+		if npc.has_method("set_current_jam_spot"):
+			npc.set_current_jam_spot(null)
 
 	_update_label()
 
