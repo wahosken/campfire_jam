@@ -348,6 +348,9 @@ func _stop_song() -> void:
 	featured_member_before_forced_melody = null
 
 	for member in registered_members:
+		if _member_is_player_carrying_solo(member):
+			continue
+
 		_stop_member_audio(member)
 		_set_member_part(member, "silent")
 
@@ -652,6 +655,19 @@ func _choose_random_featured_member(_prefer_npc := true) -> void:
 			return
 
 
+func stop_all_non_player_members() -> void:
+	var members_to_stop: Array[Node] = active_members.duplicate()
+
+	for member in members_to_stop:
+		if member == null or not is_instance_valid(member):
+			continue
+
+		if member.is_in_group("player"):
+			continue
+
+		set_member_active(member, false)
+
+
 func _restore_featured_member_after_forced_melody() -> void:
 	if featured_member_before_forced_melody != null:
 		if is_instance_valid(featured_member_before_forced_melody):
@@ -719,6 +735,9 @@ func _start_member_audio(member: Node) -> void:
 
 
 func _stop_member_audio(member: Node) -> void:
+	if _member_is_player_carrying_solo(member):
+		return
+
 	var audio_source: Node = _get_member_audio_source(member)
 
 	if audio_source != null and audio_source.has_method("stop_all"):
@@ -790,6 +809,19 @@ func _set_member_tracks_with_volume(
 		push_warning("JamContext: audio source missing track control method: " + str(audio_source.name))
 
 
+func _member_is_player_carrying_solo(member: Node) -> bool:
+	if member == null or not is_instance_valid(member):
+		return false
+
+	if not member.is_in_group("player"):
+		return false
+
+	if member.has_method("is_currently_playing_solo_jam"):
+		return member.is_currently_playing_solo_jam()
+
+	return false
+
+
 # ------------------------------------------------------------
 # Part helpers
 # ------------------------------------------------------------
@@ -801,6 +833,9 @@ func _set_member_part(member: Node, part_name: String) -> void:
 		return
 
 	if not is_instance_valid(member):
+		return
+
+	if _member_is_player_carrying_solo(member):
 		return
 
 	member_parts[member] = part_name

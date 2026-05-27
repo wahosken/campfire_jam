@@ -533,7 +533,11 @@ func cycle_instrument() -> void:
 					if current_jam_context.has_method("refresh_arrangement"):
 						current_jam_context.refresh_arrangement()
 
-	_start_instrument_visuals()
+	if was_playing:
+		_start_instrument_visuals()
+	else:
+		_stop_instrument_visuals()
+
 	_update_part_label()
 
 

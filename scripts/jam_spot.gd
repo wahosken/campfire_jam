@@ -117,6 +117,11 @@ func stop_jam() -> void:
 
 	jam_is_active = false
 
+	var player: Node = get_tree().get_first_node_in_group("player")
+
+	if player != null:
+		_release_player_from_stopped_jam_preserve_audio(player)
+
 	var npcs_to_release: Array[Node] = registered_npcs.duplicate()
 
 	for npc in npcs_to_release:
@@ -124,8 +129,10 @@ func stop_jam() -> void:
 
 	registered_npcs.clear()
 
-	if jam_context != null and jam_context.has_method("stop_all_members"):
-		jam_context.stop_all_members()
+	# Do NOT use stop_all_members() here.
+	# That can stop the player while they are holding play.
+	if jam_context != null and jam_context.has_method("stop_all_non_player_members"):
+		jam_context.stop_all_non_player_members()
 
 	_update_label()
 
@@ -395,6 +402,42 @@ func _release_npc_from_stopped_jam(npc: Node) -> void:
 
 	if npc.has_method("set_current_jam_spot"):
 		npc.set_current_jam_spot(null)
+
+
+func _release_player_from_stopped_jam_preserve_audio(player: Node) -> void:
+	if player == null or not is_instance_valid(player):
+		return
+
+	if not player.is_in_group("player"):
+		return
+
+	var player_is_playing := false
+
+	if "is_playing_instrument" in player:
+		player_is_playing = player.is_playing_instrument
+
+	if player_is_playing:
+		# Remove from JamContext without stopping the player's audio.
+		if jam_context != null and is_instance_valid(jam_context):
+			if jam_context.has_method("detach_member_preserve_audio"):
+				jam_context.detach_member_preserve_audio(player)
+			else:
+				if jam_context.has_method("clear_member_requested_part"):
+					jam_context.clear_member_requested_part(player)
+
+				if jam_context.has_method("set_member_active"):
+					# Avoid this if possible because it may stop player audio.
+					pass
+
+		if player.has_method("detach_from_current_jam_to_carried_solo"):
+			player.detach_from_current_jam_to_carried_solo()
+
+		return
+
+	# If player is not actively holding play, normal cleanup is fine.
+	if jam_context != null and is_instance_valid(jam_context):
+		if jam_context.has_method("set_member_active"):
+			jam_context.set_member_active(player, false)
 
 
 func _fallback_release_npc(npc: Node) -> void:
