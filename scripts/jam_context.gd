@@ -529,12 +529,30 @@ func _apply_arrangement_to_member(member: Node, rhythm_counts: Dictionary) -> vo
 		rhythm_on = requested_part == "rhythm" or requested_part == "both"
 		melody_on = is_featured and (requested_part == "melody" or requested_part == "both")
 	else:
-		if is_featured:
-			rhythm_on = false
-			melody_on = true
-		else:
-			rhythm_on = true
-			melody_on = false
+		match requested_part:
+			"rhythm":
+				# Explicit rhythm request should never be overridden into melody.
+				rhythm_on = true
+				melody_on = false
+			"melody":
+				rhythm_on = false
+				melody_on = true
+			"both":
+				# Both means this NPC is allowed to participate in normal arrangement.
+				if is_featured:
+					rhythm_on = false
+					melody_on = true
+				else:
+					rhythm_on = true
+					melody_on = false
+			_:
+				# Auto/default NPC behavior.
+				if is_featured:
+					rhythm_on = false
+					melody_on = true
+				else:
+					rhythm_on = true
+					melody_on = false
 
 	var rhythm_db: float = _get_rhythm_volume_for_member(member, rhythm_counts)
 
@@ -600,7 +618,13 @@ func _choose_random_featured_member(_prefer_npc := true) -> void:
 
 		var requested_part: String = _get_member_requested_part(member)
 
+		# Silent members do not participate.
 		if requested_part == "silent":
+			continue
+
+		# Explicit rhythm-only members should not be selected as featured melody.
+		# This matters for player-led auto followers when the player is carrying melody.
+		if requested_part == "rhythm":
 			continue
 
 		var instrument_id: String = _get_member_instrument_id(member)
