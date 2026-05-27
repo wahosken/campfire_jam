@@ -11,10 +11,22 @@
 [ext_resource type="Texture2D" uid="uid://7jqyxs1ubxqu" path="res://assets/buttons6.png" id="8_8rtgm"]
 [ext_resource type="Texture2D" uid="uid://cricbsha6b26" path="res://assets/pause_button.png" id="9_p5rgw"]
 [ext_resource type="Texture2D" uid="uid://bhclna2yubkcp" path="res://assets/pause_button_pressed.png" id="10_vg6n2"]
-[ext_resource type="Texture2D" uid="uid://lb3xm5d3t48c" path="res://assets/buttons13.png" id="11_vkldo"]
-[ext_resource type="Texture2D" uid="uid://b6whiafbh3ce6" path="res://assets/buttons14.png" id="12_2m6gh"]
+[ext_resource type="Texture2D" uid="uid://bdl4emqk0j4b0" path="res://assets/buttons-interact01.png" id="12_vg6n2"]
+[ext_resource type="Texture2D" uid="uid://vbmw8sn1xt8c" path="res://assets/buttons-interact02.png" id="13_vkldo"]
+[ext_resource type="Texture2D" uid="uid://cqvsamd81jm6w" path="res://assets/buttons-cycleinstrument01.png" id="14_vg6n2"]
+[ext_resource type="Texture2D" uid="uid://cs56eecexfs3v" path="res://assets/buttons-cycleinstrument02.png" id="15_vkldo"]
+[ext_resource type="Texture2D" uid="uid://bijk7toibpwci" path="res://assets/buttons-cyclesong01.png" id="16_2m6gh"]
+[ext_resource type="Texture2D" uid="uid://cfd6dy25kl3x3" path="res://assets/buttons-cyclesong02.png" id="17_k5uol"]
+[ext_resource type="Texture2D" uid="uid://dkeobe1a755wn" path="res://assets/buttons-playrhythm01.png" id="18_7d5h0"]
+[ext_resource type="Texture2D" uid="uid://b45mw02353wrg" path="res://assets/buttons-playrhythm02.png" id="19_x4gx8"]
+[ext_resource type="Texture2D" uid="uid://c2thwksqcjq2n" path="res://assets/buttons-playmelody01.png" id="20_u7l8p"]
+[ext_resource type="Texture2D" uid="uid://bd3eb4vowpg8n" path="res://assets/buttons-playmelody02.png" id="21_kdw8g"]
+[ext_resource type="Script" uid="uid://g7toywqshxlv" path="res://scripts/virtual_joystick.gd" id="22_vkldo"]
+[ext_resource type="Texture2D" uid="uid://sf15ejwuwbyk" path="res://assets/joystick_base.png" id="23_k5uol"]
+[ext_resource type="Texture2D" uid="uid://b3d4pdfixkyn5" path="res://assets/joystick_knob.png" id="24_7d5h0"]
 
 [node name="Overlay" type="CanvasLayer" unique_id=183187612]
+process_mode = 3
 script = ExtResource("1_njieu")
 
 [node name="UI" type="Control" parent="." unique_id=402755030]
@@ -95,7 +107,6 @@ texture_pressed = ExtResource("8_8rtgm")
 action = "move_down"
 
 [node name="HBoxContainer3" type="HBoxContainer" parent="UI" unique_id=562433868]
-visible = false
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -135,38 +146,92 @@ grow_vertical = 2
 modulate = Color(1, 1, 1, 0.8)
 position = Vector2(140, 12)
 scale = Vector2(2, 2)
-texture_normal = ExtResource("11_vkldo")
-texture_pressed = ExtResource("12_2m6gh")
+texture_normal = ExtResource("12_vg6n2")
+texture_pressed = ExtResource("13_vkldo")
 action = "interact"
 
 [node name="CycleInstrumentsButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=1807431339]
 modulate = Color(1, 1, 1, 0.8)
 position = Vector2(50, 94)
 scale = Vector2(2, 2)
-texture_normal = ExtResource("11_vkldo")
-texture_pressed = ExtResource("12_2m6gh")
+texture_normal = ExtResource("14_vg6n2")
+texture_pressed = ExtResource("15_vkldo")
 action = "cycle_instrument"
 
 [node name="CycleSongsButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=1882277219]
 modulate = Color(1, 1, 1, 0.8)
 position = Vector2(138, 94)
 scale = Vector2(2, 2)
-texture_normal = ExtResource("11_vkldo")
-texture_pressed = ExtResource("12_2m6gh")
+texture_normal = ExtResource("16_2m6gh")
+texture_pressed = ExtResource("17_k5uol")
 action = "cycle_song"
 
 [node name="RhythmButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=734656703]
 modulate = Color(1, 1, 1, 0.8)
 position = Vector2(52, 178)
 scale = Vector2(2, 2)
-texture_normal = ExtResource("11_vkldo")
-texture_pressed = ExtResource("12_2m6gh")
+texture_normal = ExtResource("18_7d5h0")
+texture_pressed = ExtResource("19_x4gx8")
 action = "play_rhythm"
 
 [node name="MelodyButton" type="TouchScreenButton" parent="UI/HBoxContainer4" unique_id=2070411827]
 modulate = Color(1, 1, 1, 0.8)
 position = Vector2(138, 178)
 scale = Vector2(2, 2)
-texture_normal = ExtResource("11_vkldo")
-texture_pressed = ExtResource("12_2m6gh")
+texture_normal = ExtResource("20_u7l8p")
+texture_pressed = ExtResource("21_kdw8g")
 action = "play_melody"
+
+[node name="HBoxContainer5" type="HBoxContainer" parent="UI" unique_id=990470105]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -240.0
+offset_right = 444.0
+grow_vertical = 0
+
+[node name="JoystickControls" type="Control" parent="UI/HBoxContainer5" unique_id=1758612619]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="VirtualJoystick" type="Control" parent="UI/HBoxContainer5/JoystickControls" unique_id=1436180068]
+custom_minimum_size = Vector2(140, 140)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -98.0
+offset_top = -100.0
+offset_right = 98.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+script = ExtResource("22_vkldo")
+
+[node name="Base" type="TextureRect" parent="UI/HBoxContainer5/JoystickControls/VirtualJoystick" unique_id=1007199806]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -164.0
+offset_bottom = -168.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(5, 5)
+mouse_filter = 2
+texture = ExtResource("23_k5uol")
+stretch_mode = 5
+
+[node name="Knob" type="TextureRect" parent="UI/HBoxContainer5/JoystickControls/VirtualJoystick" unique_id=1663169050]
+layout_mode = 1
+offset_right = 64.0
+offset_bottom = 64.0
+scale = Vector2(2, 2)
+mouse_filter = 2
+texture = ExtResource("24_7d5h0")
+stretch_mode = 5

@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://crbcdbde1uclf" path="res://scripts/jam_context.gd" id="2_vyejd"]
 [ext_resource type="PackedScene" uid="uid://b2rachx81sojt" path="res://scenes/jam_spot_formation.tscn" id="3_icwyp"]
 
-[node name="JamSpot" type="Node2D" unique_id=1582202994]
+[node name="JamSpot" type="Node2D" unique_id=1582202994 groups=["jamspot"]]
 script = ExtResource("1_0ko27")
 
 [node name="JamContext" type="Node" parent="." unique_id=849390137]

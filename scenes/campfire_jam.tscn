@@ -18,6 +18,7 @@
 [ext_resource type="PackedScene" uid="uid://d21e1vvxjrume" path="res://scenes/overlay.tscn" id="10_dp30u"]
 [ext_resource type="PackedScene" uid="uid://dtm7ryrpuv7qa" path="res://scenes/start_gate.tscn" id="15_x6ebq"]
 [ext_resource type="PackedScene" uid="uid://d1ifhrg7vlxou" path="res://scenes/npc_dialogue_prompt.tscn" id="17_s3408"]
+[ext_resource type="PackedScene" uid="uid://dlglwi6aqtsgh" path="res://scenes/pause_menu.tscn" id="19_eguu7"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_s3408"]
 vertices = PackedVector2Array(-975.9922, -1617, 1362.9922, -1617, 700.03906, -1203, 354.9297, -1203, 1362, -47.992188, 698.97656, -900, -975, -47, 357.0703, -900)
@@ -110,7 +111,7 @@ metadata/_edit_use_anchors_ = true
 collision_layer = 16
 collision_mask = 14
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="FountainJamSpot/JamArea" unique_id=1371260151]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FountainJamSpot/JamArea" unique_id=1371260151 groups=["jam_activation_shape"]]
 shape = SubResource("CircleShape2D_s3408")
 
 [node name="InteractionArea" type="Area2D" parent="FountainJamSpot" unique_id=1968245359 groups=["interactable"]]
@@ -171,7 +172,7 @@ metadata/_edit_use_anchors_ = true
 collision_layer = 16
 collision_mask = 14
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CampfireJamSpot/JamArea" unique_id=445197964]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CampfireJamSpot/JamArea" unique_id=445197964 groups=["jam_activation_shape"]]
 shape = SubResource("CircleShape2D_bew7y")
 
 [node name="InteractionArea" type="Area2D" parent="CampfireJamSpot" unique_id=1262593958 groups=["interactable"]]
@@ -257,3 +258,16 @@ text = "Interact"
 [node name="NPCDialoguePrompt" parent="." unique_id=1416366564 instance=ExtResource("17_s3408")]
 
 [node name="StartGate" parent="." unique_id=185219785 instance=ExtResource("15_x6ebq")]
+
+[node name="PauseMenu" parent="." unique_id=2135615612 instance=ExtResource("19_eguu7")]
+touch_overlay_path = NodePath("../TouchOverlay")
+start_gate_path = NodePath("../StartGate")
+
+[node name="DebugOverlay" type="Label" parent="PauseMenu" unique_id=1345672760]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -104.0
+offset_bottom = 100.0
+grow_horizontal = 0
+text = "Debug"

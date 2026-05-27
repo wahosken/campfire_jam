@@ -27,7 +27,7 @@ var jam_is_active := false
 # Lifecycle
 # ------------------------------------------------------------
 
-func _ready() -> void:
+func _ready() -> void:	
 	add_to_group("jam_spot")
 
 	if jam_spot_formation != null and jam_spot_formation.has_method("set_jam_spot"):
@@ -682,13 +682,3 @@ func _update_label() -> void:
 		state_text,
 		registered_npcs.size()
 	]
-
-
-func _debug_spot(message: String) -> void:
-	if debug_jamspot:
-		print("[%s] %s | active=%s registered=%d" % [
-			name,
-			message,
-			str(jam_is_active),
-			registered_npcs.size()
-		])
