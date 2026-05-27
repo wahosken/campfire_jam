@@ -79,6 +79,35 @@ func _input(event: InputEvent) -> void:
 		toggle_pause()
 		get_viewport().set_input_as_handled()
 
+	if event is InputEventScreenTouch and event.pressed:
+		_handle_touch_press(event.position)
+
+
+func _handle_touch_press(touch_position: Vector2) -> void:
+	var buttons: Array[Button] = [
+		resume_button,
+		restart_scene_button,
+		mute_button,
+		touch_arrows_button,
+		touch_joystick_button,
+		show_jam_radius_button,
+		show_fps_button,
+		close_button
+	]
+
+	for button in buttons:
+		if button == null:
+			continue
+
+		if not button.visible:
+			continue
+
+		var rect := button.get_global_rect()
+
+		if rect.has_point(touch_position):
+			button.emit_signal("pressed")
+			return
+
 
 func _can_pause_now() -> bool:
 	if not require_start_gate_open:
@@ -110,11 +139,6 @@ func pause_game() -> void:
 	get_tree().paused = true
 	panel.visible = true
 
-	var touch_overlay := get_node_or_null(touch_overlay_path)
-
-	if touch_overlay != null:
-		touch_overlay.visible = false
-
 	await get_tree().process_frame
 	resume_button.grab_focus()
 
@@ -123,11 +147,6 @@ func resume_game() -> void:
 	is_paused = false
 	get_tree().paused = false
 	panel.visible = false
-
-	var touch_overlay := get_node_or_null(touch_overlay_path)
-
-	if touch_overlay != null:
-		touch_overlay.visible = true
 
 
 func _restart_scene() -> void:
