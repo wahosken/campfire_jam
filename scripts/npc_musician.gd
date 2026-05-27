@@ -15,9 +15,15 @@ extends CharacterBody2D
 @export var follow_max_distance := 96.0
 
 @export var jam_formation_move_speed := 90.0
-@export var jam_formation_min_distance := 75.0
-@export var jam_formation_max_distance := 100.0
+@export var jam_formation_min_distance := 125.0
+@export var jam_formation_max_distance := 150.0
 @export var jam_formation_slow_radius := 140.0
+
+@export var jamspot_formation_stop_distance := 8.0
+@export var jamspot_formation_slow_radius := 48.0
+
+@export var precise_formation_stop_distance := 8.0
+@export var precise_formation_slow_radius := 48.0
 
 @export var use_navigation_agent := true
 @export var navigation_target_update_distance := 8.0
@@ -80,6 +86,7 @@ var follow_target: Node = null
 
 var jam_formation_target_position := Vector2.ZERO
 var has_jam_formation_target := false
+var use_precise_jam_formation := false
 
 var instrument_visual_tween: Tween = null
 
@@ -96,6 +103,7 @@ const PLAYING_SCALE := Vector2(1.08, 0.94)
 
 func _ready() -> void:
 	add_to_group("npc_musician")
+	add_to_group("musician")
 	add_to_group("interactable")
 
 	jam_manager = get_tree().get_first_node_in_group("jam_manager")
@@ -389,13 +397,19 @@ func set_jam_formation_target(target_position: Vector2) -> void:
 
 func clear_jam_formation_target() -> void:
 	if not has_jam_formation_target:
+		use_precise_jam_formation = false
 		return
 
 	has_jam_formation_target = false
 	jam_formation_target_position = Vector2.ZERO
+	use_precise_jam_formation = false
 
 	if debug_npc_state:
 		print("[%s] cleared formation target" % name)
+
+
+func set_precise_jam_formation(is_precise: bool) -> void:
+	use_precise_jam_formation = is_precise
 
 
 # ------------------------------------------------------------
@@ -768,29 +782,45 @@ func _update_jam_formation_movement(delta: float) -> void:
 	if not has_jam_formation_target:
 		return
 
-	if is_controlled_by_active_jam_spot():
+	if following_player:
 		return
 
-	if freeform_mode == FreeformMode.NONE:
+	var is_jamspot_controlled := is_controlled_by_active_jam_spot()
+
+	if freeform_mode == FreeformMode.NONE and not is_jamspot_controlled:
 		return
+
+	var stop_distance: float = jam_formation_max_distance
+	var slow_radius: float = jam_formation_slow_radius
+	var move_speed: float = jam_formation_move_speed
+
+	# JamSpot formation should be precise.
+	if is_jamspot_controlled:
+		stop_distance = jamspot_formation_stop_distance
+		slow_radius = jamspot_formation_slow_radius
+
+	# NPC-led freeform can also request precise placement.
+	if use_precise_jam_formation:
+		stop_distance = precise_formation_stop_distance
+		slow_radius = precise_formation_slow_radius
 
 	var distance: float = global_position.distance_to(jam_formation_target_position)
 
-	# Comfortable zone. Do not micro-adjust.
-	if distance <= jam_formation_max_distance:
+	if distance <= stop_distance:
 		velocity = Vector2.ZERO
+		move_and_slide()
 		return
 
-	var speed: float = jam_formation_move_speed
+	var speed: float = move_speed
 
-	if distance < jam_formation_slow_radius:
-		var t: float = inverse_lerp(jam_formation_max_distance, jam_formation_slow_radius, distance)
-		speed = lerp(jam_formation_move_speed * 0.35, jam_formation_move_speed, t)
+	if distance < slow_radius:
+		var t: float = inverse_lerp(stop_distance, slow_radius, distance)
+		speed = lerp(move_speed * 0.35, move_speed, t)
 
 	_move_toward_world_position(
 		jam_formation_target_position,
 		speed,
-		jam_formation_max_distance,
+		stop_distance,
 		delta
 	)
 
@@ -838,6 +868,10 @@ func start_following_player() -> void:
 
 	if player == null:
 		return
+
+	# Manual follow is a direct player command.
+	# It should override any JamSpot/freeform formation positioning.
+	clear_jam_formation_target()
 
 	follow_target = player
 	following_player = true

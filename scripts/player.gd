@@ -72,6 +72,8 @@ var instruments := [
 
 func _ready() -> void:
 	add_to_group("player")
+	add_to_group("player_musician")
+	add_to_group("musician")
 
 	npc_dialogue_prompt = get_tree().get_first_node_in_group("npc_dialogue_prompt")
 

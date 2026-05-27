@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b2rachx81sojt"]
+
+[ext_resource type="Script" uid="uid://d3ofr6sv0gsjb" path="res://scripts/jam_spot_formation.gd" id="1_3gafj"]
+
+[node name="JamSpotFormation" type="Node" unique_id=962678760]
+script = ExtResource("1_3gafj")

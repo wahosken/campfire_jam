@@ -2,7 +2,12 @@ extends Node
 
 @export var base_radius := 48.0
 @export var radius_per_extra_member := 6.0
-@export var max_radius := 96.0
+
+@export var loose_min_radius := 75.0
+@export var loose_max_radius := 100.0
+
+@export var precise_min_radius := 125.0
+@export var precise_max_radius := 150.0
 
 @export var start_angle_degrees := -90.0
 @export var debug_logs := false
@@ -21,6 +26,8 @@ extends Node
 var leader: Node2D = null
 var members: Array[Node2D] = []
 var assigned_slots := {}
+
+var use_precise_slots := false
 
 
 # ------------------------------------------------------------
@@ -103,11 +110,19 @@ func remove_member(member: Node) -> void:
 
 
 func clear() -> void:
-	clear_targets_from_members()
+	for member in members:
+		if member == null or not is_instance_valid(member):
+			continue
 
-	leader = null
+		if member.has_method("set_precise_jam_formation"):
+			member.set_precise_jam_formation(false)
+
+		if member.has_method("clear_jam_formation_target"):
+			member.clear_jam_formation_target()
+
 	members.clear()
 	assigned_slots.clear()
+	leader = null
 
 
 func get_assigned_target_for_member(member: Node) -> Vector2:
@@ -222,11 +237,19 @@ func get_slot_position(
 
 
 func get_radius_for_count(follower_count: int) -> float:
-	if follower_count <= 1:
-		return base_radius
+	var min_radius: float = loose_min_radius
+	var max_radius: float = loose_max_radius
 
-	var radius := base_radius + float(follower_count - 1) * radius_per_extra_member
-	return min(radius, max_radius)
+	if use_precise_slots:
+		min_radius = precise_min_radius
+		max_radius = precise_max_radius
+
+	if follower_count <= 1:
+		return min_radius
+
+	var t: float = clamp(float(follower_count - 1) / 5.0, 0.0, 1.0)
+
+	return lerp(min_radius, max_radius, t)
 
 
 func apply_targets_to_members() -> void:
@@ -237,10 +260,13 @@ func apply_targets_to_members() -> void:
 		if member == null or not is_instance_valid(member):
 			continue
 
-		var target_position := get_assigned_target_for_member(member)
+		var target_position: Vector2 = get_assigned_target_for_member(member)
 
 		if member.has_method("set_jam_formation_target"):
 			member.set_jam_formation_target(target_position)
+
+		if member.has_method("set_precise_jam_formation"):
+			member.set_precise_jam_formation(use_precise_slots)
 
 
 func clear_targets_from_members() -> void:
@@ -380,6 +406,10 @@ func _is_world_position_valid(world_position: Vector2) -> bool:
 	var results := space_state.intersect_shape(query, 1)
 
 	return results.is_empty()
+
+
+func set_precise_slots(is_precise: bool) -> void:
+	use_precise_slots = is_precise
 
 
 # ------------------------------------------------------------

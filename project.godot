@@ -39,6 +39,8 @@ player=""
 npc_musician=""
 interactable=""
 jam_manager=""
+musician=""
+player_musician=""
 
 [input]
 

@@ -27,6 +27,9 @@ signal nearby_jam_changed(jam_source: Node, jam_type: String, jam_name: String)
 
 @export var jamspot_handoff_delay := 0.35
 
+@export var player_stationary_jam_delay := 0.45
+@export var player_stationary_speed_threshold := 8.0
+
 const JAM_TYPE_NONE := "none"
 const JAM_TYPE_JAM_SPOT := "jam_spot"
 const JAM_TYPE_MUSICIAN := "musician"
@@ -57,6 +60,8 @@ var current_nearby_jam_name := "None"
 var current_nearby_jam_distance := INF
 var pending_jamspot_handoffs := {}
 
+var player_stationary_timer := 0.0
+var player_was_stationary_for_jam := false
 
 # ------------------------------------------------------------
 # Lifecycle
@@ -73,7 +78,7 @@ func _process(delta: float) -> void:
 	_update_pending_freeform_auto_joins(delta)
 	_update_pending_jamspot_handoffs(delta)
 	_update_active_freeform_recruitment(delta)
-	_update_active_jam_formation_targets()
+	_update_active_jam_formation_targets(delta)
 	_refresh_player_led_auto_follower_requests()
 
 	var player: Node = get_tree().get_first_node_in_group("player")
@@ -525,6 +530,46 @@ func remove_player_from_freeform_members(player: Node, context: Node = null) -> 
 	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
 		if active_freeform_jam_context.has_method("refresh_arrangement"):
 			active_freeform_jam_context.refresh_arrangement()
+
+
+func _player_should_use_precise_freeform_slots(delta: float) -> bool:
+	var player: Node = get_tree().get_first_node_in_group("player")
+
+	if player == null:
+		player_stationary_timer = 0.0
+		player_was_stationary_for_jam = false
+		return false
+
+	if not player is CharacterBody2D:
+		player_stationary_timer = 0.0
+		player_was_stationary_for_jam = false
+		return false
+
+	if not _is_player_led_freeform():
+		player_stationary_timer = 0.0
+		player_was_stationary_for_jam = false
+		return false
+
+	if not "is_playing_instrument" in player:
+		player_stationary_timer = 0.0
+		player_was_stationary_for_jam = false
+		return false
+
+	if not player.is_playing_instrument:
+		player_stationary_timer = 0.0
+		player_was_stationary_for_jam = false
+		return false
+
+	var speed: float = player.velocity.length()
+
+	if speed <= player_stationary_speed_threshold:
+		player_stationary_timer += delta
+	else:
+		player_stationary_timer = 0.0
+
+	player_was_stationary_for_jam = player_stationary_timer >= player_stationary_jam_delay
+
+	return player_was_stationary_for_jam
 
 
 # ------------------------------------------------------------
@@ -1420,6 +1465,9 @@ func _destroy_active_freeform_context() -> void:
 	pending_freeform_auto_joins.clear()
 	pending_jamspot_handoffs.clear()
 
+	player_stationary_timer = 0.0
+	player_was_stationary_for_jam = false
+
 	if jam_formation != null and jam_formation.has_method("clear"):
 		jam_formation.clear()
 
@@ -2073,11 +2121,22 @@ func _sync_jam_formation_to_active_freeform() -> void:
 	if jam_formation.has_method("set_members"):
 		jam_formation.set_members(formation_members)
 
+	var should_use_precise_slots := _is_npc_led_freeform()
+
+	if _is_player_led_freeform():
+		should_use_precise_slots = player_was_stationary_for_jam
+
+	if jam_formation.has_method("set_precise_slots"):
+		jam_formation.set_precise_slots(should_use_precise_slots)
+
+	if jam_formation.has_method("set_precise_slots"):
+		jam_formation.set_precise_slots(should_use_precise_slots)
+
 	if jam_formation.has_method("apply_targets_to_members"):
 		jam_formation.apply_targets_to_members()
 
 
-func _update_active_jam_formation_targets() -> void:
+func _update_active_jam_formation_targets(delta: float) -> void:
 	if jam_formation == null:
 		return
 
@@ -2095,6 +2154,14 @@ func _update_active_jam_formation_targets() -> void:
 
 	if not active_freeform_anchor is Node2D:
 		return
+
+	var should_use_precise_slots := _is_npc_led_freeform()
+
+	if _is_player_led_freeform():
+		should_use_precise_slots = _player_should_use_precise_freeform_slots(delta)
+
+	if jam_formation.has_method("set_precise_slots"):
+		jam_formation.set_precise_slots(should_use_precise_slots)
 
 	if jam_formation.has_method("apply_targets_to_members"):
 		jam_formation.apply_targets_to_members()

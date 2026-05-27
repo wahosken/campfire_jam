@@ -15,6 +15,7 @@ extends Node2D
 @onready var jam_context: Node = $JamContext
 @onready var jam_area: Area2D = $JamArea
 @onready var jam_collision_shape: CollisionShape2D = $JamArea/CollisionShape2D
+@onready var jam_spot_formation: Node = $JamSpotFormation
 
 var active_refresh_timer := 0.0
 
@@ -29,16 +30,12 @@ var jam_is_active := false
 func _ready() -> void:
 	add_to_group("jam_spot")
 
+	if jam_spot_formation != null and jam_spot_formation.has_method("set_jam_spot"):
+		jam_spot_formation.set_jam_spot(self)
+
 	_connect_jam_area_signals()
 	_sync_jam_context_song()
 	_update_label()
-
-	# For browser builds, StartGate should call start_if_auto_enabled()
-	# after the first player input.
-	#
-	# If this project is not being tested in browser, this can be restored:
-	# if auto_start_on_ready:
-	#	call_deferred("start_jam")
 
 
 func _process(delta: float) -> void:
@@ -128,6 +125,7 @@ func stop_jam() -> void:
 		_release_npc_from_stopped_jam(npc)
 
 	registered_npcs.clear()
+	_sync_jamspot_formation()
 
 	# Do NOT use stop_all_members() here.
 	# That can stop the player while they are holding play.
@@ -152,12 +150,11 @@ func register_npc(npc: Node) -> void:
 		npc.set_current_jam_spot(self)
 
 	if jam_is_active:
-		# Defer so all area/body enter events can settle before JamContext
-		# decides arrangement. This prevents temporary "solo/both" states.
 		call_deferred("refresh_all_npc_activity")
 	else:
 		refresh_npc_activity(npc)
 
+	_sync_jamspot_formation()
 	_update_label()
 
 
@@ -193,6 +190,7 @@ func unregister_npc(npc: Node) -> void:
 		if npc.has_method("set_current_jam_spot"):
 			npc.set_current_jam_spot(null)
 
+	_sync_jamspot_formation()
 	_update_label()
 
 
@@ -264,6 +262,8 @@ func _get_npcs_currently_inside_jam_area() -> Array[Node]:
 func refresh_all_npc_activity() -> void:
 	for npc in registered_npcs.duplicate():
 		refresh_npc_activity(npc)
+
+	_sync_jamspot_formation()
 
 
 func refresh_npc_activity(npc: Node) -> void:
@@ -473,6 +473,38 @@ func _get_npc_audio_source(npc: Node) -> Node:
 		return npc.get_jam_audio_source()
 
 	return null
+
+
+func _sync_jamspot_formation() -> void:
+	if jam_spot_formation == null:
+		return
+
+	if not jam_is_active:
+		if jam_spot_formation.has_method("clear"):
+			jam_spot_formation.clear()
+
+		return
+
+	var formation_members: Array[Node] = []
+
+	for npc in registered_npcs:
+		if npc == null or not is_instance_valid(npc):
+			continue
+
+		if not npc.is_in_group("musician"):
+			continue
+
+		if not npc is Node2D:
+			continue
+
+		if npc.has_method("is_following_player"):
+			if npc.is_following_player():
+				continue
+
+		formation_members.append(npc)
+
+	if jam_spot_formation.has_method("set_members"):
+		jam_spot_formation.set_members(formation_members)
 
 
 # ------------------------------------------------------------
