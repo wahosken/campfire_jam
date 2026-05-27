@@ -558,23 +558,22 @@ func _set_solo_member_arrangement(member: Node) -> void:
 		_set_member_part(member, "silent")
 		return
 
-	if member.is_in_group("player"):
-		match requested_part:
-			"rhythm":
-				_set_member_tracks(member, true, false)
-				_set_member_part(member, "rhythm")
-			"melody":
-				_set_member_tracks(member, false, true)
-				_set_member_part(member, "melody")
-			"both":
-				_set_member_tracks(member, true, true)
-				_set_member_part(member, "both")
-			_:
-				_set_member_tracks(member, true, true)
-				_set_member_part(member, "both")
-	else:
-		_set_member_tracks(member, true, true)
-		_set_member_part(member, "both")
+	match requested_part:
+		"rhythm":
+			_set_member_tracks(member, true, false)
+			_set_member_part(member, "rhythm")
+		"melody":
+			_set_member_tracks(member, false, true)
+			_set_member_part(member, "melody")
+		"both":
+			_set_member_tracks(member, true, true)
+			_set_member_part(member, "both")
+		_:
+			# Auto/default behavior:
+			# Player solo should follow their request fallback.
+			# NPC solo should play both only if no explicit request was made.
+			_set_member_tracks(member, true, true)
+			_set_member_part(member, "both")
 
 	current_featured_member = member
 	current_featured_instrument = _get_member_instrument_id(member)
@@ -714,6 +713,14 @@ func _set_member_tracks(member: Node, rhythm_on: bool, melody_on: bool) -> void:
 		push_warning("JamContext: No audio source for track assignment: " + str(member.name))
 		return
 
+	if member.is_in_group("player"):
+		if member.has_method("is_currently_playing_solo_jam"):
+			if member.is_currently_playing_solo_jam():
+				return
+
+	if audio_source.has_method("force_jam_control"):
+		audio_source.force_jam_control()
+
 	if audio_source.has_method("force_jam_control"):
 		audio_source.force_jam_control()
 
@@ -737,6 +744,14 @@ func _set_member_tracks_with_volume(
 	if audio_source == null:
 		push_warning("JamContext: No audio source for track assignment: " + str(member.name))
 		return
+
+	if member.is_in_group("player"):
+		if member.has_method("is_currently_playing_solo_jam"):
+			if member.is_currently_playing_solo_jam():
+				return
+
+	if audio_source.has_method("force_jam_control"):
+		audio_source.force_jam_control()
 
 	if audio_source.has_method("force_jam_control"):
 		audio_source.force_jam_control()

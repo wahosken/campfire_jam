@@ -179,12 +179,9 @@ func _rescan_npcs_inside_jam_area() -> void:
 	if jam_area == null:
 		return
 
-	for area in jam_area.get_overlapping_areas():
-		var possible_npc: Node = area.get_parent()
-
-		if _is_valid_npc(possible_npc):
-			register_npc(possible_npc)
-
+	# Important:
+	# Actual JamSpot ownership should use NPC body collision only,
+	# not the larger InteractionArea.
 	for body in jam_area.get_overlapping_bodies():
 		if _is_valid_npc(body):
 			register_npc(body)
@@ -227,13 +224,8 @@ func _get_npcs_currently_inside_jam_area() -> Array[Node]:
 	if jam_area == null:
 		return found_npcs
 
-	for area in jam_area.get_overlapping_areas():
-		var possible_npc: Node = area.get_parent()
-
-		if _is_valid_npc(possible_npc):
-			if not found_npcs.has(possible_npc):
-				found_npcs.append(possible_npc)
-
+	# Important:
+	# Actual JamSpot ownership should use NPC body collision only.
 	for body in jam_area.get_overlapping_bodies():
 		if _is_valid_npc(body):
 			if not found_npcs.has(body):
@@ -306,8 +298,15 @@ func _release_npc_from_inactive_jam(npc: Node) -> void:
 
 func _claim_npc_for_active_jam(npc: Node) -> void:
 	# JamSpot is active and NPC is enabled, so JamSpot takes priority.
-	# Auto freeform followers get a short handoff delay so they can enter
-	# the JamSpot safely instead of snapping off at the edge.
+	# Any freeform/manual state should reset before the fixed JamSpot controls it.
+
+	if _npc_is_already_claimed_by_this_jam(npc):
+		_request_npc_both_parts(npc)
+
+		if jam_context != null and jam_context.has_method("set_member_active"):
+			jam_context.set_member_active(npc, true)
+
+		return
 
 	var jam_manager: Node = get_tree().get_first_node_in_group("jam_manager")
 
@@ -421,14 +420,15 @@ func _get_npc_audio_source(npc: Node) -> Node:
 # Jam area callbacks
 # ------------------------------------------------------------
 
-func _on_jam_area_area_entered(area: Area2D) -> void:
-	var possible_npc: Node = area.get_parent()
-	_try_register_possible_npc(possible_npc)
+func _on_jam_area_area_entered(_area: Area2D) -> void:
+	# Do not register NPCs through InteractionArea.
+	# Actual JamSpot ownership uses body_entered/body_exited only.
+	pass
 
 
-func _on_jam_area_area_exited(area: Area2D) -> void:
-	var possible_npc: Node = area.get_parent()
-	_try_unregister_possible_npc(possible_npc)
+func _on_jam_area_area_exited(_area: Area2D) -> void:
+	# Do not unregister NPCs through InteractionArea.
+	pass
 
 
 func _on_jam_area_body_entered(body: Node) -> void:
@@ -455,6 +455,23 @@ func _try_unregister_possible_npc(node: Node) -> void:
 
 	if registered_npcs.has(node):
 		unregister_npc(node)
+
+
+func _npc_is_already_claimed_by_this_jam(npc: Node) -> bool:
+	if npc == null or not is_instance_valid(npc):
+		return false
+
+	if not "current_jam_spot" in npc:
+		return false
+
+	if npc.current_jam_spot != self:
+		return false
+
+	if not npc.has_method("is_controlled_by_jam_spot"):
+		return false
+
+	return npc.is_controlled_by_jam_spot()
+
 
 
 # ------------------------------------------------------------

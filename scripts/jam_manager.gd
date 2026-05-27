@@ -74,6 +74,7 @@ func _process(delta: float) -> void:
 	_update_pending_jamspot_handoffs(delta)
 	_update_active_freeform_recruitment(delta)
 	_update_active_jam_formation_targets()
+	_refresh_player_led_auto_follower_requests()
 
 	var player: Node = get_tree().get_first_node_in_group("player")
 
@@ -505,19 +506,12 @@ func remove_player_from_freeform_members(player: Node, context: Node = null) -> 
 		var remaining_manual_npcs: Array[Node] = _get_active_manual_freeform_npcs()
 
 		if remaining_manual_npcs.is_empty():
-			# Player may be leaving the freeform context because they entered a JamSpot,
-			# but if they are still holding play, auto followers should keep using the
-			# player as their moving formation anchor until they individually enter
-			# the actual JamSpot and hand off.
 			if _player_is_still_playing() and _has_auto_freeform_followers():
 				active_freeform_anchor = player
 				active_freeform_leader = player
 
 				_sync_jam_formation_to_active_freeform()
-
-				if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-					if active_freeform_jam_context.has_method("refresh_arrangement"):
-						active_freeform_jam_context.refresh_arrangement()
+				_refresh_player_led_auto_follower_requests()
 
 				return
 
@@ -691,6 +685,10 @@ func request_jamspot_handoff_if_needed(npc: Node, jam_spot: Node) -> bool:
 	if npc.has_method("is_following_player"):
 		if npc.is_following_player():
 			return false
+
+	# Already in handoff. Tell JamSpot "do not claim yet."
+	if pending_jamspot_handoffs.has(npc):
+		return true
 
 	# Only delay auto freeform followers.
 	if not npc.has_method("is_auto_freeform"):
@@ -1140,9 +1138,13 @@ func _finish_auto_npc_join_delay(npc: Node) -> void:
 	if not active_freeform_members.has(npc):
 		return
 
+	if pending_jamspot_handoffs.has(npc):
+		_silence_freeform_follower_without_waiting(npc)
+		return
+
 	if _is_position_inside_buffer_but_not_jamspot(npc.global_position):
 		pending_freeform_auto_joins[npc] = 0.0
-		_set_auto_npc_waiting_for_join(npc)
+		_silence_freeform_follower_without_waiting(npc)
 		return
 
 	_set_npc_freeform_request_on_context(npc, active_freeform_jam_context)
@@ -1259,15 +1261,18 @@ func _queue_jamspot_handoff(npc: Node, jam_spot: Node) -> void:
 
 	_clear_pending_freeform_auto_join(npc)
 
+	# Silence the NPC during JamSpot handoff, but keep them active in the
+	# freeform context until the handoff finishes.
+	# This prevents the freeform JamContext from stopping and touching
+	# the player's carried audio.
 	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		if active_freeform_jam_context.has_method("clear_member_requested_part"):
-			active_freeform_jam_context.clear_member_requested_part(npc)
-
-		if active_freeform_jam_context.has_method("set_member_active"):
-			active_freeform_jam_context.set_member_active(npc, false)
+		if active_freeform_jam_context.has_method("set_member_requested_parts"):
+			active_freeform_jam_context.set_member_requested_parts(npc, false, false)
+		elif active_freeform_jam_context.has_method("set_member_requested_part"):
+			active_freeform_jam_context.set_member_requested_part(npc, "silent")
 
 	if npc.has_method("set_current_part"):
-		npc.set_current_part("waiting")
+		npc.set_current_part("silent")
 
 
 func _update_pending_jamspot_handoffs(delta: float) -> void:
@@ -1288,11 +1293,14 @@ func _update_pending_jamspot_handoffs(delta: float) -> void:
 			pending_jamspot_handoffs.erase(npc)
 			continue
 
+		# Manual follow cancels JamSpot stealing.
 		if npc.has_method("is_following_player"):
 			if npc.is_following_player():
 				pending_jamspot_handoffs.erase(npc)
 				continue
 
+		# If the player leads the NPC back out before the delay finishes,
+		# cancel the handoff and let freeform continue.
 		if npc is Node2D:
 			if _get_active_jamspot_containing_position(npc.global_position) != jam_spot:
 				pending_jamspot_handoffs.erase(npc)
@@ -1922,7 +1930,12 @@ func _release_freeform_npc_for_actual_jamspot(npc: Node, jam_spot: Node) -> void
 		if active_freeform_jam_context.has_method("refresh_arrangement"):
 			active_freeform_jam_context.refresh_arrangement()
 
-	_cleanup_freeform_context_if_only_player_left()
+	# If the player is still holding play, never force player cleanup here.
+	# This transfer is about the NPC joining a JamSpot, not about stopping the player.
+	if _player_is_still_playing():
+		_cleanup_freeform_context_if_only_player_left(false)
+	else:
+		_cleanup_freeform_context_if_only_player_left(true)
 
 
 func _get_active_jamspot_containing_position(world_position: Vector2) -> Node:
@@ -2062,6 +2075,62 @@ func _update_active_jam_formation_targets() -> void:
 # Request, display, and debug helpers
 # ------------------------------------------------------------
 
+
+func _refresh_player_led_auto_follower_requests() -> void:
+	if not _is_player_led_freeform():
+		return
+
+	if active_freeform_jam_context == null:
+		return
+
+	if not is_instance_valid(active_freeform_jam_context):
+		return
+
+	var player: Node = get_tree().get_first_node_in_group("player")
+
+	if player == null:
+		return
+
+	if not "is_playing_instrument" in player:
+		return
+
+	if not player.is_playing_instrument:
+		return
+
+	for member in active_freeform_members:
+		if member == null or not is_instance_valid(member):
+			continue
+
+		if member.is_in_group("player"):
+			continue
+
+		if not member.has_method("is_auto_freeform"):
+			continue
+
+		if not member.is_auto_freeform():
+			continue
+
+		# Pending freeform join should stay silent/waiting.
+		if pending_freeform_auto_joins.has(member):
+			continue
+
+		# Pending JamSpot handoff should stay silent.
+		if pending_jamspot_handoffs.has(member):
+			continue
+
+		# Inside etiquette buffer should not play freeform audio,
+		# but should also not enter the freeform "waiting" join state.
+		if member is Node2D:
+			if _is_position_inside_buffer_but_not_jamspot(member.global_position):
+				_silence_freeform_follower_without_waiting(member)
+				continue
+
+		_set_npc_freeform_request_on_context(member, active_freeform_jam_context)
+
+	if active_freeform_jam_context.has_method("refresh_arrangement"):
+		active_freeform_jam_context.refresh_arrangement()
+
+
 func _set_player_request_on_context(player: Node, jam_context: Node) -> void:
 	if player == null or jam_context == null:
 		return
@@ -2082,14 +2151,71 @@ func _set_player_request_on_context(player: Node, jam_context: Node) -> void:
 		jam_context.set_member_requested_part(player, part_name)
 
 
+func _silence_freeform_follower_without_waiting(npc: Node) -> void:
+	if npc == null:
+		return
+
+	if active_freeform_jam_context == null:
+		return
+
+	if not is_instance_valid(active_freeform_jam_context):
+		return
+
+	# Important:
+	# Do NOT clear_member_requested_part() here.
+	# Do NOT set_member_active(npc, false) here.
+	#
+	# The NPC should remain an active freeform member for movement/formation,
+	# but request silence while inside the JamSpot buffer.
+	if active_freeform_jam_context.has_method("set_member_requested_parts"):
+		active_freeform_jam_context.set_member_requested_parts(npc, false, false)
+	elif active_freeform_jam_context.has_method("set_member_requested_part"):
+		active_freeform_jam_context.set_member_requested_part(npc, "silent")
+
+	if npc.has_method("set_current_part"):
+		npc.set_current_part("silent")
+
+
 func _set_npc_freeform_request_on_context(npc: Node, jam_context: Node) -> void:
 	if npc == null or jam_context == null:
 		return
 
+	var rhythm_on := true
+	var melody_on := true
+
+	if _is_player_led_freeform():
+		var player: Node = get_tree().get_first_node_in_group("player")
+
+		if player != null:
+			var player_wants_rhythm := false
+			var player_wants_melody := false
+
+			if player.has_method("get_wants_rhythm"):
+				player_wants_rhythm = player.get_wants_rhythm()
+
+			if player.has_method("get_wants_melody"):
+				player_wants_melody = player.get_wants_melody()
+
+			# Player-led followers should accompany, not replace.
+			# Never request both in player-led freeform.
+			if player_wants_melody and not player_wants_rhythm:
+				rhythm_on = true
+				melody_on = false
+			elif player_wants_rhythm and not player_wants_melody:
+				rhythm_on = false
+				melody_on = true
+			elif player_wants_rhythm and player_wants_melody:
+				rhythm_on = true
+				melody_on = false
+			else:
+				rhythm_on = true
+				melody_on = false
+
 	if jam_context.has_method("set_member_requested_parts"):
-		jam_context.set_member_requested_parts(npc, true, true)
+		jam_context.set_member_requested_parts(npc, rhythm_on, melody_on)
 	elif jam_context.has_method("set_member_requested_part"):
-		jam_context.set_member_requested_part(npc, "both")
+		var part_name: String = _get_part_from_flags(rhythm_on, melody_on)
+		jam_context.set_member_requested_part(npc, part_name)
 
 
 func _get_part_from_flags(rhythm_on: bool, melody_on: bool) -> String:

@@ -202,6 +202,7 @@ position = Vector2(527, -914)
 
 [node name="JamManager" parent="." unique_id=841948683 instance=ExtResource("9_ngu8v")]
 freeform_jam_context_scene = ExtResource("10_bew7y")
+jamspot_handoff_delay = 2.5
 
 [node name="player" parent="." unique_id=685309387 instance=ExtResource("3_hiehu")]
 position = Vector2(697, -629)

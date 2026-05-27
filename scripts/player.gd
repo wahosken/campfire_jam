@@ -266,6 +266,7 @@ func _start_direct_solo() -> void:
 # Jam transition / carried solo
 # ------------------------------------------------------------
 
+
 func _check_for_jam_transition_while_playing() -> void:
 	if not is_playing_instrument:
 		return
@@ -273,8 +274,8 @@ func _check_for_jam_transition_while_playing() -> void:
 	if jam_manager == null:
 		return
 
-	# Direct solo is the player's portable/freeform state.
-	# While soloing, JamManager may recruit nearby NPCs into a moving freeform jam.
+	# Direct solo is sacred. While soloing, the player keeps their current song.
+	# JamManager may recruit nearby NPCs if the player is not inside an actual JamSpot.
 	if is_playing_direct_solo:
 		if jam_manager.has_method("try_auto_attach_npc_to_player"):
 			jam_manager.try_auto_attach_npc_to_player(self, global_position)
@@ -293,12 +294,13 @@ func _check_for_jam_transition_while_playing() -> void:
 	if jam_manager.has_method("get_current_nearby_jam_context"):
 		valid_nearby_context = jam_manager.get_current_nearby_jam_context()
 
-	# If the current context is still the valid nearby context, stay latched.
+	# If the current context is still valid, stay latched.
 	if valid_nearby_context == current_jam_context:
 		return
 
-	# If there is no valid nearby context, or another context is valid,
-	# detach into carried solo. The next held-input update can join the new context cleanly.
+	# If the player is already playing and walks into a different context,
+	# do NOT switch songs/contexts. Detach into carried solo and preserve
+	# the current carried song until the player releases play.
 	detach_from_current_jam_to_carried_solo()
 
 
@@ -314,11 +316,11 @@ func detach_from_current_jam_to_carried_solo() -> void:
 	# Important:
 	# Carry the song from the jam being left.
 	# Do not use selected_song_id here.
+	# Keep the exact song the player is currently carrying.
+	# Do not replace it with the context song when detaching.
 	var saved_song_id := current_playing_song_id
 
 	if previous_context != null and is_instance_valid(previous_context):
-		saved_song_id = _get_song_id_from_context(previous_context)
-
 		if previous_context.has_method("detach_member_preserve_audio"):
 			previous_context.detach_member_preserve_audio(self)
 		else:
