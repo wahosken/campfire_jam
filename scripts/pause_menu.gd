@@ -110,6 +110,11 @@ func pause_game() -> void:
 	get_tree().paused = true
 	panel.visible = true
 
+	var touch_overlay := get_node_or_null(touch_overlay_path)
+
+	if touch_overlay != null:
+		touch_overlay.visible = false
+
 	await get_tree().process_frame
 	resume_button.grab_focus()
 
@@ -118,6 +123,11 @@ func resume_game() -> void:
 	is_paused = false
 	get_tree().paused = false
 	panel.visible = false
+
+	var touch_overlay := get_node_or_null(touch_overlay_path)
+
+	if touch_overlay != null:
+		touch_overlay.visible = true
 
 
 func _restart_scene() -> void:
