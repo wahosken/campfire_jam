@@ -43,6 +43,8 @@ extends CharacterBody2D
 @export var jam_formation_max_distance := 150.0
 @export var jam_formation_slow_radius := 140.0
 
+@export var formation_smoothness := 8.0
+
 @export var jamspot_formation_stop_distance := 8.0
 @export var jamspot_formation_slow_radius := 48.0
 
@@ -124,6 +126,9 @@ var follow_target: Node = null
 var jam_formation_target_position := Vector2.ZERO
 var has_jam_formation_target := false
 var use_precise_jam_formation := false
+
+var formation_velocity: Vector2 = Vector2.ZERO
+var smoothed_move_target: Vector2 = Vector2.ZERO
 
 var instrument_visual_tween: Tween = null
 
@@ -323,6 +328,18 @@ func _start_own_manual_freeform_from_prompt() -> void:
 # ------------------------------------------------------------
 # Freeform control
 # ------------------------------------------------------------
+
+
+func apply_formation_motion(target_position: Vector2, delta: float) -> void:
+	var desired_velocity: Vector2 = (target_position - global_position)
+
+	var smooth_factor: float = clamp(formation_smoothness * delta, 0.0, 1.0)
+
+	formation_velocity = formation_velocity.lerp(desired_velocity, smooth_factor)
+
+	velocity = formation_velocity
+	move_and_slide()
+
 
 # Called by JamManager when this NPC auto-joins a freeform jam.
 func start_auto_freeform() -> void:
@@ -898,7 +915,8 @@ func _move_toward_world_position(target_position: Vector2, move_speed: float, st
 		move_and_slide()
 		return
 
-	var move_target: Vector2 = target_position
+	smoothed_move_target = smoothed_move_target.lerp(target_position, 0.15)
+	var move_target: Vector2 = smoothed_move_target
 
 	if use_navigation_agent and navigation_agent != null:
 		if navigation_agent.target_position.distance_to(target_position) > navigation_target_update_distance:

@@ -29,6 +29,7 @@ var assigned_slots := {}
 
 var use_precise_slots := false
 
+var formation_blend := 0.0
 
 # ------------------------------------------------------------
 # Public API
@@ -167,51 +168,61 @@ func get_all_assigned_targets() -> Dictionary:
 
 
 func get_freeform_position(member: Node2D, leader_position: Vector2) -> Vector2:
-	# Ensure stable anchor exists (THIS is the key fix)
+	# Ensure stable anchor exists
 	if not member.has_freeform_anchor:
-		var angle := randf_range(0.0, TAU)
-		var radius := get_radius_for_count(members.size())
+		var angle: float = randf_range(0.0, TAU)
+		var radius: float = get_radius_for_count(members.size())
 
 		member.freeform_anchor_offset = Vector2.RIGHT.rotated(angle) * radius
 		member.has_freeform_anchor = true
 
-	# Base desired position (stable)
-	var base_position: Vector2 = leader_position + member.freeform_anchor_offset
+	# Stable positions
+	var circle_pos: Vector2 = leader_position + member.freeform_anchor_offset
+	var cluster_pos: Vector2 = get_field_position_for_npc(member, members)
 
-	var best_pos := base_position
-	var best_score := INF
+	var best_pos: Vector2 = circle_pos.lerp(cluster_pos, formation_blend)
+	var best_score: float = INF
 
-	# small local adjustment only (NOT full re-roll anymore)
-	for i in range(6):
-		var jitter := Vector2(
-			randf_range(-6.0, 6.0),
-			randf_range(-6.0, 6.0)
-		)
+	# small evaluation pass (no randomness anymore)
+	for i in range(4):
+		var test_pos: Vector2 = best_pos
 
-		var candidate := base_position + jitter
+		var score: float = test_pos.distance_to(member.global_position)
 
-		var score := candidate.distance_to(member.global_position)
-
-		# crowd penalty
+		# crowd pressure
 		for other in members:
 			if other == null or other == member:
 				continue
 			if not other is Node2D:
 				continue
 
-			var dist := candidate.distance_to(other.global_position)
+			var dist: float = test_pos.distance_to(other.global_position)
+
 			if dist < slot_clearance_radius * 3.0:
 				score += 200.0
 
 		# collision penalty
-		if not _is_world_position_valid(candidate):
+		if not _is_world_position_valid(test_pos):
 			score += 500.0
 
 		if score < best_score:
 			best_score = score
-			best_pos = candidate
 
 	return best_pos
+
+
+func get_field_position_for_npc(member: Node2D, members: Array[Node2D]) -> Vector2:
+	# fallback field logic for freeform (simple + stable)
+
+	var center: Vector2 = leader.global_position
+
+	var rng := RandomNumberGenerator.new()
+	rng.seed = member.get_instance_id()
+
+	var angle: float = rng.randf_range(0.0, TAU)
+	var radius: float = get_radius_for_count(members.size())
+
+	return center + Vector2.RIGHT.rotated(angle) * radius
 
 
 func debug_print_assignments() -> void:
@@ -453,6 +464,17 @@ func _is_world_position_valid(world_position: Vector2) -> bool:
 
 func set_precise_slots(is_precise: bool) -> void:
 	use_precise_slots = is_precise
+
+
+func update_formation_blend(delta: float, leader_velocity: Vector2) -> void:
+	var target := 0.0
+
+	if leader_velocity.length() < 10.0:
+		target = 1.0  # stationary → jam cluster
+	else:
+		target = 0.0  # moving → loose follow
+
+	formation_blend = lerp(formation_blend, target, delta * 3.5)
 
 
 # ------------------------------------------------------------
