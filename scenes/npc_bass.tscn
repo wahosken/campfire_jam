@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dgi3bcdtv1vab"]
 
-[ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/npc_musician.gd" id="1_iubrl"]
-[ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/instrument_audio_source.gd" id="2_58ipr"]
+[ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/musicians/musician.gd" id="1_iubrl"]
+[ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/audio/instrument_audio_source.gd" id="2_58ipr"]
 [ext_resource type="AudioStream" uid="uid://b1x2boy27xxja" path="res://audio/song 1/song1-003-bass_rhythm.wav" id="3_s00xo"]
 [ext_resource type="AudioStream" uid="uid://d2t5mdol561us" path="res://audio/song 1/song1-004-bass_lead.wav" id="4_1pmlb"]
 [ext_resource type="AudioStream" uid="uid://26yo666jqypi" path="res://audio/song 2/song2-003-bass_rhythm.wav" id="5_4jck1"]

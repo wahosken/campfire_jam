@@ -1,6 +1,33 @@
+# ------------------------------------------------------------
+# JamManager
+#
+# High-level coordinator for:
+# - freeform jam creation/destruction
+# - jam ownership arbitration
+# - player/NPC jam transitions
+# - freeform recruitment
+# - jamspot handoffs
+# - nearby jam queries
+#
+# Does NOT own:
+# - audio playback logic
+# - arrangement logic
+# - stem synchronization
+# - musician movement implementation
+#
+# Long-term direction:
+# - shrink toward coordinator/registry role
+# - move freeform runtime state into specialized jam objects
+# - become more event-driven over time
+# ------------------------------------------------------------
+
 extends Node
 
 signal nearby_jam_changed(jam_source: Node, jam_type: String, jam_name: String)
+
+# ------------------------------------------------------------
+# References / configuration
+# ------------------------------------------------------------
 
 @onready var jam_formation: Node = $JamFormation
 
@@ -35,20 +62,13 @@ const JAM_TYPE_JAM_SPOT := "jam_spot"
 const JAM_TYPE_MUSICIAN := "musician"
 const JAM_TYPE_PLAYER_FREEFORM := "player_freeform"
 
+# ------------------------------------------------------------
+# Runtime state
+# ------------------------------------------------------------
+
 var freeform_recruit_scan_timer := 0.0
 
-var active_freeform_jam_context: Node = null
-var active_freeform_leader: Node = null
-var active_freeform_members: Array[Node] = []
-var active_freeform_anchor: Node = null
-
-# This now means "member has fully joined and can become a bubble anchor."
-var freeform_member_join_times := {}
-
-# Auto NPCs that are already members, but are waiting before becoming audible.
-# Key: npc Node
-# Value: remaining seconds
-var pending_freeform_auto_joins := {}
+var freeform_state := FreeformJamState.new()
 
 var music_system: Node = null
 
@@ -58,7 +78,6 @@ var current_nearby_jam_source: Node = null
 var current_nearby_jam_type := JAM_TYPE_NONE
 var current_nearby_jam_name := "None"
 var current_nearby_jam_distance := INF
-var pending_jamspot_handoffs := {}
 
 var player_stationary_timer := 0.0
 var player_was_stationary_for_jam := false
@@ -153,9 +172,9 @@ func get_current_nearby_jam_context() -> Node:
 				return jam_spot.get_jam_context()
 
 	# Freeform only matters if no JamSpot is valid.
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
 		if _is_player_near_any_freeform_anchor(player_position):
-			return active_freeform_jam_context
+			return freeform_state.jam_context
 
 	return null
 
@@ -258,8 +277,8 @@ func _clear_current_nearby_jam() -> void:
 # Player freeform transitions
 # ------------------------------------------------------------
 
-func try_auto_attach_npc_to_player(player: Node, player_position: Vector2) -> void:
-	_debug_player_freeform("try_auto_attach_npc_to_player START player_playing=" + str(player.is_playing_instrument if "is_playing_instrument" in player else "unknown"))
+func try_recruit_nearby_npcs_to_player(player: Node, player_position: Vector2) -> void:
+	_debug_player_freeform("try_recruit_nearby_npcs_to_player START player_playing=" + str(player.is_playing_instrument if "is_playing_instrument" in player else "unknown"))
 
 	if player == null:
 		return
@@ -280,12 +299,12 @@ func try_auto_attach_npc_to_player(player: Node, player_position: Vector2) -> vo
 	if nearby_npcs.is_empty():
 		return
 
-	_debug_player_freeform("try_auto_attach_npc_to_player attaching NPCs")
+	_debug_player_freeform("try_recruit_nearby_npcs_to_player attaching NPCs")
 
-	if active_freeform_jam_context == null or not is_instance_valid(active_freeform_jam_context):
+	if freeform_state.jam_context == null or not is_instance_valid(freeform_state.jam_context):
 		_create_player_carried_freeform_context(player)
 
-	if active_freeform_jam_context == null:
+	if freeform_state.jam_context == null:
 		return
 
 	for npc in nearby_npcs:
@@ -320,17 +339,17 @@ func _create_player_carried_freeform_context(player: Node) -> void:
 		push_warning("JamManager is missing freeform_jam_context_scene.")
 		return
 
-	active_freeform_jam_context = freeform_jam_context_scene.instantiate()
-	add_child(active_freeform_jam_context)
+	freeform_state.jam_context = freeform_jam_context_scene.instantiate()
+	add_child(freeform_state.jam_context)
 
-	active_freeform_leader = player
-	active_freeform_anchor = player
+	freeform_state.leader = player
+	freeform_state.anchor = player
 
-	active_freeform_members.clear()
-	freeform_member_join_times.clear()
-	pending_freeform_auto_joins.clear()
+	freeform_state.members.clear()
+	freeform_state.member_join_times.clear()
+	freeform_state.pending_auto_joins.clear()
 
-	active_freeform_members.append(player)
+	freeform_state.members.append(player)
 	_record_freeform_member_join_time(player)
 
 	var player_song_id := "song_01"
@@ -340,18 +359,18 @@ func _create_player_carried_freeform_context(player: Node) -> void:
 	elif player.has_method("get_selected_song_id"):
 		player_song_id = player.get_selected_song_id()
 
-	if active_freeform_jam_context.has_method("apply_song_id"):
-		active_freeform_jam_context.apply_song_id(player_song_id)
-	elif "song_id" in active_freeform_jam_context:
-		active_freeform_jam_context.song_id = player_song_id
+	if freeform_state.jam_context.has_method("apply_song_id"):
+		freeform_state.jam_context.apply_song_id(player_song_id)
+	elif "song_id" in freeform_state.jam_context:
+		freeform_state.jam_context.song_id = player_song_id
 
-	if active_freeform_jam_context.has_method("add_member"):
-		active_freeform_jam_context.add_member(player)
+	if freeform_state.jam_context.has_method("add_member"):
+		freeform_state.jam_context.add_member(player)
 
-	if active_freeform_jam_context.has_method("start_from_existing_member"):
-		active_freeform_jam_context.start_from_existing_member(player)
+	if freeform_state.jam_context.has_method("start_from_existing_member"):
+		freeform_state.jam_context.start_from_existing_member(player)
 
-	_set_player_request_on_context(player, active_freeform_jam_context)
+	_set_player_request_on_context(player, freeform_state.jam_context)
 
 	var player_audio_source: Node = null
 
@@ -374,11 +393,11 @@ func _create_player_carried_freeform_context(player: Node) -> void:
 
 			player_audio_source.adopt_into_synced_jam(rhythm_on, melody_on)
 
-	if active_freeform_jam_context.has_method("set_member_active"):
-		active_freeform_jam_context.set_member_active(player, true)
+	if freeform_state.jam_context.has_method("set_member_active"):
+		freeform_state.jam_context.set_member_active(player, true)
 
 	if player.has_method("mark_as_freeform_jam_context"):
-		player.mark_as_freeform_jam_context(active_freeform_jam_context)
+		player.mark_as_freeform_jam_context(freeform_state.jam_context)
 
 	_debug_player_freeform("_create_player_carried_freeform_context END")
 
@@ -402,36 +421,36 @@ func handle_player_stopped_playing(previous_context: Node) -> void:
 
 	var player: Node = get_tree().get_first_node_in_group("player")
 
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
 		if player != null:
-			if active_freeform_jam_context.has_method("set_member_active"):
-				active_freeform_jam_context.set_member_active(player, false)
+			if freeform_state.jam_context.has_method("set_member_active"):
+				freeform_state.jam_context.set_member_active(player, false)
 
-			if active_freeform_members.has(player):
-				active_freeform_members.erase(player)
+			if freeform_state.members.has(player):
+				freeform_state.members.erase(player)
 
 			_clear_freeform_member_join_time(player)
 
-	if active_freeform_anchor != null:
-		if is_instance_valid(active_freeform_anchor):
-			if active_freeform_anchor != player:
+	if freeform_state.anchor != null:
+		if is_instance_valid(freeform_state.anchor):
+			if freeform_state.anchor != player:
 				_refresh_freeform_leader()
 
-				if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-					if active_freeform_jam_context.has_method("refresh_arrangement"):
-						active_freeform_jam_context.refresh_arrangement()
+				if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+					if freeform_state.jam_context.has_method("refresh_arrangement"):
+						freeform_state.jam_context.refresh_arrangement()
 
 				return
 
 	var remaining_manual_npcs: Array[Node] = _get_active_manual_freeform_npcs()
 
 	if not remaining_manual_npcs.is_empty():
-		active_freeform_anchor = remaining_manual_npcs[0]
-		active_freeform_leader = remaining_manual_npcs[0]
+		freeform_state.anchor = remaining_manual_npcs[0]
+		freeform_state.leader = remaining_manual_npcs[0]
 
-		if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-			if active_freeform_jam_context.has_method("refresh_arrangement"):
-				active_freeform_jam_context.refresh_arrangement()
+		if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+			if freeform_state.jam_context.has_method("refresh_arrangement"):
+				freeform_state.jam_context.refresh_arrangement()
 
 		return
 
@@ -446,10 +465,10 @@ func detach_player_from_freeform_if_too_far(player_position: Vector2) -> void:
 
 
 func _detach_player_from_freeform_if_too_far(player_position: Vector2) -> void:
-	if active_freeform_jam_context == null:
+	if freeform_state.jam_context == null:
 		return
 
-	if not is_instance_valid(active_freeform_jam_context):
+	if not is_instance_valid(freeform_state.jam_context):
 		return
 
 	var player: Node = get_tree().get_first_node_in_group("player")
@@ -463,10 +482,10 @@ func _detach_player_from_freeform_if_too_far(player_position: Vector2) -> void:
 	if not "current_jam_context" in player:
 		return
 
-	if player.current_jam_context != active_freeform_jam_context:
+	if player.current_jam_context != freeform_state.jam_context:
 		return
 
-	if not active_freeform_members.has(player):
+	if not freeform_state.members.has(player):
 		return
 
 	var freeform_info: Dictionary = _get_active_freeform_npc_info(player_position, true)
@@ -490,20 +509,20 @@ func remove_player_from_freeform_members(player: Node, context: Node = null) -> 
 		if not is_freeform_jam_context(context):
 			return
 
-		was_active_freeform_context = context == active_freeform_jam_context
+		was_active_freeform_context = context == freeform_state.jam_context
 	else:
 		was_active_freeform_context = true
 
-	if active_freeform_members.has(player):
-		active_freeform_members.erase(player)
+	if freeform_state.members.has(player):
+		freeform_state.members.erase(player)
 
 	_clear_freeform_member_join_time(player)
 
-	if active_freeform_anchor == player:
-		active_freeform_anchor = null
+	if freeform_state.anchor == player:
+		freeform_state.anchor = null
 
-	if active_freeform_leader == player:
-		active_freeform_leader = null
+	if freeform_state.leader == player:
+		freeform_state.leader = null
 
 	_refresh_freeform_leader()
 
@@ -512,8 +531,8 @@ func remove_player_from_freeform_members(player: Node, context: Node = null) -> 
 
 		if remaining_manual_npcs.is_empty():
 			if _player_is_still_playing() and _has_auto_freeform_followers():
-				active_freeform_anchor = player
-				active_freeform_leader = player
+				freeform_state.anchor = player
+				freeform_state.leader = player
 
 				_sync_jam_formation_to_active_freeform()
 				_refresh_player_led_auto_follower_requests()
@@ -524,12 +543,12 @@ func remove_player_from_freeform_members(player: Node, context: Node = null) -> 
 			_cleanup_freeform_context_if_no_freeform_members(false)
 			return
 
-		active_freeform_anchor = remaining_manual_npcs[0]
-		active_freeform_leader = remaining_manual_npcs[0]
+		freeform_state.anchor = remaining_manual_npcs[0]
+		freeform_state.leader = remaining_manual_npcs[0]
 
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		if active_freeform_jam_context.has_method("refresh_arrangement"):
-			active_freeform_jam_context.refresh_arrangement()
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+		if freeform_state.jam_context.has_method("refresh_arrangement"):
+			freeform_state.jam_context.refresh_arrangement()
 
 
 func _player_should_use_precise_freeform_slots(delta: float) -> bool:
@@ -598,45 +617,45 @@ func start_manual_freeform_npc(npc: Node) -> bool:
 		elif player.has_method("get_selected_song_id"):
 			freeform_song_id = player.get_selected_song_id()
 
-		if active_freeform_jam_context == null or not is_instance_valid(active_freeform_jam_context):
+		if freeform_state.jam_context == null or not is_instance_valid(freeform_state.jam_context):
 			_create_player_carried_freeform_context(player)
 	else:
 		if npc.has_method("get_primary_song_id"):
 			freeform_song_id = npc.get_primary_song_id()
 
-		if active_freeform_jam_context == null or not is_instance_valid(active_freeform_jam_context):
+		if freeform_state.jam_context == null or not is_instance_valid(freeform_state.jam_context):
 			if freeform_jam_context_scene == null:
 				npc.start_manual_freeform()
 				return true
 
-			active_freeform_jam_context = freeform_jam_context_scene.instantiate()
-			add_child(active_freeform_jam_context)
+			freeform_state.jam_context = freeform_jam_context_scene.instantiate()
+			add_child(freeform_state.jam_context)
 
-			active_freeform_members.clear()
-			freeform_member_join_times.clear()
-			pending_freeform_auto_joins.clear()
+			freeform_state.members.clear()
+			freeform_state.member_join_times.clear()
+			freeform_state.pending_auto_joins.clear()
 
-			active_freeform_leader = npc
-			active_freeform_anchor = npc
+			freeform_state.leader = npc
+			freeform_state.anchor = npc
 
-			if active_freeform_jam_context.has_method("apply_song_id"):
-				active_freeform_jam_context.apply_song_id(freeform_song_id)
-			elif "song_id" in active_freeform_jam_context:
-				active_freeform_jam_context.song_id = freeform_song_id
+			if freeform_state.jam_context.has_method("apply_song_id"):
+				freeform_state.jam_context.apply_song_id(freeform_song_id)
+			elif "song_id" in freeform_state.jam_context:
+				freeform_state.jam_context.song_id = freeform_song_id
 
-	if active_freeform_jam_context == null:
+	if freeform_state.jam_context == null:
 		return false
 
-	if active_freeform_jam_context.has_method("apply_song_id"):
-		active_freeform_jam_context.apply_song_id(freeform_song_id)
-	elif "song_id" in active_freeform_jam_context:
-		active_freeform_jam_context.song_id = freeform_song_id
+	if freeform_state.jam_context.has_method("apply_song_id"):
+		freeform_state.jam_context.apply_song_id(freeform_song_id)
+	elif "song_id" in freeform_state.jam_context:
+		freeform_state.jam_context.song_id = freeform_song_id
 
 	_add_npc_to_active_freeform_jam(npc, true)
 
 	if not player_is_playing:
-		active_freeform_anchor = npc
-		active_freeform_leader = npc
+		freeform_state.anchor = npc
+		freeform_state.leader = npc
 
 	var nearby_npcs: Array[Node] = _find_available_accompanists_near_position(npc.global_position, [npc])
 
@@ -663,20 +682,20 @@ func stop_auto_freeform_for_npc(npc: Node) -> void:
 	if npc == null:
 		return
 
-	if pending_jamspot_handoffs.has(npc):
-		pending_jamspot_handoffs.erase(npc)
+	if freeform_state.pending_jamspot_handoffs.has(npc):
+		freeform_state.pending_jamspot_handoffs.erase(npc)
 
 	_clear_pending_freeform_auto_join(npc)
 
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		if active_freeform_jam_context.has_method("set_member_active"):
-			active_freeform_jam_context.set_member_active(npc, false)
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+		if freeform_state.jam_context.has_method("set_member_active"):
+			freeform_state.jam_context.set_member_active(npc, false)
 
 	if npc.has_method("stop_freeform_immediately"):
 		npc.stop_freeform_immediately()
 
-	if active_freeform_members.has(npc):
-		active_freeform_members.erase(npc)
+	if freeform_state.members.has(npc):
+		freeform_state.members.erase(npc)
 
 	_clear_freeform_member_join_time(npc)
 
@@ -690,15 +709,15 @@ func stop_manual_freeform_for_npc(npc: Node) -> void:
 
 	_clear_pending_freeform_auto_join(npc)
 
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		if active_freeform_jam_context.has_method("set_member_active"):
-			active_freeform_jam_context.set_member_active(npc, false)
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+		if freeform_state.jam_context.has_method("set_member_active"):
+			freeform_state.jam_context.set_member_active(npc, false)
 
 	if npc.has_method("stop_freeform_immediately"):
 		npc.stop_freeform_immediately()
 
-	if active_freeform_members.has(npc):
-		active_freeform_members.erase(npc)
+	if freeform_state.members.has(npc):
+		freeform_state.members.erase(npc)
 
 	_clear_freeform_member_join_time(npc)
 
@@ -707,13 +726,13 @@ func stop_manual_freeform_for_npc(npc: Node) -> void:
 	if remaining_manual_npcs.is_empty():
 		_stop_all_auto_freeform_followers()
 	else:
-		active_freeform_leader = remaining_manual_npcs[0]
+		freeform_state.leader = remaining_manual_npcs[0]
 
 	_refresh_freeform_leader()
 
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		if active_freeform_jam_context.has_method("refresh_arrangement"):
-			active_freeform_jam_context.refresh_arrangement()
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+		if freeform_state.jam_context.has_method("refresh_arrangement"):
+			freeform_state.jam_context.refresh_arrangement()
 
 	_sync_jam_formation_to_active_freeform()
 	_cleanup_freeform_context_if_no_freeform_members()
@@ -732,7 +751,7 @@ func request_jamspot_handoff_if_needed(npc: Node, jam_spot: Node) -> bool:
 			return false
 
 	# Already in handoff. Tell JamSpot "do not claim yet."
-	if pending_jamspot_handoffs.has(npc):
+	if freeform_state.pending_jamspot_handoffs.has(npc):
 		return true
 
 	# Only delay auto freeform followers.
@@ -742,7 +761,7 @@ func request_jamspot_handoff_if_needed(npc: Node, jam_spot: Node) -> bool:
 	if not npc.is_auto_freeform():
 		return false
 
-	if not active_freeform_members.has(npc):
+	if not freeform_state.members.has(npc):
 		return false
 
 	_queue_jamspot_handoff(npc, jam_spot)
@@ -751,7 +770,7 @@ func request_jamspot_handoff_if_needed(npc: Node, jam_spot: Node) -> bool:
 
 
 func stop_all_auto_freeform_npcs() -> void:
-	var members_to_check: Array[Node] = active_freeform_members.duplicate()
+	var members_to_check: Array[Node] = freeform_state.members.duplicate()
 
 	for member in members_to_check:
 		if member == null or not is_instance_valid(member):
@@ -773,7 +792,7 @@ func promote_auto_npc_to_manual(npc: Node) -> void:
 
 	_clear_pending_freeform_auto_join(npc)
 
-	if not active_freeform_members.has(npc):
+	if not freeform_state.members.has(npc):
 		return
 
 	if npc.has_method("start_manual_freeform"):
@@ -790,13 +809,13 @@ func promote_auto_npc_to_manual(npc: Node) -> void:
 
 	_record_freeform_member_join_time(npc)
 
-	_set_npc_freeform_request_on_context(npc, active_freeform_jam_context)
+	_set_npc_freeform_request_on_context(npc, freeform_state.jam_context)
 
 	_refresh_freeform_leader()
 
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		if active_freeform_jam_context.has_method("refresh_arrangement"):
-			active_freeform_jam_context.refresh_arrangement()
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+		if freeform_state.jam_context.has_method("refresh_arrangement"):
+			freeform_state.jam_context.refresh_arrangement()
 
 
 func toggle_manual_npc_off(npc: Node) -> void:
@@ -805,12 +824,12 @@ func toggle_manual_npc_off(npc: Node) -> void:
 
 	_clear_pending_freeform_auto_join(npc)
 
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		if active_freeform_jam_context.has_method("set_member_active"):
-			active_freeform_jam_context.set_member_active(npc, false)
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+		if freeform_state.jam_context.has_method("set_member_active"):
+			freeform_state.jam_context.set_member_active(npc, false)
 
-	if active_freeform_members.has(npc):
-		active_freeform_members.erase(npc)
+	if freeform_state.members.has(npc):
+		freeform_state.members.erase(npc)
 
 	_clear_freeform_member_join_time(npc)
 
@@ -820,24 +839,24 @@ func toggle_manual_npc_off(npc: Node) -> void:
 	var remaining_manual_npcs: Array[Node] = _get_active_manual_freeform_npcs()
 
 	if remaining_manual_npcs.is_empty():
-		if active_freeform_anchor == npc:
-			active_freeform_anchor = null
+		if freeform_state.anchor == npc:
+			freeform_state.anchor = null
 
 		_stop_all_auto_freeform_followers()
 		_cleanup_freeform_context_if_no_freeform_members()
 		return
 
-	active_freeform_anchor = remaining_manual_npcs[0]
-	active_freeform_leader = remaining_manual_npcs[0]
+	freeform_state.anchor = remaining_manual_npcs[0]
+	freeform_state.leader = remaining_manual_npcs[0]
 
 	if _npc_should_rejoin_as_auto(npc):
 		_add_npc_to_active_freeform_jam(npc, false)
 
 	_refresh_freeform_leader()
 
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		if active_freeform_jam_context.has_method("refresh_arrangement"):
-			active_freeform_jam_context.refresh_arrangement()
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+		if freeform_state.jam_context.has_method("refresh_arrangement"):
+			freeform_state.jam_context.refresh_arrangement()
 
 
 func try_add_manual_npc_to_nearby_jam(npc: Node) -> bool:
@@ -869,8 +888,8 @@ func try_add_manual_npc_to_nearby_jam(npc: Node) -> bool:
 	if _is_position_inside_active_jamspot_buffer(npc_position):
 		return true
 
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		var anchor: Node = active_freeform_anchor
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+		var anchor: Node = freeform_state.anchor
 
 		if anchor != null and is_instance_valid(anchor) and anchor is Node2D:
 			var join_radius: float = _get_npc_join_radius(anchor)
@@ -899,7 +918,7 @@ func _player_is_still_playing() -> bool:
 
 
 func _has_auto_freeform_followers() -> bool:
-	for member in active_freeform_members:
+	for member in freeform_state.members:
 		if member == null or not is_instance_valid(member):
 			continue
 
@@ -916,7 +935,7 @@ func _has_auto_freeform_followers() -> bool:
 
 
 # ------------------------------------------------------------
-# Moving freeform recruitment
+# Freeform recruitment
 # ------------------------------------------------------------
 
 func update_following_npc_jam_priorities() -> void:
@@ -954,11 +973,11 @@ func update_following_npc_jam_priorities() -> void:
 
 				continue
 
-		if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-			if active_freeform_members.has(npc):
+		if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+			if freeform_state.members.has(npc):
 				continue
 
-			var anchor: Node = active_freeform_anchor
+			var anchor: Node = freeform_state.anchor
 
 			if anchor != null and is_instance_valid(anchor) and anchor is Node2D:
 				var join_radius: float = _get_npc_join_radius(anchor)
@@ -969,10 +988,10 @@ func update_following_npc_jam_priorities() -> void:
 
 
 func _update_active_freeform_recruitment(delta: float) -> void:
-	if active_freeform_jam_context == null:
+	if freeform_state.jam_context == null:
 		return
 
-	if not is_instance_valid(active_freeform_jam_context):
+	if not is_instance_valid(freeform_state.jam_context):
 		return
 
 	freeform_recruit_scan_timer += delta
@@ -986,10 +1005,10 @@ func _update_active_freeform_recruitment(delta: float) -> void:
 
 
 func _recruit_available_npcs_to_active_freeform_jam() -> void:
-	if active_freeform_jam_context == null:
+	if freeform_state.jam_context == null:
 		return
 
-	if not is_instance_valid(active_freeform_jam_context):
+	if not is_instance_valid(freeform_state.jam_context):
 		return
 
 	var anchor_positions: Array[Vector2] = _get_freeform_recruitment_anchor_positions()
@@ -998,7 +1017,7 @@ func _recruit_available_npcs_to_active_freeform_jam() -> void:
 		"recruit anchors=%d delayed=%d pending=%d player_led=%s npc_led=%s" % [
 			anchor_positions.size(),
 			_get_delayed_auto_freeform_anchor_positions().size(),
-			pending_freeform_auto_joins.size(),
+			freeform_state.pending_auto_joins.size(),
 			str(_is_player_led_freeform()),
 			str(_is_npc_led_freeform())
 		]
@@ -1011,7 +1030,7 @@ func _recruit_available_npcs_to_active_freeform_jam() -> void:
 		if npc == null or not is_instance_valid(npc):
 			continue
 
-		if active_freeform_members.has(npc):
+		if freeform_state.members.has(npc):
 			continue
 
 		if not npc is Node2D:
@@ -1038,10 +1057,10 @@ func _add_npc_to_active_freeform_jam(npc: Node, make_manual := false) -> bool:
 	if npc == null:
 		return false
 
-	if active_freeform_jam_context == null:
+	if freeform_state.jam_context == null:
 		return false
 
-	if not is_instance_valid(active_freeform_jam_context):
+	if not is_instance_valid(freeform_state.jam_context):
 		return false
 
 	if not npc is Node2D:
@@ -1050,13 +1069,13 @@ func _add_npc_to_active_freeform_jam(npc: Node, make_manual := false) -> bool:
 	if _is_position_inside_active_jamspot(npc.global_position):
 		return false
 
-	var already_member := active_freeform_members.has(npc)
+	var already_member := freeform_state.members.has(npc)
 
 	if npc.has_method("set_current_jam_context"):
-		npc.set_current_jam_context(active_freeform_jam_context)
+		npc.set_current_jam_context(freeform_state.jam_context)
 
-	if active_freeform_jam_context.has_method("add_member"):
-		active_freeform_jam_context.add_member(npc)
+	if freeform_state.jam_context.has_method("add_member"):
+		freeform_state.jam_context.add_member(npc)
 
 	var audio_source: Node = null
 
@@ -1070,8 +1089,8 @@ func _add_npc_to_active_freeform_jam(npc: Node, make_manual := false) -> bool:
 			audio_source.force_jam_control()
 
 		if audio_source.has_method("set_song_id"):
-			if "song_id" in active_freeform_jam_context:
-				audio_source.set_song_id(active_freeform_jam_context.song_id)
+			if "song_id" in freeform_state.jam_context:
+				audio_source.set_song_id(freeform_state.jam_context.song_id)
 
 	if make_manual:
 		_clear_pending_freeform_auto_join(npc)
@@ -1080,29 +1099,29 @@ func _add_npc_to_active_freeform_jam(npc: Node, make_manual := false) -> bool:
 			npc.start_manual_freeform()
 
 		if not already_member:
-			active_freeform_members.append(npc)
+			freeform_state.members.append(npc)
 
 		_record_freeform_member_join_time(npc)
-		_set_npc_freeform_request_on_context(npc, active_freeform_jam_context)
+		_set_npc_freeform_request_on_context(npc, freeform_state.jam_context)
 	else:
 		if npc.has_method("start_auto_freeform"):
 			npc.start_auto_freeform()
 
 		if not already_member:
-			active_freeform_members.append(npc)
+			freeform_state.members.append(npc)
 
 		# Auto NPCs are real members immediately, but are silent/waiting
 		# until the join/equip delay finishes.
 		_set_auto_npc_waiting_for_join(npc)
 
-		if not pending_freeform_auto_joins.has(npc):
-			pending_freeform_auto_joins[npc] = auto_freeform_join_delay
+		if not freeform_state.pending_auto_joins.has(npc):
+			freeform_state.pending_auto_joins[npc] = auto_freeform_join_delay
 
-	if active_freeform_jam_context.has_method("set_member_active"):
-		active_freeform_jam_context.set_member_active(npc, true)
+	if freeform_state.jam_context.has_method("set_member_active"):
+		freeform_state.jam_context.set_member_active(npc, true)
 
-	if active_freeform_jam_context.has_method("refresh_arrangement"):
-		active_freeform_jam_context.refresh_arrangement()
+	if freeform_state.jam_context.has_method("refresh_arrangement"):
+		freeform_state.jam_context.refresh_arrangement()
 
 	_refresh_freeform_leader()
 	_sync_jam_formation_to_active_freeform()
@@ -1114,34 +1133,34 @@ func _set_auto_npc_waiting_for_join(npc: Node) -> void:
 	if npc == null:
 		return
 
-	if active_freeform_jam_context == null:
+	if freeform_state.jam_context == null:
 		return
 
-	if not is_instance_valid(active_freeform_jam_context):
+	if not is_instance_valid(freeform_state.jam_context):
 		return
 
-	if active_freeform_jam_context.has_method("set_member_requested_parts"):
-		active_freeform_jam_context.set_member_requested_parts(npc, false, false)
-	elif active_freeform_jam_context.has_method("set_member_requested_part"):
-		active_freeform_jam_context.set_member_requested_part(npc, "silent")
+	if freeform_state.jam_context.has_method("set_member_requested_parts"):
+		freeform_state.jam_context.set_member_requested_parts(npc, false, false)
+	elif freeform_state.jam_context.has_method("set_member_requested_part"):
+		freeform_state.jam_context.set_member_requested_part(npc, "silent")
 
 	if npc.has_method("set_current_part"):
 		npc.set_current_part("waiting")
 
 
 func _update_pending_freeform_auto_joins(delta: float) -> void:
-	if pending_freeform_auto_joins.is_empty():
+	if freeform_state.pending_auto_joins.is_empty():
 		return
 
-	var pending_npcs: Array = pending_freeform_auto_joins.keys()
+	var pending_npcs: Array = freeform_state.pending_auto_joins.keys()
 
 	for npc in pending_npcs:
 		if npc == null or not is_instance_valid(npc):
-			pending_freeform_auto_joins.erase(npc)
+			freeform_state.pending_auto_joins.erase(npc)
 			continue
 
-		if not active_freeform_members.has(npc):
-			pending_freeform_auto_joins.erase(npc)
+		if not freeform_state.members.has(npc):
+			freeform_state.pending_auto_joins.erase(npc)
 			continue
 
 		var containing_jam_spot := _get_active_jamspot_containing_position(npc.global_position)
@@ -1150,20 +1169,20 @@ func _update_pending_freeform_auto_joins(delta: float) -> void:
 			_queue_jamspot_handoff(npc, containing_jam_spot)
 			continue
 
-		var remaining_time: float = float(pending_freeform_auto_joins[npc])
+		var remaining_time: float = float(freeform_state.pending_auto_joins[npc])
 		remaining_time -= delta
 
 		if remaining_time > 0.0:
-			pending_freeform_auto_joins[npc] = remaining_time
+			freeform_state.pending_auto_joins[npc] = remaining_time
 			continue
 
 		# Delay is finished, but NPC should not play inside the etiquette buffer.
 		# Keep them pending at 0 until formation movement pulls them out.
 		if _is_position_inside_buffer_but_not_jamspot(npc.global_position):
-			pending_freeform_auto_joins[npc] = 0.0
+			freeform_state.pending_auto_joins[npc] = 0.0
 			continue
 
-		pending_freeform_auto_joins.erase(npc)
+		freeform_state.pending_auto_joins.erase(npc)
 		_finish_auto_npc_join_delay(npc)
 
 
@@ -1174,31 +1193,31 @@ func _finish_auto_npc_join_delay(npc: Node) -> void:
 	if not is_instance_valid(npc):
 		return
 
-	if active_freeform_jam_context == null:
+	if freeform_state.jam_context == null:
 		return
 
-	if not is_instance_valid(active_freeform_jam_context):
+	if not is_instance_valid(freeform_state.jam_context):
 		return
 
-	if not active_freeform_members.has(npc):
+	if not freeform_state.members.has(npc):
 		return
 
-	if pending_jamspot_handoffs.has(npc):
+	if freeform_state.pending_jamspot_handoffs.has(npc):
 		_silence_freeform_follower_without_waiting(npc)
 		return
 
 	if _is_position_inside_buffer_but_not_jamspot(npc.global_position):
-		pending_freeform_auto_joins[npc] = 0.0
+		freeform_state.pending_auto_joins[npc] = 0.0
 		_silence_freeform_follower_without_waiting(npc)
 		return
 
-	_set_npc_freeform_request_on_context(npc, active_freeform_jam_context)
+	_set_npc_freeform_request_on_context(npc, freeform_state.jam_context)
 
-	if active_freeform_jam_context.has_method("set_member_active"):
-		active_freeform_jam_context.set_member_active(npc, true)
+	if freeform_state.jam_context.has_method("set_member_active"):
+		freeform_state.jam_context.set_member_active(npc, true)
 
-	if active_freeform_jam_context.has_method("refresh_arrangement"):
-		active_freeform_jam_context.refresh_arrangement()
+	if freeform_state.jam_context.has_method("refresh_arrangement"):
+		freeform_state.jam_context.refresh_arrangement()
 
 	# Only after the wait finishes can this auto NPC expand the bubble.
 	_record_freeform_member_join_time(npc)
@@ -1210,18 +1229,18 @@ func _clear_pending_freeform_auto_join(npc: Node) -> void:
 	if npc == null:
 		return
 
-	if pending_freeform_auto_joins.has(npc):
-		pending_freeform_auto_joins.erase(npc)
+	if freeform_state.pending_auto_joins.has(npc):
+		freeform_state.pending_auto_joins.erase(npc)
 
 
 func _check_auto_freeform_leave(_player_position: Vector2) -> void:
-	if active_freeform_jam_context == null:
+	if freeform_state.jam_context == null:
 		return
 
-	if not is_instance_valid(active_freeform_jam_context):
+	if not is_instance_valid(freeform_state.jam_context):
 		return
 
-	var members_to_check: Array[Node] = active_freeform_members.duplicate()
+	var members_to_check: Array[Node] = freeform_state.members.duplicate()
 
 	for member in members_to_check:
 		if member == null or not is_instance_valid(member):
@@ -1259,30 +1278,30 @@ func remove_npc_from_freeform_members_for_jamspot(npc: Node) -> void:
 	if npc == null:
 		return
 
-	if pending_jamspot_handoffs.has(npc):
-		pending_jamspot_handoffs.erase(npc)
+	if freeform_state.pending_jamspot_handoffs.has(npc):
+		freeform_state.pending_jamspot_handoffs.erase(npc)
 
 	_clear_pending_freeform_auto_join(npc)
 
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		if active_freeform_jam_context.has_method("set_member_active"):
-			active_freeform_jam_context.set_member_active(npc, false)
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+		if freeform_state.jam_context.has_method("set_member_active"):
+			freeform_state.jam_context.set_member_active(npc, false)
 
-	if active_freeform_members.has(npc):
-		active_freeform_members.erase(npc)
+	if freeform_state.members.has(npc):
+		freeform_state.members.erase(npc)
 
 	_clear_freeform_member_join_time(npc)
 
-	if active_freeform_anchor == npc:
-		active_freeform_anchor = null
+	if freeform_state.anchor == npc:
+		freeform_state.anchor = null
 
-	if active_freeform_leader == npc:
-		active_freeform_leader = null
+	if freeform_state.leader == npc:
+		freeform_state.leader = null
 		_refresh_freeform_leader()
 
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		if active_freeform_jam_context.has_method("refresh_arrangement"):
-			active_freeform_jam_context.refresh_arrangement()
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+		if freeform_state.jam_context.has_method("refresh_arrangement"):
+			freeform_state.jam_context.refresh_arrangement()
 
 	_sync_jam_formation_to_active_freeform()
 	_cleanup_freeform_context_if_no_freeform_members()
@@ -1295,11 +1314,11 @@ func _queue_jamspot_handoff(npc: Node, jam_spot: Node) -> void:
 	if jam_spot == null or not is_instance_valid(jam_spot):
 		return
 
-	if pending_jamspot_handoffs.has(npc):
-		pending_jamspot_handoffs[npc]["jam_spot"] = jam_spot
+	if freeform_state.pending_jamspot_handoffs.has(npc):
+		freeform_state.pending_jamspot_handoffs[npc]["jam_spot"] = jam_spot
 		return
 
-	pending_jamspot_handoffs[npc] = {
+	freeform_state.pending_jamspot_handoffs[npc] = {
 		"jam_spot": jam_spot,
 		"remaining": jamspot_handoff_delay
 	}
@@ -1310,45 +1329,45 @@ func _queue_jamspot_handoff(npc: Node, jam_spot: Node) -> void:
 	# freeform context until the handoff finishes.
 	# This prevents the freeform JamContext from stopping and touching
 	# the player's carried audio.
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		if active_freeform_jam_context.has_method("set_member_requested_parts"):
-			active_freeform_jam_context.set_member_requested_parts(npc, false, false)
-		elif active_freeform_jam_context.has_method("set_member_requested_part"):
-			active_freeform_jam_context.set_member_requested_part(npc, "silent")
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+		if freeform_state.jam_context.has_method("set_member_requested_parts"):
+			freeform_state.jam_context.set_member_requested_parts(npc, false, false)
+		elif freeform_state.jam_context.has_method("set_member_requested_part"):
+			freeform_state.jam_context.set_member_requested_part(npc, "silent")
 
 	if npc.has_method("set_current_part"):
 		npc.set_current_part("silent")
 
 
 func _update_pending_jamspot_handoffs(delta: float) -> void:
-	if pending_jamspot_handoffs.is_empty():
+	if freeform_state.pending_jamspot_handoffs.is_empty():
 		return
 
-	var npcs := pending_jamspot_handoffs.keys()
+	var npcs := freeform_state.pending_jamspot_handoffs.keys()
 
 	for npc in npcs:
 		if npc == null or not is_instance_valid(npc):
-			pending_jamspot_handoffs.erase(npc)
+			freeform_state.pending_jamspot_handoffs.erase(npc)
 			continue
 
-		var handoff: Dictionary = pending_jamspot_handoffs[npc]
+		var handoff: Dictionary = freeform_state.pending_jamspot_handoffs[npc]
 		var jam_spot: Node = handoff.get("jam_spot", null)
 
 		if jam_spot == null or not is_instance_valid(jam_spot):
-			pending_jamspot_handoffs.erase(npc)
+			freeform_state.pending_jamspot_handoffs.erase(npc)
 			continue
 
 		# Manual follow cancels JamSpot stealing.
 		if npc.has_method("is_following_player"):
 			if npc.is_following_player():
-				pending_jamspot_handoffs.erase(npc)
+				freeform_state.pending_jamspot_handoffs.erase(npc)
 				continue
 
 		# If the player leads the NPC back out before the delay finishes,
 		# cancel the handoff and let freeform continue.
 		if npc is Node2D:
 			if _get_active_jamspot_containing_position(npc.global_position) != jam_spot:
-				pending_jamspot_handoffs.erase(npc)
+				freeform_state.pending_jamspot_handoffs.erase(npc)
 				continue
 
 		var remaining: float = float(handoff.get("remaining", 0.0))
@@ -1356,10 +1375,10 @@ func _update_pending_jamspot_handoffs(delta: float) -> void:
 
 		if remaining > 0.0:
 			handoff["remaining"] = remaining
-			pending_jamspot_handoffs[npc] = handoff
+			freeform_state.pending_jamspot_handoffs[npc] = handoff
 			continue
 
-		pending_jamspot_handoffs.erase(npc)
+		freeform_state.pending_jamspot_handoffs.erase(npc)
 		_release_freeform_npc_for_actual_jamspot(npc, jam_spot)
 
 
@@ -1367,27 +1386,27 @@ func cancel_jamspot_handoff_for_npc(npc: Node) -> void:
 	if npc == null:
 		return
 
-	if not pending_jamspot_handoffs.has(npc):
+	if not freeform_state.pending_jamspot_handoffs.has(npc):
 		return
 
-	pending_jamspot_handoffs.erase(npc)
+	freeform_state.pending_jamspot_handoffs.erase(npc)
 
 	# If this NPC still belongs to the active freeform group, restore normal
 	# freeform behavior. If they are still in the buffer, keep them silent;
 	# if they are outside the buffer, let them play again.
-	if active_freeform_members.has(npc):
+	if freeform_state.members.has(npc):
 		if npc is Node2D:
 			if _is_position_inside_buffer_but_not_jamspot(npc.global_position):
 				_silence_freeform_follower_without_waiting(npc)
 			else:
-				_set_npc_freeform_request_on_context(npc, active_freeform_jam_context)
+				_set_npc_freeform_request_on_context(npc, freeform_state.jam_context)
 
-		if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-			if active_freeform_jam_context.has_method("set_member_active"):
-				active_freeform_jam_context.set_member_active(npc, true)
+		if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+			if freeform_state.jam_context.has_method("set_member_active"):
+				freeform_state.jam_context.set_member_active(npc, true)
 
-			if active_freeform_jam_context.has_method("refresh_arrangement"):
-				active_freeform_jam_context.refresh_arrangement()
+			if freeform_state.jam_context.has_method("refresh_arrangement"):
+				freeform_state.jam_context.refresh_arrangement()
 
 	_sync_jam_formation_to_active_freeform()
 
@@ -1399,7 +1418,7 @@ func cancel_jamspot_handoff_for_npc(npc: Node) -> void:
 func _cleanup_freeform_context_if_no_freeform_members(return_player_to_solo := true) -> void:
 	var has_npc_member := false
 
-	for member in active_freeform_members:
+	for member in freeform_state.members:
 		if member == null or not is_instance_valid(member):
 			continue
 
@@ -1418,7 +1437,7 @@ func _cleanup_freeform_context_if_no_freeform_members(return_player_to_solo := t
 		if player != null and is_instance_valid(player):
 			if "is_playing_instrument" in player and player.is_playing_instrument:
 				if "current_jam_context" in player:
-					if player.current_jam_context == active_freeform_jam_context:
+					if player.current_jam_context == freeform_state.jam_context:
 						if player.has_method("return_to_carried_solo_from_freeform"):
 							player.return_to_carried_solo_from_freeform()
 
@@ -1428,7 +1447,7 @@ func _cleanup_freeform_context_if_no_freeform_members(return_player_to_solo := t
 func _cleanup_freeform_context_if_only_player_left(return_player_to_solo := true) -> void:
 	var non_player_count := 0
 
-	for member in active_freeform_members:
+	for member in freeform_state.members:
 		if member == null or not is_instance_valid(member):
 			continue
 
@@ -1446,7 +1465,7 @@ func _cleanup_freeform_context_if_only_player_left(return_player_to_solo := true
 		if player != null and is_instance_valid(player):
 			if "is_playing_instrument" in player and player.is_playing_instrument:
 				if "current_jam_context" in player:
-					if player.current_jam_context == active_freeform_jam_context:
+					if player.current_jam_context == freeform_state.jam_context:
 						if player.has_method("return_to_carried_solo_from_freeform"):
 							player.return_to_carried_solo_from_freeform()
 
@@ -1454,16 +1473,16 @@ func _cleanup_freeform_context_if_only_player_left(return_player_to_solo := true
 
 
 func _destroy_active_freeform_context() -> void:
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		active_freeform_jam_context.queue_free()
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+		freeform_state.jam_context.queue_free()
 
-	active_freeform_jam_context = null
-	active_freeform_leader = null
-	active_freeform_anchor = null
-	active_freeform_members.clear()
-	freeform_member_join_times.clear()
-	pending_freeform_auto_joins.clear()
-	pending_jamspot_handoffs.clear()
+	freeform_state.jam_context = null
+	freeform_state.leader = null
+	freeform_state.anchor = null
+	freeform_state.members.clear()
+	freeform_state.member_join_times.clear()
+	freeform_state.pending_auto_joins.clear()
+	freeform_state.pending_jamspot_handoffs.clear()
 
 	player_stationary_timer = 0.0
 	player_was_stationary_for_jam = false
@@ -1475,7 +1494,7 @@ func _destroy_active_freeform_context() -> void:
 
 
 func _stop_all_auto_freeform_followers() -> void:
-	var members_to_check: Array[Node] = active_freeform_members.duplicate()
+	var members_to_check: Array[Node] = freeform_state.members.duplicate()
 
 	for member in members_to_check:
 		if member == null or not is_instance_valid(member):
@@ -1492,15 +1511,15 @@ func _stop_all_auto_freeform_followers() -> void:
 
 		_clear_pending_freeform_auto_join(member)
 
-		if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-			if active_freeform_jam_context.has_method("set_member_active"):
-				active_freeform_jam_context.set_member_active(member, false)
+		if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+			if freeform_state.jam_context.has_method("set_member_active"):
+				freeform_state.jam_context.set_member_active(member, false)
 
 		if member.has_method("stop_freeform_immediately"):
 			member.stop_freeform_immediately()
 
-		if active_freeform_members.has(member):
-			active_freeform_members.erase(member)
+		if freeform_state.members.has(member):
+			freeform_state.members.erase(member)
 
 		_clear_freeform_member_join_time(member)
 
@@ -1638,7 +1657,7 @@ func _find_available_accompanists_near_position(center_position: Vector2, exclud
 		if excluded_members.has(npc):
 			continue
 
-		if active_freeform_members.has(npc):
+		if freeform_state.members.has(npc):
 			continue
 
 		if not npc.has_method("is_available_for_player_accompaniment"):
@@ -1666,7 +1685,7 @@ func _find_available_accompanists_near_position(center_position: Vector2, exclud
 func _get_active_manual_freeform_npcs() -> Array[Node]:
 	var manual_npcs: Array[Node] = []
 
-	for member in active_freeform_members:
+	for member in freeform_state.members:
 		if member == null or not is_instance_valid(member):
 			continue
 
@@ -1686,10 +1705,10 @@ func _npc_should_rejoin_as_auto(npc: Node) -> bool:
 	if npc == null:
 		return false
 
-	if active_freeform_jam_context == null:
+	if freeform_state.jam_context == null:
 		return false
 
-	if not is_instance_valid(active_freeform_jam_context):
+	if not is_instance_valid(freeform_state.jam_context):
 		return false
 
 	if not npc is Node2D:
@@ -1704,7 +1723,7 @@ func _npc_should_rejoin_as_auto(npc: Node) -> bool:
 	if _is_position_inside_active_jamspot(npc.global_position):
 		return false
 
-	for member in active_freeform_members:
+	for member in freeform_state.members:
 		if member == null or not is_instance_valid(member):
 			continue
 
@@ -1731,7 +1750,7 @@ func _npc_should_rejoin_as_auto(npc: Node) -> bool:
 # ------------------------------------------------------------
 
 func _get_freeform_leave_anchor_positions_for_member(member: Node) -> Array[Vector2]:
-	var positions: Array[Vector2] = _get_active_freeform_anchor_positions()
+	var positions: Array[Vector2] = get_freeform_anchor_positions()
 
 	var should_include_delayed_anchors := false
 
@@ -1756,14 +1775,14 @@ func _get_freeform_leave_anchor_positions_for_member(member: Node) -> Array[Vect
 	return positions
 
 
-func _get_active_freeform_anchor_positions() -> Array[Vector2]:
+func get_freeform_anchor_positions() -> Array[Vector2]:
 	var positions: Array[Vector2] = []
 
-	if active_freeform_anchor != null and is_instance_valid(active_freeform_anchor):
-		if active_freeform_anchor is Node2D:
-			positions.append(active_freeform_anchor.global_position)
+	if freeform_state.anchor != null and is_instance_valid(freeform_state.anchor):
+		if freeform_state.anchor is Node2D:
+			positions.append(freeform_state.anchor.global_position)
 
-	for member in active_freeform_members:
+	for member in freeform_state.members:
 		if member == null or not is_instance_valid(member):
 			continue
 
@@ -1778,7 +1797,7 @@ func _get_active_freeform_anchor_positions() -> Array[Vector2]:
 				if not positions.has(member.global_position):
 					positions.append(member.global_position)
 
-	for member in active_freeform_members:
+	for member in freeform_state.members:
 		if member == null or not is_instance_valid(member):
 			continue
 
@@ -1795,7 +1814,7 @@ func _get_active_freeform_anchor_positions() -> Array[Vector2]:
 func _get_delayed_auto_freeform_anchor_positions() -> Array[Vector2]:
 	var positions: Array[Vector2] = []
 
-	for member in active_freeform_members:
+	for member in freeform_state.members:
 		if member == null or not is_instance_valid(member):
 			continue
 
@@ -1811,7 +1830,7 @@ func _get_delayed_auto_freeform_anchor_positions() -> Array[Vector2]:
 		if not member.is_auto_freeform():
 			continue
 
-		if pending_freeform_auto_joins.has(member):
+		if freeform_state.pending_auto_joins.has(member):
 			continue
 
 		if not _has_freeform_member_anchor_delay_passed(member):
@@ -1824,7 +1843,7 @@ func _get_delayed_auto_freeform_anchor_positions() -> Array[Vector2]:
 
 
 func _get_freeform_recruitment_anchor_positions() -> Array[Vector2]:
-	var positions: Array[Vector2] = _get_active_freeform_anchor_positions()
+	var positions: Array[Vector2] = get_freeform_anchor_positions()
 
 	var should_include_delayed_anchors := false
 
@@ -1859,14 +1878,14 @@ func _is_npc_near_any_freeform_anchor(npc: Node, anchor_positions: Array[Vector2
 
 
 func _is_player_near_any_freeform_anchor(player_position: Vector2) -> bool:
-	var anchor_positions: Array[Vector2] = _get_active_freeform_anchor_positions()
+	var positions: Array[Vector2] = get_freeform_anchor_positions()
 
-	if anchor_positions.is_empty():
+	if positions.is_empty():
 		return false
 
 	var join_radius := _get_player_freeform_join_radius()
 
-	for anchor_position in anchor_positions:
+	for anchor_position in positions:
 		var distance: float = player_position.distance_to(anchor_position)
 
 		if distance <= join_radius:
@@ -1900,7 +1919,7 @@ func _get_active_freeform_npc_info(player_position: Vector2, use_leave_radius :=
 	var best_distance := INF
 	var best_radius := 0.0
 
-	for member in active_freeform_members:
+	for member in freeform_state.members:
 		if member == null or not is_instance_valid(member):
 			continue
 
@@ -1966,15 +1985,15 @@ func _release_freeform_npc_for_actual_jamspot(npc: Node, jam_spot: Node) -> void
 
 	_clear_pending_freeform_auto_join(npc)
 
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		if active_freeform_jam_context.has_method("set_member_active"):
-			active_freeform_jam_context.set_member_active(npc, false)
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+		if freeform_state.jam_context.has_method("set_member_active"):
+			freeform_state.jam_context.set_member_active(npc, false)
 
-		if active_freeform_jam_context.has_method("clear_member_requested_part"):
-			active_freeform_jam_context.clear_member_requested_part(npc)
+		if freeform_state.jam_context.has_method("clear_member_requested_part"):
+			freeform_state.jam_context.clear_member_requested_part(npc)
 
-	if active_freeform_members.has(npc):
-		active_freeform_members.erase(npc)
+	if freeform_state.members.has(npc):
+		freeform_state.members.erase(npc)
 
 	_clear_freeform_member_join_time(npc)
 
@@ -1986,11 +2005,11 @@ func _release_freeform_npc_for_actual_jamspot(npc: Node, jam_spot: Node) -> void
 	elif npc.has_method("stop_freeform_immediately"):
 		npc.stop_freeform_immediately()
 
-	if active_freeform_anchor == npc:
-		active_freeform_anchor = null
+	if freeform_state.anchor == npc:
+		freeform_state.anchor = null
 
-	if active_freeform_leader == npc:
-		active_freeform_leader = null
+	if freeform_state.leader == npc:
+		freeform_state.leader = null
 
 	# Hand the NPC to the actual JamSpot after freeform is cleared.
 	if jam_spot != null and is_instance_valid(jam_spot):
@@ -2003,9 +2022,9 @@ func _release_freeform_npc_for_actual_jamspot(npc: Node, jam_spot: Node) -> void
 	_refresh_freeform_leader()
 	_sync_jam_formation_to_active_freeform()
 
-	if active_freeform_jam_context != null and is_instance_valid(active_freeform_jam_context):
-		if active_freeform_jam_context.has_method("refresh_arrangement"):
-			active_freeform_jam_context.refresh_arrangement()
+	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
+		if freeform_state.jam_context.has_method("refresh_arrangement"):
+			freeform_state.jam_context.refresh_arrangement()
 
 	# If the player is still holding play, never force player cleanup here.
 	# This transfer is about the NPC joining a JamSpot, not about stopping the player.
@@ -2032,79 +2051,89 @@ func _get_active_jamspot_containing_position(world_position: Vector2) -> Node:
 
 
 func _is_player_led_freeform() -> bool:
-	if active_freeform_anchor == null:
+	if freeform_state.anchor == null:
 		return false
 
-	if not is_instance_valid(active_freeform_anchor):
+	if not is_instance_valid(freeform_state.anchor):
 		return false
 
-	return active_freeform_anchor.is_in_group("player")
+	return freeform_state.anchor.is_in_group("player")
 
 
 func _is_npc_led_freeform() -> bool:
-	if active_freeform_anchor == null:
+	if freeform_state.anchor == null:
 		return false
 
-	if not is_instance_valid(active_freeform_anchor):
+	if not is_instance_valid(freeform_state.anchor):
 		return false
 
-	return not active_freeform_anchor.is_in_group("player")
+	return not freeform_state.anchor.is_in_group("player")
+
+
+# ------------------------------------------------------------
+# Freeform member state
+# ------------------------------------------------------------
 
 
 func _record_freeform_member_join_time(member: Node) -> void:
 	if member == null:
 		return
 
-	freeform_member_join_times[member] = Time.get_ticks_msec() / 1000.0
+	freeform_state.member_join_times[member] = Time.get_ticks_msec() / 1000.0
 
 
 func _clear_freeform_member_join_time(member: Node) -> void:
 	if member == null:
 		return
 
-	if freeform_member_join_times.has(member):
-		freeform_member_join_times.erase(member)
+	if freeform_state.member_join_times.has(member):
+		freeform_state.member_join_times.erase(member)
 
 
 func _has_freeform_member_anchor_delay_passed(member: Node) -> bool:
 	if member == null:
 		return false
 
-	if not freeform_member_join_times.has(member):
+	if not freeform_state.member_join_times.has(member):
 		return false
 
-	var joined_at: float = float(freeform_member_join_times[member])
+	var joined_at: float = float(freeform_state.member_join_times[member])
 	var now: float = Time.get_ticks_msec() / 1000.0
 
 	return now - joined_at >= auto_freeform_anchor_delay
+
+
+# ------------------------------------------------------------
+# Formation synchronization
+# ------------------------------------------------------------
 
 
 func _sync_jam_formation_to_active_freeform() -> void:
 	if jam_formation == null:
 		return
 
-	if active_freeform_jam_context == null or not is_instance_valid(active_freeform_jam_context):
+	if freeform_state.jam_context == null or not is_instance_valid(freeform_state.jam_context):
 		if jam_formation.has_method("clear"):
 			jam_formation.clear()
 		return
 
-	if active_freeform_anchor == null or not is_instance_valid(active_freeform_anchor):
+	if freeform_state.anchor == null or not is_instance_valid(freeform_state.anchor):
 		if jam_formation.has_method("clear"):
 			jam_formation.clear()
 		return
 
-	if not active_freeform_anchor is Node2D:
+	if not freeform_state.anchor is Node2D:
 		if jam_formation.has_method("clear"):
 			jam_formation.clear()
 		return
 
 	var formation_members: Array[Node] = []
 
-	for member in active_freeform_members:
+	for member in freeform_state.members:
 		if member == null or not is_instance_valid(member):
 			continue
 
-		if member == active_freeform_anchor:
+		if member == freeform_state.anchor:
 			continue
 
 		if member.is_in_group("player"):
@@ -2116,7 +2145,7 @@ func _sync_jam_formation_to_active_freeform() -> void:
 		formation_members.append(member)
 
 	if jam_formation.has_method("set_leader"):
-		jam_formation.set_leader(active_freeform_anchor)
+		jam_formation.set_leader(freeform_state.anchor)
 
 	if jam_formation.has_method("set_members"):
 		jam_formation.set_members(formation_members)
@@ -2140,19 +2169,19 @@ func _update_active_jam_formation_targets(delta: float) -> void:
 	if jam_formation == null:
 		return
 
-	if active_freeform_jam_context == null:
+	if freeform_state.jam_context == null:
 		return
 
-	if not is_instance_valid(active_freeform_jam_context):
+	if not is_instance_valid(freeform_state.jam_context):
 		return
 
-	if active_freeform_anchor == null:
+	if freeform_state.anchor == null:
 		return
 
-	if not is_instance_valid(active_freeform_anchor):
+	if not is_instance_valid(freeform_state.anchor):
 		return
 
-	if not active_freeform_anchor is Node2D:
+	if not freeform_state.anchor is Node2D:
 		return
 
 	var should_use_precise_slots := _is_npc_led_freeform()
@@ -2168,7 +2197,7 @@ func _update_active_jam_formation_targets(delta: float) -> void:
 
 
 # ------------------------------------------------------------
-# Request, display, and debug helpers
+# Arrangement request helpers
 # ------------------------------------------------------------
 
 
@@ -2176,10 +2205,10 @@ func _refresh_player_led_auto_follower_requests() -> void:
 	if not _is_player_led_freeform():
 		return
 
-	if active_freeform_jam_context == null:
+	if freeform_state.jam_context == null:
 		return
 
-	if not is_instance_valid(active_freeform_jam_context):
+	if not is_instance_valid(freeform_state.jam_context):
 		return
 
 	var player: Node = get_tree().get_first_node_in_group("player")
@@ -2193,7 +2222,7 @@ func _refresh_player_led_auto_follower_requests() -> void:
 	if not player.is_playing_instrument:
 		return
 
-	for member in active_freeform_members:
+	for member in freeform_state.members:
 		if member == null or not is_instance_valid(member):
 			continue
 
@@ -2207,11 +2236,11 @@ func _refresh_player_led_auto_follower_requests() -> void:
 			continue
 
 		# Pending freeform join should stay silent/waiting.
-		if pending_freeform_auto_joins.has(member):
+		if freeform_state.pending_auto_joins.has(member):
 			continue
 
 		# Pending JamSpot handoff should stay silent.
-		if pending_jamspot_handoffs.has(member):
+		if freeform_state.pending_jamspot_handoffs.has(member):
 			continue
 
 		# Inside etiquette buffer should not play freeform audio,
@@ -2221,10 +2250,10 @@ func _refresh_player_led_auto_follower_requests() -> void:
 				_silence_freeform_follower_without_waiting(member)
 				continue
 
-		_set_npc_freeform_request_on_context(member, active_freeform_jam_context)
+		_set_npc_freeform_request_on_context(member, freeform_state.jam_context)
 
-	if active_freeform_jam_context.has_method("refresh_arrangement"):
-		active_freeform_jam_context.refresh_arrangement()
+	if freeform_state.jam_context.has_method("refresh_arrangement"):
+		freeform_state.jam_context.refresh_arrangement()
 
 
 func _set_player_request_on_context(player: Node, jam_context: Node) -> void:
@@ -2251,10 +2280,10 @@ func _silence_freeform_follower_without_waiting(npc: Node) -> void:
 	if npc == null:
 		return
 
-	if active_freeform_jam_context == null:
+	if freeform_state.jam_context == null:
 		return
 
-	if not is_instance_valid(active_freeform_jam_context):
+	if not is_instance_valid(freeform_state.jam_context):
 		return
 
 	# Important:
@@ -2263,10 +2292,10 @@ func _silence_freeform_follower_without_waiting(npc: Node) -> void:
 	#
 	# The NPC should remain an active freeform member for movement/formation,
 	# but request silence while inside the JamSpot buffer.
-	if active_freeform_jam_context.has_method("set_member_requested_parts"):
-		active_freeform_jam_context.set_member_requested_parts(npc, false, false)
-	elif active_freeform_jam_context.has_method("set_member_requested_part"):
-		active_freeform_jam_context.set_member_requested_part(npc, "silent")
+	if freeform_state.jam_context.has_method("set_member_requested_parts"):
+		freeform_state.jam_context.set_member_requested_parts(npc, false, false)
+	elif freeform_state.jam_context.has_method("set_member_requested_part"):
+		freeform_state.jam_context.set_member_requested_part(npc, "silent")
 
 	if npc.has_method("set_current_part"):
 		npc.set_current_part("silent")
@@ -2324,6 +2353,9 @@ func _get_part_from_flags(rhythm_on: bool, melody_on: bool) -> String:
 
 	return "silent"
 
+# ------------------------------------------------------------
+# Display / UI helpers
+# ------------------------------------------------------------
 
 func _get_jam_source_display_name(source: Node, fallback_name: String) -> String:
 	if source == null:
@@ -2366,13 +2398,13 @@ func is_freeform_jam_context(jam_context: Node) -> bool:
 	if not is_instance_valid(jam_context):
 		return false
 
-	if active_freeform_jam_context == null:
+	if freeform_state.jam_context == null:
 		return false
 
-	if not is_instance_valid(active_freeform_jam_context):
+	if not is_instance_valid(freeform_state.jam_context):
 		return false
 
-	return jam_context == active_freeform_jam_context
+	return jam_context == freeform_state.jam_context
 
 
 func is_player_near_current_jamspot_context(jam_context: Node) -> bool:
@@ -2419,9 +2451,9 @@ func reset_all_auto_blocks() -> void:
 
 
 func _refresh_freeform_leader() -> void:
-	active_freeform_leader = null
+	freeform_state.leader = null
 
-	for member in active_freeform_members:
+	for member in freeform_state.members:
 		if member == null or not is_instance_valid(member):
 			continue
 
@@ -2430,31 +2462,31 @@ func _refresh_freeform_leader() -> void:
 
 		if member.has_method("is_manual_freeform"):
 			if member.is_manual_freeform():
-				active_freeform_leader = member
+				freeform_state.leader = member
 				return
 
-	for member in active_freeform_members:
+	for member in freeform_state.members:
 		if member == null or not is_instance_valid(member):
 			continue
 
 		if member.is_in_group("player"):
-			active_freeform_leader = member
+			freeform_state.leader = member
 			return
 
-	for member in active_freeform_members:
+	for member in freeform_state.members:
 		if member == null or not is_instance_valid(member):
 			continue
 
 		if not member.is_in_group("player"):
-			active_freeform_leader = member
+			freeform_state.leader = member
 			return
 
 
 func get_freeform_leader_text() -> String:
-	var leader: Node = active_freeform_leader
+	var leader: Node = freeform_state.leader
 
 	if leader == null or not is_instance_valid(leader):
-		leader = active_freeform_anchor
+		leader = freeform_state.anchor
 
 	if leader == null or not is_instance_valid(leader):
 		return "Freeform"
@@ -2483,13 +2515,18 @@ func get_freeform_leader_text() -> String:
 	return "%s led" % instrument_name
 
 
+# ------------------------------------------------------------
+# Debug helpers
+# ------------------------------------------------------------
+
+
 func _debug_player_freeform(message: String) -> void:
 	if debug_player_freeform:
 		print("[JAM_MANAGER_PLAYER] %s | freeform_context=%s anchor=%s leader=%s members=%s pending=%s" % [
 			message,
-			str(active_freeform_jam_context),
-			str(active_freeform_anchor),
-			str(active_freeform_leader),
-			str(active_freeform_members),
-			str(pending_freeform_auto_joins.keys())
+			str(freeform_state.jam_context),
+			str(freeform_state.anchor),
+			str(freeform_state.leader),
+			str(freeform_state.members),
+			str(freeform_state.pending_auto_joins.keys())
 		])

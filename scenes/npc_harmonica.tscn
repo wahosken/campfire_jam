@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://drl7f1y3s7a6x"]
 
-[ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/npc_musician.gd" id="1_khbeg"]
-[ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/instrument_audio_source.gd" id="2_1qbbg"]
+[ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/musicians/musician.gd" id="1_khbeg"]
+[ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/audio/instrument_audio_source.gd" id="2_1qbbg"]
 [ext_resource type="AudioStream" uid="uid://rfdwxfpr6ur1" path="res://audio/song 1/song1-005-harmonica_rhythm.wav" id="3_e5rru"]
 [ext_resource type="AudioStream" uid="uid://b8jfefgc2no43" path="res://audio/song 1/song1-006-harmonica_lead.wav" id="4_fco0b"]
 [ext_resource type="AudioStream" uid="uid://dqc34kbx2ly41" path="res://audio/song 2/song2-005-harmonica_rhythm.wav" id="5_y4ir2"]

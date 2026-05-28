@@ -1,3 +1,27 @@
+# ------------------------------------------------------------
+# NPCMusician
+#
+# Musician entity controller for NPC-controlled musicians.
+#
+# Responsible for:
+# - movement
+# - following
+# - jam participation
+# - interaction
+# - current musical state
+# - formation movement
+#
+# Does NOT:
+# - own arrangement decisions
+# - own synchronization timing
+# - own jam recruitment logic
+#
+# Long-term direction:
+# - evolve toward shared Musician abstraction
+# - separate musician state from controller ownership
+# - support player/NPC/co-op parity
+# ------------------------------------------------------------
+
 extends CharacterBody2D
 
 @export var debug_npc_state := false

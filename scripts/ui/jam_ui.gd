@@ -12,6 +12,10 @@ var music_system: Node = null
 var jam_manager: Node = null
 
 
+func _process(_delta: float) -> void:
+	if visible:
+		update_ui()
+
 # ------------------------------------------------------------
 # Setup / refresh
 # ------------------------------------------------------------
@@ -25,6 +29,9 @@ func setup_ui(player_ref: Node, music_system_ref: Node) -> void:
 
 
 func update_ui() -> void:
+	if player == null:
+		player = get_tree().get_first_node_in_group("player")
+
 	if jam_manager == null:
 		jam_manager = get_tree().get_first_node_in_group("jam_manager")
 
@@ -136,14 +143,20 @@ func _update_interact_prompt() -> void:
 
 	interact_prompt_label.visible = true
 
+	# Some interactables are proxy areas that point to a real owner.
+	var interaction_target: Node = closest_interactable
+
+	if closest_interactable.has_meta("jam_spot"):
+		interaction_target = closest_interactable.get_meta("jam_spot")
+
 	var interact_name := "Interact"
 
-	if closest_interactable.has_method("get_display_name"):
-		interact_name = closest_interactable.get_display_name()
-	elif "display_name" in closest_interactable:
-		interact_name = str(closest_interactable.display_name)
-	elif closest_interactable.name != "":
-		interact_name = closest_interactable.name
+	if interaction_target.has_method("get_display_name"):
+		interact_name = interaction_target.get_display_name()
+	elif "display_name" in interaction_target:
+		interact_name = str(interaction_target.display_name)
+	elif interaction_target.name != "":
+		interact_name = interaction_target.name
 
 	interact_prompt_label.text = "Interact: %s" % interact_name
 

@@ -30,6 +30,12 @@ var jam_is_active := false
 func _ready() -> void:	
 	add_to_group("jam_spot")
 
+	if jam_area != null:
+		jam_area.add_to_group("interactable")
+
+	if jam_area != null:
+		jam_area.set_meta("jam_spot", self)
+
 	if jam_spot_formation != null and jam_spot_formation.has_method("set_jam_spot"):
 		jam_spot_formation.set_jam_spot(self)
 

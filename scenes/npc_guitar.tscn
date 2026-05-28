@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://ch5e2petf0x3t"]
 
-[ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/npc_musician.gd" id="1_njmx8"]
-[ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/instrument_audio_source.gd" id="2_v3fsn"]
+[ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/musicians/musician.gd" id="1_njmx8"]
+[ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/audio/instrument_audio_source.gd" id="2_v3fsn"]
 [ext_resource type="AudioStream" uid="uid://cc4y5lg137oam" path="res://audio/song 1/song1-001-guitar_rhythm.wav" id="3_csoos"]
 [ext_resource type="AudioStream" uid="uid://cir28v33uqdmo" path="res://audio/song 1/song1-002-guitar_lead.wav" id="4_uuwsd"]
 [ext_resource type="AudioStream" uid="uid://x654xn2eyq6f" path="res://audio/song 2/song2-001-guitar_rhythm.wav" id="5_8mojk"]

@@ -1,6 +1,32 @@
+# ------------------------------------------------------------
+# JamContext
+#
+# Represents a live jam session.
+#
+# Responsible for:
+# - member registration
+# - arrangement logic
+# - melody/rhythm assignment
+# - synchronized playback
+# - song transport
+# - featured instrument selection
+#
+# Does NOT:
+# - recruit musicians
+# - manage world proximity
+# - manage formations
+# - manage jam ownership transitions
+#
+# Long-term direction:
+# - become the primary runtime jam-state object
+# - support freeform jams, jam spots, festivals, and multiplayer
+# ------------------------------------------------------------
+
 extends Node
 
-signal arrangement_changed
+signal member_added(member)
+signal member_removed(member)
+signal arrangement_changed()
 
 @export var song_id := "song_01"
 @export var bpm := 100.0
@@ -73,12 +99,17 @@ func add_member(member: Node) -> void:
 		return
 
 	registered_members.append(member)
+
 	member_parts[member] = "silent"
 	member_requested_parts[member] = "auto"
 	member_rhythm_db[member] = 0.0
 
 	if member.has_method("set_current_jam_context"):
 		member.set_current_jam_context(self)
+
+	member_added.emit(member)
+
+	_update_arrangement()
 
 
 func remove_member(member: Node) -> void:
@@ -111,6 +142,8 @@ func remove_member(member: Node) -> void:
 
 	if featured_member_before_forced_melody == member:
 		featured_member_before_forced_melody = null
+
+	member_removed.emit(member)
 
 	_update_arrangement()
 
@@ -465,6 +498,7 @@ func _set_member_audio_song(member: Node) -> void:
 
 func refresh_arrangement() -> void:
 	_update_arrangement()
+	arrangement_changed.emit()
 
 
 func _update_arrangement() -> void:

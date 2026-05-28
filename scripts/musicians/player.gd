@@ -279,8 +279,8 @@ func _check_for_jam_transition_while_playing() -> void:
 	# Direct solo is sacred. While soloing, the player keeps their current song.
 	# JamManager may recruit nearby NPCs if the player is not inside an actual JamSpot.
 	if is_playing_direct_solo:
-		if jam_manager.has_method("try_auto_attach_npc_to_player"):
-			jam_manager.try_auto_attach_npc_to_player(self, global_position)
+		if jam_manager.has_method("try_recruit_nearby_npcs_to_player"):
+			jam_manager.try_recruit_nearby_npcs_to_player(self, global_position)
 
 		return
 
@@ -423,15 +423,20 @@ func _handle_npc_interact_input() -> void:
 	if closest_interactable == null:
 		return
 
+	# Some interactables are proxy areas that point to a real owner.
+	var interaction_target: Node = closest_interactable
+
+	if closest_interactable.has_meta("jam_spot"):
+		interaction_target = closest_interactable.get_meta("jam_spot")
+
 	# NPCs never execute direct interact behavior from the player.
 	# They only open NPCDialoguePrompt.
-	if closest_interactable.is_in_group("npc_musician"):
-		_open_npc_prompt(closest_interactable)
+	if interaction_target.is_in_group("npc_musician"):
+		_open_npc_prompt(interaction_target)
 		return
 
-	# JamSpot interaction proxies and other non-NPC interactables can still use interact().
-	if closest_interactable.has_method("interact"):
-		closest_interactable.interact()
+	if interaction_target.has_method("interact"):
+		interaction_target.interact()
 
 
 func _handle_instrument_cycle_input() -> void:
