@@ -41,6 +41,10 @@ func set_leader(new_leader: Node) -> void:
 	if leader == new_leader:
 		return
 
+	for m in members:
+		if m is Node2D:
+			m.has_freeform_anchor = false
+
 	leader = new_leader
 	_rebuild_slot_assignments()
 
@@ -63,6 +67,10 @@ func set_members(new_members: Array[Node]) -> void:
 
 	if _members_match_current_members(cleaned_members):
 		return
+
+	for m in members:
+		if m is Node2D:
+			m.has_freeform_anchor = false
 
 	members = cleaned_members
 	_rebuild_slot_assignments()
@@ -94,6 +102,8 @@ func add_member(member: Node) -> void:
 
 	members.append(member)
 	_rebuild_slot_assignments()
+
+	member.has_freeform_anchor = false
 
 
 func remove_member(member: Node) -> void:
@@ -138,22 +148,7 @@ func get_assigned_target_for_member(member: Node) -> Vector2:
 
 		return leader.global_position
 
-	var slot_index: int = int(assigned_slots[member])
-
-	if member != null and member is Node2D:
-		return get_valid_slot_position(
-			leader.global_position,
-			slot_index,
-			members.size(),
-			member.global_position
-		)
-
-	return get_valid_slot_position(
-		leader.global_position,
-		slot_index,
-		members.size(),
-		leader.global_position
-	)
+	return get_freeform_position(member, leader.global_position)
 
 
 func get_all_assigned_targets() -> Dictionary:
@@ -169,6 +164,54 @@ func get_all_assigned_targets() -> Dictionary:
 		targets[member] = get_assigned_target_for_member(member)
 
 	return targets
+
+
+func get_freeform_position(member: Node2D, leader_position: Vector2) -> Vector2:
+	# Ensure stable anchor exists (THIS is the key fix)
+	if not member.has_freeform_anchor:
+		var angle := randf_range(0.0, TAU)
+		var radius := get_radius_for_count(members.size())
+
+		member.freeform_anchor_offset = Vector2.RIGHT.rotated(angle) * radius
+		member.has_freeform_anchor = true
+
+	# Base desired position (stable)
+	var base_position: Vector2 = leader_position + member.freeform_anchor_offset
+
+	var best_pos := base_position
+	var best_score := INF
+
+	# small local adjustment only (NOT full re-roll anymore)
+	for i in range(6):
+		var jitter := Vector2(
+			randf_range(-6.0, 6.0),
+			randf_range(-6.0, 6.0)
+		)
+
+		var candidate := base_position + jitter
+
+		var score := candidate.distance_to(member.global_position)
+
+		# crowd penalty
+		for other in members:
+			if other == null or other == member:
+				continue
+			if not other is Node2D:
+				continue
+
+			var dist := candidate.distance_to(other.global_position)
+			if dist < slot_clearance_radius * 3.0:
+				score += 200.0
+
+		# collision penalty
+		if not _is_world_position_valid(candidate):
+			score += 500.0
+
+		if score < best_score:
+			best_score = score
+			best_pos = candidate
+
+	return best_pos
 
 
 func debug_print_assignments() -> void:

@@ -614,6 +614,42 @@ func is_position_inside_buffer_radius(world_position: Vector2) -> bool:
 	return global_position.distance_to(world_position) <= get_buffer_radius()
 
 
+func get_field_position_for_npc(npc: Node, members: Array[Node]) -> Vector2:
+	var center := global_position
+
+	var rng := RandomNumberGenerator.new()
+	rng.seed = npc.get_instance_id()
+
+	var best_pos := center
+	var best_score := INF
+
+	# sample multiple candidate positions
+	for i in range(6):
+		var angle := rng.randf_range(0.0, TAU)
+
+		# THIS is where your policy connects later (safe integration point)
+		var radius: float = lerp(125.0, 150.0, float(members.size()) / 8.0)
+
+		var candidate: Vector2 = center + Vector2.RIGHT.rotated(angle) * radius
+
+		var score: float = candidate.distance_to(npc.global_position)
+
+		for other in members:
+			if other == null or other == npc:
+				continue
+			if not other is Node2D:
+				continue
+
+			if candidate.distance_to(other.global_position) < 65.0:
+				score += 200.0
+
+		if score < best_score:
+			best_score = score
+			best_pos = candidate
+
+	return best_pos
+
+
 # ------------------------------------------------------------
 # Queries
 # ------------------------------------------------------------

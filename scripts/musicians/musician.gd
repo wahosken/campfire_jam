@@ -38,7 +38,7 @@ extends CharacterBody2D
 @export var follow_min_distance := 56.0
 @export var follow_max_distance := 96.0
 
-@export var jam_formation_move_speed := 90.0
+@export var jam_formation_move_speed := 120.0
 @export var jam_formation_min_distance := 125.0
 @export var jam_formation_max_distance := 150.0
 @export var jam_formation_slow_radius := 140.0
@@ -95,6 +95,9 @@ enum MusicState {
 
 var music_state_buffer := MusicState.IDLE
 var state_change_timer := 0.0
+
+var freeform_anchor_offset: Vector2 = Vector2.ZERO
+var has_freeform_anchor := false
 
 var behavior_state := BehaviorState.IDLE
 var freeform_mode := FreeformMode.NONE
