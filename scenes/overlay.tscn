@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://d21e1vvxjrume"]
 
 [ext_resource type="Texture2D" uid="uid://dcrs8kyagur1l" path="res://assets/buttons7.png" id="1_i2ryd"]
-[ext_resource type="Script" uid="uid://fvw1mmpa61pa" path="res://scripts/touch_overlay.gd" id="1_njieu"]
+[ext_resource type="Script" uid="uid://fvw1mmpa61pa" path="res://scripts/ui/touch_overlay.gd" id="1_njieu"]
 [ext_resource type="Texture2D" uid="uid://dhp42yaxpi4q8" path="res://assets/buttons8.png" id="2_njieu"]
 [ext_resource type="Texture2D" uid="uid://c310ancmn7xd6" path="res://assets/buttons3.png" id="3_rqwgw"]
 [ext_resource type="Texture2D" uid="uid://c42fulrdxr25o" path="res://assets/buttons4.png" id="4_lot3u"]
@@ -21,7 +21,7 @@
 [ext_resource type="Texture2D" uid="uid://b45mw02353wrg" path="res://assets/buttons-playrhythm02.png" id="19_x4gx8"]
 [ext_resource type="Texture2D" uid="uid://c2thwksqcjq2n" path="res://assets/buttons-playmelody01.png" id="20_u7l8p"]
 [ext_resource type="Texture2D" uid="uid://bd3eb4vowpg8n" path="res://assets/buttons-playmelody02.png" id="21_kdw8g"]
-[ext_resource type="Script" uid="uid://g7toywqshxlv" path="res://scripts/virtual_joystick.gd" id="22_vkldo"]
+[ext_resource type="Script" uid="uid://g7toywqshxlv" path="res://scripts/ui/virtual_joystick.gd" id="22_vkldo"]
 [ext_resource type="Texture2D" uid="uid://sf15ejwuwbyk" path="res://assets/joystick_base.png" id="23_k5uol"]
 [ext_resource type="Texture2D" uid="uid://b3d4pdfixkyn5" path="res://assets/joystick_knob.png" id="24_7d5h0"]
 

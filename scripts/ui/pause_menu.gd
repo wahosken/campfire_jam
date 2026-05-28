@@ -79,9 +79,6 @@ func _input(event: InputEvent) -> void:
 		toggle_pause()
 		get_viewport().set_input_as_handled()
 
-	if event is InputEventScreenTouch and event.pressed:
-		_handle_touch_press(event.position)
-
 
 func _handle_touch_press(touch_position: Vector2) -> void:
 	var buttons: Array[Button] = [
@@ -105,7 +102,14 @@ func _handle_touch_press(touch_position: Vector2) -> void:
 		var rect := button.get_global_rect()
 
 		if rect.has_point(touch_position):
-			button.emit_signal("pressed")
+			button.grab_focus()
+
+			if button is CheckButton:
+				button.button_pressed = not button.button_pressed
+				button.toggled.emit(button.button_pressed)
+			else:
+				button.pressed.emit()
+
 			return
 
 
