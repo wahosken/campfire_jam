@@ -22,6 +22,7 @@ var active_refresh_timer := 0.0
 var registered_npcs: Array[Node] = []
 var jam_is_active := false
 
+var policy: Node
 
 # ------------------------------------------------------------
 # Lifecycle
@@ -29,6 +30,8 @@ var jam_is_active := false
 
 func _ready() -> void:	
 	add_to_group("jam_spot")
+
+	policy = get_tree().get_first_node_in_group("jam_policy")
 
 	if jam_area != null:
 		jam_area.add_to_group("interactable")
@@ -131,7 +134,6 @@ func stop_jam() -> void:
 		_release_npc_from_stopped_jam(npc)
 
 	registered_npcs.clear()
-	_sync_jamspot_formation()
 
 	# Do NOT use stop_all_members() here.
 	# That can stop the player while they are holding play.
@@ -160,7 +162,6 @@ func register_npc(npc: Node) -> void:
 	else:
 		refresh_npc_activity(npc)
 
-	_sync_jamspot_formation()
 	_update_label()
 
 
@@ -196,7 +197,6 @@ func unregister_npc(npc: Node) -> void:
 		if npc.has_method("set_current_jam_spot"):
 			npc.set_current_jam_spot(null)
 
-	_sync_jamspot_formation()
 	_update_label()
 
 

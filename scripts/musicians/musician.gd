@@ -52,6 +52,8 @@ extends CharacterBody2D
 @export var use_navigation_agent := true
 @export var navigation_target_update_distance := 8.0
 
+@export var state_change_delay := 0.25
+
 @onready var navigation_agent: NavigationAgent2D = $NavigationAgent2D
 
 @onready var interaction_area: Area2D = $InteractionArea
@@ -85,6 +87,14 @@ enum MusicControlMode {
 	SCHEDULE
 }
 
+enum MusicState {
+	IDLE,
+	FOLLOWING,
+	JAMMING
+}
+
+var music_state_buffer := MusicState.IDLE
+var state_change_timer := 0.0
 
 var behavior_state := BehaviorState.IDLE
 var freeform_mode := FreeformMode.NONE
@@ -144,6 +154,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	update_music_state(delta)
 	_update_jam_formation_movement(delta)
 	_update_follow_player(delta)
 
@@ -802,6 +813,33 @@ func clear_music_control_mode() -> void:
 # Jam formation movement
 # ------------------------------------------------------------
 
+
+func update_music_state(delta: float) -> void:
+	var desired_state := music_state_buffer
+
+	# JAMSPOT HAS TOP PRIORITY
+	if is_controlled_by_active_jam_spot():
+		desired_state = MusicState.JAMMING
+
+	# FREEFORM / FOLLOW LOGIC (important missing piece)
+	elif following_player:
+		desired_state = MusicState.FOLLOWING
+
+	# IDLE OTHERWISE
+	else:
+		desired_state = MusicState.IDLE
+
+	# STATE TRANSITION DELAY (prevents jitter)
+	if desired_state != music_state_buffer:
+		state_change_timer += delta
+
+		if state_change_timer >= state_change_delay:
+			music_state_buffer = desired_state
+			state_change_timer = 0.0
+	else:
+		state_change_timer = 0.0
+
+
 func _update_jam_formation_movement(delta: float) -> void:
 	if not has_jam_formation_target:
 		return
@@ -993,6 +1031,16 @@ func get_behavior_state() -> BehaviorState:
 
 func get_primary_song_id() -> String:
 	return primary_song_id
+
+
+func get_music_intent() -> String:
+	if is_controlled_by_active_jam_spot():
+		return "jamspot"
+
+	if following_player:
+		return "freeform_follow"
+
+	return "idle"
 
 
 # ------------------------------------------------------------
