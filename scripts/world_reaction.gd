@@ -5,25 +5,47 @@ extends Node2D
 
 @export var required_song_id := ""
 @export var required_instrument_id := ""
+@export var required_musician_count := 1
 
 @export var broken_visual: NodePath
 @export var repaired_visual: NodePath
 @export var collision_shape: NodePath
 
+@export var label_text:= ""
+
 @onready var reaction_area: Area2D = $ReactionArea
 
-var musicians_in_range: Array[Node] = []
+@onready var label: Label = $Label
+
+var player_in_range: Node = null
 
 var activated := false
 
+var check_timer := 0.0
 
 func _ready() -> void:
 	add_to_group("world_reaction")
+	update_label()
 
 	update_visuals()
 
 	reaction_area.body_entered.connect(_on_reaction_area_body_entered)
 	reaction_area.body_exited.connect(_on_reaction_area_body_exited)
+
+
+func _process(delta: float) -> void:
+
+	if activated:
+		return
+
+	check_timer += delta
+
+	if check_timer < 0.25:
+		return
+
+	check_timer = 0.0
+
+	try_current_player_jam()
 
 
 func activate() -> void:
@@ -62,7 +84,7 @@ func update_visuals() -> void:
 
 func try_activate(song_id: String) -> bool:
 
-	if musicians_in_range.is_empty():
+	if player_in_range == null:
 		return false
 
 	if song_id != required_song_id:
@@ -71,40 +93,40 @@ func try_activate(song_id: String) -> bool:
 	if not has_required_instrument():
 		return false
 
+	if get_player_jam_size() < required_musician_count:
+		return false
+
 	activate()
 
 	return true
 
 
-func _on_reaction_area_body_entered(body: Node) -> void:
+func try_current_player_jam() -> void:
 
-	if not body.is_in_group("musician"):
+	if player_in_range == null:
 		return
 
-	if not musicians_in_range.has(body):
-		musicians_in_range.append(body)
+	if not player_in_range.has_method("get_current_playing_song_id"):
+		return
+
+	var song_id: String = player_in_range.get_current_playing_song_id()
+
+	try_activate(song_id)
+
+
+func _on_reaction_area_body_entered(body: Node) -> void:
+
+	if body.is_in_group("player"):
+
+		player_in_range = body
+
+		try_current_player_jam()
 
 
 func _on_reaction_area_body_exited(body: Node) -> void:
 
-	if not body.is_in_group("musician"):
-		return
-
-	if musicians_in_range.has(body):
-		musicians_in_range.erase(body)
-
-
-func has_active_music_nearby() -> bool:
-
-	for musician in musicians_in_range:
-
-		if musician == null:
-			continue
-
-		if musician.has_method("get_current_playing_song_id"):
-			return true
-
-	return false
+	if body == player_in_range:
+		player_in_range = null
 
 
 func has_required_instrument() -> bool:
@@ -112,18 +134,39 @@ func has_required_instrument() -> bool:
 	if required_instrument_id == "":
 		return true
 
-	for musician in musicians_in_range:
+	if player_in_range == null:
+		return false
 
-		if musician == null:
-			continue
+	if not player_in_range.has_method("get_current_instrument_id"):
+		return false
 
-		if not is_instance_valid(musician):
-			continue
+	return player_in_range.get_current_instrument_id() == required_instrument_id
 
-		if not musician.has_method("get_current_instrument_id"):
-			continue
 
-		if musician.get_current_instrument_id() == required_instrument_id:
-			return true
+func get_player_jam_size() -> int:
 
-	return false
+	if player_in_range == null:
+		return 0
+
+	# Player alone counts as 1 musician.
+	var count := 1
+
+	if not "current_jam_context" in player_in_range:
+		return count
+
+	var context: Node = player_in_range.current_jam_context
+
+	if context == null:
+		return count
+
+	if not is_instance_valid(context):
+		return count
+
+	if context.has_method("get_active_musician_count"):
+		return context.get_playing_musician_count()
+
+	return count
+
+
+func update_label() -> void:
+	label.text = label_text

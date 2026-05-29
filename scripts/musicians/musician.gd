@@ -1104,7 +1104,7 @@ func _update_follow_player(delta: float) -> void:
 # ------------------------------------------------------------
 
 func is_actively_playing_jam() -> bool:
-	return wants_to_play or current_part != "silent"
+	return current_part != "silent"
 
 
 func get_display_name() -> String:

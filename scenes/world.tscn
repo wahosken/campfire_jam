@@ -17,8 +17,8 @@
 [ext_resource type="PackedScene" uid="uid://d1ifhrg7vlxou" path="res://scenes/npc_dialogue_prompt.tscn" id="17_f17e3"]
 [ext_resource type="PackedScene" uid="uid://cor2o2sb3weio" path="res://scenes/npc_unlock_manager.tscn" id="18_lakw3"]
 [ext_resource type="PackedScene" uid="uid://dtm7ryrpuv7qa" path="res://scenes/start_gate.tscn" id="18_x2olw"]
-[ext_resource type="PackedScene" uid="uid://cleud6a1ht4ni" path="res://scenes/bridge_reaction.tscn" id="19_2lf6f"]
 [ext_resource type="PackedScene" uid="uid://dlglwi6aqtsgh" path="res://scenes/pause_menu.tscn" id="19_817gm"]
+[ext_resource type="PackedScene" uid="uid://s724hjaak62t" path="res://scenes/world_reaction.tscn" id="19_pm21f"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_s3408"]
 vertices = PackedVector2Array(-975.9922, -1617, 1362.9922, -1617, 700.03906, -1203, 354.9297, -1203, 1362, -47.992188, 698.97656, -900, -975, -47, 357.0703, -900)
@@ -181,9 +181,13 @@ collision_mask = 2
 position = Vector2(3.5, 7)
 shape = SubResource("RectangleShape2D_bew7y")
 
-[node name="BridgeReaction" parent="." unique_id=1323215740 instance=ExtResource("19_2lf6f")]
-position = Vector2(192, -387)
+[node name="Bridge_WorldReaction" parent="." unique_id=323313496 instance=ExtResource("19_pm21f")]
+position = Vector2(988, -1165)
+unlock_npc_id = "mandolin"
+required_song_id = "song_02"
 required_instrument_id = "bass"
+required_musician_count = 3
+label_text = "Bridge"
 
 [node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("6_ctatt")]
 position = Vector2(461, -562)

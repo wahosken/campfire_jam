@@ -1077,6 +1077,29 @@ func _is_member_audio_playing(member: Node) -> bool:
 	return true
 
 
+func get_active_musician_count() -> int:
+	return active_members.size()
+
+
+func get_playing_musician_count() -> int:
+
+	var count := 0
+
+	for member in active_members:
+
+		if member == null:
+			continue
+
+		if not is_instance_valid(member):
+			continue
+
+		if member.has_method("is_actively_playing_jam"):
+			if member.is_actively_playing_jam():
+				count += 1
+
+	return count
+
+
 # ------------------------------------------------------------
 # Debug
 # ------------------------------------------------------------

@@ -833,6 +833,10 @@ func is_currently_playing_solo_jam() -> bool:
 	return is_playing_direct_solo
 
 
+func is_actively_playing_jam() -> bool:
+	return is_playing_instrument
+
+
 func get_current_jam_leader_text() -> String:
 	if is_playing_direct_solo:
 		return "Player"
