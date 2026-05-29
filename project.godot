@@ -43,6 +43,7 @@ musician=""
 player_musician=""
 jamspot=""
 jam_activation_shape=""
+world_reaction=""
 
 [input]
 

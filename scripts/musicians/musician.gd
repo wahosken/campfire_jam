@@ -65,6 +65,9 @@ extends CharacterBody2D
 
 @export var unlock_id := ""
 
+@export_multiline var locked_dialogue := "I'd love to play, but something is preventing me."
+@export_multiline var unlocked_dialogue := "Thanks for helping me!"
+
 enum BehaviorState {
 	IDLE,
 	SCHEDULED,
@@ -379,6 +382,10 @@ func apply_formation_motion(target_position: Vector2, delta: float) -> void:
 
 # Called by JamManager when this NPC auto-joins a freeform jam.
 func start_auto_freeform() -> void:
+
+	if is_locked():
+		return
+
 	if not can_use_freeform_logic():
 		return
 
@@ -391,6 +398,10 @@ func start_auto_freeform() -> void:
 
 # Called by JamManager when this NPC is committed/indefinite.
 func start_manual_freeform() -> void:
+
+	if is_locked():
+		return
+
 	if not can_use_freeform_logic():
 		return
 
@@ -445,6 +456,10 @@ func is_proximity_blocked() -> bool:
 
 
 func is_available_for_player_accompaniment() -> bool:
+
+	if is_locked():
+		return false
+
 	if not can_use_freeform_logic():
 		return false
 
@@ -508,6 +523,15 @@ func set_precise_jam_formation(is_precise: bool) -> void:
 # ------------------------------------------------------------
 
 func begin_jam_spot_control(jam_spot: Node, jam_context: Node) -> void:
+
+	if is_locked():
+		print(display_name, " BLOCKED JAMSPOT CONTROL")
+
+		_stop_current_audio_source()
+		_clear_playing_state()
+
+		return
+
 	_debug_state("begin_jam_spot_control from " + str(jam_spot))
 
 	current_jam_spot = jam_spot
@@ -641,6 +665,10 @@ func is_npc_enabled() -> bool:
 
 # Internal control method used by JamSpot/JamManager.
 func set_actual_playing(is_playing: bool) -> void:
+
+	if is_locked():
+		return
+
 	_debug_state("set_actual_playing -> " + str(is_playing))
 
 	if wants_to_play == is_playing:
@@ -1135,6 +1163,14 @@ func get_music_intent() -> String:
 		return "freeform_follow"
 
 	return "idle"
+
+
+func get_dialogue_text() -> String:
+
+	if is_locked():
+		return locked_dialogue
+
+	return unlocked_dialogue
 
 
 # ------------------------------------------------------------

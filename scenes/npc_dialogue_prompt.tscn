@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://d1ifhrg7vlxou"]
 
-[ext_resource type="Script" uid="uid://bka4w7flcv4xk" path="res://scripts/npc_dialogue_prompt.gd" id="1_o8rpa"]
+[ext_resource type="Script" uid="uid://bka4w7flcv4xk" path="res://scripts/ui/npc_dialogue_prompt.gd" id="1_o8rpa"]
 
 [node name="NPCDialoguePrompt" type="CanvasLayer" unique_id=1416366564]
 process_mode = 3
@@ -28,11 +28,17 @@ layout_mode = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer" unique_id=2001209077]
 layout_mode = 2
+alignment = 1
 
 [node name="NameLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1555436950]
 custom_minimum_size = Vector2(240, 36)
 layout_mode = 2
 text = "Name"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DialogueLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=2074157250]
+layout_mode = 2
 horizontal_alignment = 1
 vertical_alignment = 1
 

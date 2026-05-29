@@ -246,6 +246,7 @@ func _join_current_jam_context() -> void:
 	if current_jam_context.has_method("set_member_active"):
 		current_jam_context.set_member_active(self, true)
 
+	notify_world_reactions()
 
 func _start_direct_solo() -> void:
 	is_playing_direct_solo = true
@@ -263,6 +264,7 @@ func _start_direct_solo() -> void:
 	if current_audio_source.has_method("start_solo_tracks"):
 		current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
 
+	notify_world_reactions()
 
 # ------------------------------------------------------------
 # Jam transition / carried solo
@@ -766,6 +768,14 @@ func _is_npc_dialogue_prompt_open() -> bool:
 		return npc_dialogue_prompt.visible
 
 	return false
+
+
+func notify_world_reactions() -> void:
+
+	for reaction in get_tree().get_nodes_in_group("world_reaction"):
+
+		if reaction.has_method("try_activate"):
+			reaction.try_activate(current_playing_song_id)
 
 
 # ------------------------------------------------------------

@@ -326,6 +326,11 @@ func _release_npc_from_inactive_jam(npc: Node) -> void:
 
 
 func _claim_npc_for_active_jam(npc: Node) -> void:
+
+	if npc.has_method("is_locked"):
+		if npc.is_locked():
+			return
+			
 	# JamSpot is active and NPC is enabled, so JamSpot takes priority.
 	# Any freeform/manual state should reset before the fixed JamSpot controls it.
 
@@ -508,6 +513,10 @@ func _sync_jamspot_formation() -> void:
 				continue
 
 		formation_members.append(npc)
+
+		if npc.has_method("is_locked"):
+			if npc.is_locked():
+				continue
 
 	if jam_spot_formation.has_method("set_members"):
 		jam_spot_formation.set_members(formation_members)

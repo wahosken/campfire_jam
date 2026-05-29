@@ -183,6 +183,7 @@ shape = SubResource("RectangleShape2D_bew7y")
 
 [node name="BridgeReaction" parent="." unique_id=1323215740 instance=ExtResource("19_2lf6f")]
 position = Vector2(192, -387)
+required_instrument_id = "bass"
 
 [node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("6_ctatt")]
 position = Vector2(461, -562)
@@ -196,7 +197,7 @@ position = Vector2(653, -528)
 primary_song_id = "song_02"
 
 [node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("9_ts3gi")]
-position = Vector2(278, -605)
+position = Vector2(278, -583)
 start_locked = true
 
 [node name="House" parent="." unique_id=1834173392 instance=ExtResource("10_0nbtd")]

@@ -3,6 +3,7 @@ extends CanvasLayer
 signal closed
 
 @onready var name_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/NameLabel
+@onready var dialogue_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/DialogueLabel
 @onready var play_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PlayButton
 @onready var follow_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/FollowButton
 @onready var close_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/CloseButton
@@ -104,6 +105,11 @@ func open_for_npc(npc: Node) -> void:
 
 	name_label.text = _get_npc_display_name(current_npc)
 
+	if current_npc.has_method("get_dialogue_text"):
+		dialogue_label.text = current_npc.get_dialogue_text()
+	else:
+		dialogue_label.text = ""
+
 	_refresh_buttons()
 	_select_button(0)
 
@@ -137,8 +143,26 @@ func _refresh_buttons() -> void:
 	if current_npc == null:
 		return
 
+	var locked: bool = false
+
+	if current_npc.has_method("is_locked"):
+		locked = current_npc.is_locked()
+
 	play_button.text = _get_play_button_text(current_npc)
 	follow_button.text = _get_follow_button_text(current_npc)
+
+	play_button.visible = not locked
+	follow_button.visible = not locked
+
+	close_button.visible = true
+
+	if locked:
+		selected_button_index = 0
+
+	if locked:
+		_select_button(2)
+	else:
+		_select_button(0)
 
 	_update_button_visuals()
 
