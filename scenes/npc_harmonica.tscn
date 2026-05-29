@@ -20,6 +20,7 @@ wall_min_slide_angle = 0.0
 script = ExtResource("1_khbeg")
 instrument_name = "harmonica"
 display_name = "Harmonica"
+unlock_id = "harmonica"
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8

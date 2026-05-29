@@ -19,6 +19,7 @@ motion_mode = 1
 wall_min_slide_angle = 0.0
 script = ExtResource("1_iubrl")
 display_name = "Bass"
+unlock_id = "bass"
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8

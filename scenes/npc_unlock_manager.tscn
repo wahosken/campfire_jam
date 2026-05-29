@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cor2o2sb3weio"]
+
+[ext_resource type="Script" uid="uid://bv4rietxm61h2" path="res://scripts/npc_unlock_manager.gd" id="1_ben2a"]
+
+[node name="NPCUnlockManager" type="Node" unique_id=113470290]
+script = ExtResource("1_ben2a")

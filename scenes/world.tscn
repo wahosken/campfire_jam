@@ -15,7 +15,9 @@
 [ext_resource type="PackedScene" uid="uid://d21e1vvxjrume" path="res://scenes/overlay.tscn" id="15_rup4s"]
 [ext_resource type="Script" uid="uid://cevh1omjrnc6a" path="res://scripts/ui/jam_ui.gd" id="16_4kbfs"]
 [ext_resource type="PackedScene" uid="uid://d1ifhrg7vlxou" path="res://scenes/npc_dialogue_prompt.tscn" id="17_f17e3"]
+[ext_resource type="PackedScene" uid="uid://cor2o2sb3weio" path="res://scenes/npc_unlock_manager.tscn" id="18_lakw3"]
 [ext_resource type="PackedScene" uid="uid://dtm7ryrpuv7qa" path="res://scenes/start_gate.tscn" id="18_x2olw"]
+[ext_resource type="PackedScene" uid="uid://cleud6a1ht4ni" path="res://scenes/bridge_reaction.tscn" id="19_2lf6f"]
 [ext_resource type="PackedScene" uid="uid://dlglwi6aqtsgh" path="res://scenes/pause_menu.tscn" id="19_817gm"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_s3408"]
@@ -179,6 +181,9 @@ collision_mask = 2
 position = Vector2(3.5, 7)
 shape = SubResource("RectangleShape2D_bew7y")
 
+[node name="BridgeReaction" parent="." unique_id=1323215740 instance=ExtResource("19_2lf6f")]
+position = Vector2(192, -387)
+
 [node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("6_ctatt")]
 position = Vector2(461, -562)
 primary_song_id = "song_02"
@@ -192,6 +197,7 @@ primary_song_id = "song_02"
 
 [node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("9_ts3gi")]
 position = Vector2(278, -605)
+start_locked = true
 
 [node name="House" parent="." unique_id=1834173392 instance=ExtResource("10_0nbtd")]
 position = Vector2(527, -914)
@@ -266,3 +272,5 @@ offset_left = -104.0
 offset_bottom = 100.0
 grow_horizontal = 0
 text = "Debug"
+
+[node name="NPCUnlockManager" parent="." unique_id=113470290 instance=ExtResource("18_lakw3")]

@@ -20,6 +20,7 @@ wall_min_slide_angle = 0.0
 script = ExtResource("1_njmx8")
 instrument_name = "guitar"
 display_name = "Guitar"
+unlock_id = "guitar"
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8

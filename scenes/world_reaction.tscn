@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://s724hjaak62t"]
+
+[ext_resource type="Script" uid="uid://cyrr24qs3ahpf" path="res://scripts/world_reaction.gd" id="1_l3mwr"]
+
+[node name="WorldReaction" type="Node2D" unique_id=322454352]
+script = ExtResource("1_l3mwr")

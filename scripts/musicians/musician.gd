@@ -63,6 +63,7 @@ extends CharacterBody2D
 @onready var label: Label = $Label
 @onready var audio_source: Node = $InstrumentAudioSource
 
+@export var unlock_id := ""
 
 enum BehaviorState {
 	IDLE,
@@ -94,6 +95,18 @@ enum MusicState {
 	FOLLOWING,
 	JAMMING
 }
+
+enum NPCState {
+	LOCKED,
+	IDLE,
+	FOLLOW,
+	MOVETO_JAM,
+	JAM
+}
+
+@export var start_locked := false
+
+var npc_state := NPCState.IDLE
 
 var music_state_buffer := MusicState.IDLE
 var state_change_timer := 0.0
@@ -144,6 +157,14 @@ const PLAYING_SCALE := Vector2(1.08, 0.94)
 # ------------------------------------------------------------
 
 func _ready() -> void:
+
+	if start_locked:
+		npc_state = NPCState.LOCKED
+		print(display_name + " STARTED LOCKED")
+	else:
+		npc_state = NPCState.IDLE
+		print(display_name + " STARTED IDLE")
+		
 	add_to_group("npc_musician")
 	add_to_group("musician")
 	add_to_group("interactable")
@@ -171,9 +192,21 @@ func _physics_process(delta: float) -> void:
 # Interaction
 # ------------------------------------------------------------
 
+
+func is_locked() -> bool:
+	return npc_state == NPCState.LOCKED
+
+
 # Basic interact only opens the prompt.
 # NPC music should only start/stop through NPCDialoguePrompt.
 func interact() -> void:
+
+	print("INTERACT STATE: ", npc_state)
+
+	if npc_state == NPCState.LOCKED:
+		print(display_name + " IS LOCKED")
+		return
+
 	if interaction_temporarily_disabled:
 		return
 
@@ -225,6 +258,9 @@ func is_interaction_temporarily_disabled() -> bool:
 # 4. Nearby jam: join existing jam.
 # 5. No jam nearby: start own primary song.
 func toggle_play_song_request() -> void:
+	if is_locked():
+		return
+
 	_debug_state("toggle_play_song_request START")
 
 	if _handle_active_jam_spot_toggle():
@@ -558,6 +594,29 @@ func is_controlled_by_active_jam_spot() -> bool:
 # ------------------------------------------------------------
 # Playing state and JamContext requests
 # ------------------------------------------------------------
+
+
+func unlock_npc() -> void:
+	start_locked = false
+	npc_state = NPCState.IDLE
+
+	enable_interaction()
+
+	_update_label()
+
+	print(display_name + " unlocked")
+
+
+func lock_npc() -> void:
+	npc_state = NPCState.LOCKED
+
+	stop_following_player()
+	stop_freeform_immediately()
+
+	_update_label()
+
+	print(display_name + " locked")
+
 
 func set_npc_enabled(is_enabled: bool) -> void:
 	_debug_state("set_npc_enabled -> " + str(is_enabled))
@@ -940,6 +999,9 @@ func _move_toward_world_position(target_position: Vector2, move_speed: float, st
 # ------------------------------------------------------------
 
 func toggle_follow_player() -> void:
+	if is_locked():
+		return
+
 	if following_player:
 		stop_following_player()
 	else:
@@ -947,6 +1009,9 @@ func toggle_follow_player() -> void:
 
 
 func start_following_player() -> void:
+	if is_locked():
+		return
+
 	var player: Node = get_tree().get_first_node_in_group("player")
 
 	if player == null:
@@ -958,12 +1023,16 @@ func start_following_player() -> void:
 
 	follow_target = player
 	following_player = true
+	npc_state = NPCState.FOLLOW
 	_update_label()
 
 
 func stop_following_player() -> void:
 	following_player = false
 	follow_target = null
+
+	if npc_state == NPCState.FOLLOW:
+		npc_state = NPCState.IDLE
 	_update_label()
 
 
@@ -1054,6 +1123,10 @@ func get_primary_song_id() -> String:
 	return primary_song_id
 
 
+func get_unlock_id() -> String:
+	return unlock_id
+
+
 func get_music_intent() -> String:
 	if is_controlled_by_active_jam_spot():
 		return "jamspot"
@@ -1069,6 +1142,10 @@ func get_music_intent() -> String:
 # ------------------------------------------------------------
 
 func _update_label() -> void:
+	if npc_state == NPCState.LOCKED:
+		label.text = "%s [LOCKED]" % display_name
+		return
+
 	if label == null:
 		return
 
@@ -1079,6 +1156,9 @@ func _update_label() -> void:
 
 	if following_player:
 		mode_text += " [FOLLOW]"
+
+	if npc_state == NPCState.FOLLOW:
+		mode_text += " [FOLLOW_STATE]"
 
 	if current_part == "waiting":
 		label.text = "%s%s: Waiting" % [
