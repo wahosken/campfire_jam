@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="NPCDialogueData" format=3 uid="uid://c4qbpqfmo3oao"]
+
+[ext_resource type="Script" uid="uid://cxymkcbaj7wk2" path="res://scripts/dialogue/npc_dialogue_data.gd" id="1_dby77"]
+[ext_resource type="Resource" uid="uid://cbsvl6w7ruwjk" path="res://dialogue/npc_guitar_complete.tres" id="1_t30g0"]
+[ext_resource type="Resource" uid="uid://b7uag0ppbcipu" path="res://dialogue/npc_guitar_intro.tres" id="2_bhv0r"]
+[ext_resource type="Resource" uid="uid://bacrmonco0v8x" path="res://dialogue/npc_guitar_recruited.tres" id="3_uh24j"]
+[ext_resource type="Resource" uid="uid://cvlyahin5tg6b" path="res://dialogue/npc_guitar_task.tres" id="5_ktc81"]
+
+[resource]
+script = ExtResource("1_dby77")
+intro_dialogue = ExtResource("2_bhv0r")
+task_dialogue = ExtResource("5_ktc81")
+completion_dialogue = ExtResource("1_t30g0")
+recruited_dialogue = ExtResource("3_uh24j")
+metadata/_custom_type_script = "uid://cxymkcbaj7wk2"

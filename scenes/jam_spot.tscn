@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://dafv1jiuv4pav" path="res://scripts/jam/jam_spot.gd" id="1_0ko27"]
 [ext_resource type="Script" uid="uid://crbcdbde1uclf" path="res://scripts/jam/jam_context.gd" id="2_vyejd"]
 [ext_resource type="PackedScene" uid="uid://b2rachx81sojt" path="res://scenes/jam_spot_formation.tscn" id="3_icwyp"]
-[ext_resource type="Script" uid="uid://bsnwb8i06g8q6" path="res://scripts/jam_formation_policy.gd" id="4_83il5"]
+[ext_resource type="Script" path="res://scripts/jam/jam_formation_policy.gd" id="4_83il5"]
 
 [node name="JamSpot" type="Node2D" unique_id=1582202994 groups=["jamspot"]]
 script = ExtResource("1_0ko27")

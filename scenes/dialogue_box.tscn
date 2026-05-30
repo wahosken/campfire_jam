@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://sago7pta8rx"]
+
+[ext_resource type="Script" uid="uid://cvqumtl7h6xbm" path="res://scripts/ui/dialogue_box.gd" id="1_rc1id"]
+
+[node name="DialogueBox" type="CanvasLayer" unique_id=294302182 groups=["dialogue_box"]]
+script = ExtResource("1_rc1id")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1095538981]
+custom_minimum_size = Vector2(250, 150)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Panel" type="Panel" parent="MarginContainer" unique_id=936544200]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/Panel" unique_id=1368731614]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SpeakerLabel" type="Label" parent="MarginContainer/Panel/VBoxContainer" unique_id=977383270]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Guitar"
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/Panel/VBoxContainer" unique_id=1394390714]
+layout_mode = 2
+
+[node name="DialogueLabel" type="Label" parent="MarginContainer/Panel/VBoxContainer" unique_id=1625840262]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_vertical = 1
+autowrap_mode = 3
+
+[node name="ContinueLabel" type="Label" parent="MarginContainer/Panel/VBoxContainer" unique_id=1093233158]
+layout_mode = 2
+text = "Press Interact"
+horizontal_alignment = 2

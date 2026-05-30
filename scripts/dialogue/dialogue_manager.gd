@@ -1,0 +1,85 @@
+extends Node
+
+var current_sequence = null
+var current_index := 0
+
+var current_speaker: Node = null
+
+var dialogue_box = null
+
+var dialogue_active := false
+
+
+func _ready() -> void:
+	dialogue_box = get_tree().get_first_node_in_group("dialogue_box")
+
+
+func start_dialogue(sequence, speaker = null) -> void:
+
+	current_speaker = speaker
+
+	dialogue_active = true
+
+	current_sequence = sequence
+	current_index = 0
+
+	show_current_line()
+
+
+func show_current_line() -> void:
+
+	if current_sequence == null:
+		end_dialogue()
+		return
+
+	if current_index >= current_sequence.lines.size():
+		end_dialogue()
+		return
+
+	if dialogue_box == null:
+		return
+
+	dialogue_box.show_line(
+		current_sequence.lines[current_index],
+		current_speaker
+	)
+
+
+func advance() -> void:
+
+	if not dialogue_active:
+		return
+
+	current_index += 1
+	show_current_line()
+
+
+func end_dialogue() -> void:
+
+#	var finished_sequence = current_sequence
+
+	if current_speaker != null:
+
+		# First conversation finished.
+		if current_speaker.has_method("begin_task"):
+
+			if current_speaker.progression_state == current_speaker.NPCProgressionState.INTRO:
+				current_speaker.begin_task()
+
+		# Completion conversation finished.
+		if current_speaker.has_method("recruit"):
+
+			if current_speaker.progression_state == current_speaker.NPCProgressionState.TASK_COMPLETE:
+				current_speaker.recruit()
+
+	dialogue_active = false
+
+	current_sequence = null
+	current_index = 0
+
+	if dialogue_box != null:
+		dialogue_box.hide()
+
+
+func is_dialogue_active() -> bool:
+	return dialogue_active

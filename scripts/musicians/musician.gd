@@ -21,7 +21,6 @@
 # - separate musician state from controller ownership
 # - support player/NPC/co-op parity
 # ------------------------------------------------------------
-
 extends CharacterBody2D
 
 @export var debug_npc_state := false
@@ -65,8 +64,16 @@ extends CharacterBody2D
 
 @export var unlock_id := ""
 
-@export_multiline var locked_dialogue := "I'd love to play, but something is preventing me."
-@export_multiline var unlocked_dialogue := "Thanks for helping me!"
+@export var dialogue_data: NPCDialogueData
+
+@export var progression_state := NPCProgressionState.INTRO
+
+enum NPCProgressionState {
+	INTRO,
+	TASK_GIVEN,
+	TASK_COMPLETE,
+	RECRUITED
+}
 
 enum BehaviorState {
 	IDLE,
@@ -100,7 +107,6 @@ enum MusicState {
 }
 
 enum NPCState {
-	LOCKED,
 	IDLE,
 	FOLLOW,
 	MOVETO_JAM,
@@ -161,12 +167,12 @@ const PLAYING_SCALE := Vector2(1.08, 0.94)
 
 func _ready() -> void:
 
+	npc_state = NPCState.IDLE
+
 	if start_locked:
-		npc_state = NPCState.LOCKED
-		print(display_name + " STARTED LOCKED")
+		progression_state = NPCProgressionState.INTRO
 	else:
-		npc_state = NPCState.IDLE
-		print(display_name + " STARTED IDLE")
+		progression_state = NPCProgressionState.RECRUITED
 		
 	add_to_group("npc_musician")
 	add_to_group("musician")
@@ -197,17 +203,30 @@ func _physics_process(delta: float) -> void:
 
 
 func is_locked() -> bool:
-	return npc_state == NPCState.LOCKED
+	return progression_state == NPCProgressionState.INTRO
+
+
+func is_recruited() -> bool:
+	return progression_state == NPCProgressionState.RECRUITED
 
 
 # Basic interact only opens the prompt.
 # NPC music should only start/stop through NPCDialoguePrompt.
 func interact() -> void:
 
-	print("INTERACT STATE: ", npc_state)
+	if DialogueManager.is_dialogue_active():
+		return
 
-	if npc_state == NPCState.LOCKED:
-		print(display_name + " IS LOCKED")
+	if not is_recruited():
+
+		var dialogue := get_current_dialogue()
+
+		if dialogue != null:
+			DialogueManager.start_dialogue(
+				dialogue,
+				self
+			)
+
 		return
 
 	if interaction_temporarily_disabled:
@@ -249,6 +268,13 @@ func is_interaction_temporarily_disabled() -> bool:
 	return interaction_temporarily_disabled
 
 
+func begin_task() -> void:
+
+	set_progression_state(
+		NPCProgressionState.TASK_GIVEN
+	)
+
+
 # ------------------------------------------------------------
 # Prompt music controls
 # ------------------------------------------------------------
@@ -261,7 +287,7 @@ func is_interaction_temporarily_disabled() -> bool:
 # 4. Nearby jam: join existing jam.
 # 5. No jam nearby: start own primary song.
 func toggle_play_song_request() -> void:
-	if is_locked():
+	if not is_recruited():
 		return
 
 	_debug_state("toggle_play_song_request START")
@@ -383,7 +409,7 @@ func apply_formation_motion(target_position: Vector2, delta: float) -> void:
 # Called by JamManager when this NPC auto-joins a freeform jam.
 func start_auto_freeform() -> void:
 
-	if is_locked():
+	if not is_recruited():
 		return
 
 	if not can_use_freeform_logic():
@@ -399,7 +425,7 @@ func start_auto_freeform() -> void:
 # Called by JamManager when this NPC is committed/indefinite.
 func start_manual_freeform() -> void:
 
-	if is_locked():
+	if not is_recruited():
 		return
 
 	if not can_use_freeform_logic():
@@ -457,7 +483,7 @@ func is_proximity_blocked() -> bool:
 
 func is_available_for_player_accompaniment() -> bool:
 
-	if is_locked():
+	if not is_recruited():
 		return false
 
 	if not can_use_freeform_logic():
@@ -524,8 +550,7 @@ func set_precise_jam_formation(is_precise: bool) -> void:
 
 func begin_jam_spot_control(jam_spot: Node, jam_context: Node) -> void:
 
-	if is_locked():
-		print(display_name, " BLOCKED JAMSPOT CONTROL")
+	if not is_recruited():
 
 		_stop_current_audio_source()
 		_clear_playing_state()
@@ -621,25 +646,21 @@ func is_controlled_by_active_jam_spot() -> bool:
 
 
 func unlock_npc() -> void:
+
 	start_locked = false
-	npc_state = NPCState.IDLE
+	progression_state = NPCProgressionState.RECRUITED
 
 	enable_interaction()
-
 	_update_label()
-
-	print(display_name + " unlocked")
 
 
 func lock_npc() -> void:
-	npc_state = NPCState.LOCKED
+	progression_state = NPCProgressionState.INTRO
 
 	stop_following_player()
 	stop_freeform_immediately()
 
 	_update_label()
-
-	print(display_name + " locked")
 
 
 func set_npc_enabled(is_enabled: bool) -> void:
@@ -666,7 +687,7 @@ func is_npc_enabled() -> bool:
 # Internal control method used by JamSpot/JamManager.
 func set_actual_playing(is_playing: bool) -> void:
 
-	if is_locked():
+	if not is_recruited():
 		return
 
 	_debug_state("set_actual_playing -> " + str(is_playing))
@@ -896,6 +917,16 @@ func _request_both_parts_from_current_context_or_start_solo() -> void:
 	set_actual_playing(true)
 
 
+func set_progression_state(new_state: NPCProgressionState) -> void:
+
+	if progression_state == new_state:
+		return
+
+	progression_state = new_state
+
+	_update_label()
+
+
 # ------------------------------------------------------------
 # Context setters
 # ------------------------------------------------------------
@@ -1022,12 +1053,16 @@ func _move_toward_world_position(target_position: Vector2, move_speed: float, st
 	move_and_slide()
 
 
+func can_participate_as_recruited_musician() -> bool:
+	return progression_state == NPCProgressionState.RECRUITED
+
+
 # ------------------------------------------------------------
 # Following
 # ------------------------------------------------------------
 
 func toggle_follow_player() -> void:
-	if is_locked():
+	if not is_recruited():
 		return
 
 	if following_player:
@@ -1037,7 +1072,7 @@ func toggle_follow_player() -> void:
 
 
 func start_following_player() -> void:
-	if is_locked():
+	if not is_recruited():
 		return
 
 	var player: Node = get_tree().get_first_node_in_group("player")
@@ -1165,12 +1200,39 @@ func get_music_intent() -> String:
 	return "idle"
 
 
-func get_dialogue_text() -> String:
+func get_current_dialogue() -> DialogueSequence:
 
-	if is_locked():
-		return locked_dialogue
+	if dialogue_data == null:
+		return null
 
-	return unlocked_dialogue
+	match progression_state:
+
+		NPCProgressionState.INTRO:
+			return dialogue_data.intro_dialogue
+
+		NPCProgressionState.TASK_GIVEN:
+			return dialogue_data.task_dialogue
+
+		NPCProgressionState.TASK_COMPLETE:
+			return dialogue_data.completion_dialogue
+
+		NPCProgressionState.RECRUITED:
+			return dialogue_data.recruited_dialogue
+
+		_:
+			return dialogue_data.intro_dialogue
+
+
+func complete_task() -> void:
+	set_progression_state(
+		NPCProgressionState.TASK_COMPLETE
+	)
+
+
+func recruit() -> void:
+	set_progression_state(
+		NPCProgressionState.RECRUITED
+	)
 
 
 # ------------------------------------------------------------
@@ -1178,11 +1240,23 @@ func get_dialogue_text() -> String:
 # ------------------------------------------------------------
 
 func _update_label() -> void:
-	if npc_state == NPCState.LOCKED:
-		label.text = "%s [LOCKED]" % display_name
-		return
 
 	if label == null:
+		return
+
+	if not is_recruited():
+
+		match progression_state:
+
+			NPCProgressionState.INTRO:
+				label.text = "%s [!]" % display_name
+
+			NPCProgressionState.TASK_GIVEN:
+				label.text = "%s [TASK]" % display_name
+
+			NPCProgressionState.TASK_COMPLETE:
+				label.text = "%s [READY]" % display_name
+
 		return
 
 	var mode_text := ""
@@ -1210,23 +1284,28 @@ func _update_label() -> void:
 		]
 		return
 
-	var db_text := ""
+	if current_part == "melody":
+		label.text = "%s%s: Melody" % [
+			display_name,
+			mode_text
+		]
+		return
 
-	if current_part == "rhythm" or current_part == "both":
-		var rhythm_db := 0.0
+	if current_part == "rhythm":
+		label.text = "%s%s: Rhythm" % [
+			display_name,
+			mode_text
+		]
+		return
 
-		if current_jam_context != null and current_jam_context.has_method("get_rhythm_db_for_member"):
-			rhythm_db = current_jam_context.get_rhythm_db_for_member(self)
+	if current_part == "both":
+		label.text = "%s%s: Both" % [
+			display_name,
+			mode_text
+		]
+		return
 
-		if rhythm_db < 0.0:
-			db_text = " %.0fdB" % rhythm_db
-
-	label.text = "%s%s: %s%s" % [
-		display_name,
-		mode_text,
-		current_part.capitalize(),
-		db_text
-	]
+	label.text = display_name + mode_text
 
 
 func _update_visual_from_current_part() -> void:

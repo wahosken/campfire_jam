@@ -4,6 +4,7 @@ signal closed
 
 @onready var name_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/NameLabel
 @onready var dialogue_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/DialogueLabel
+@onready var talk_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/TalkButton
 @onready var play_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PlayButton
 @onready var follow_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/FollowButton
 @onready var close_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/CloseButton
@@ -33,6 +34,7 @@ func _ready() -> void:
 	visible = false
 
 	menu_buttons = [
+		talk_button,
 		play_button,
 		follow_button,
 		close_button
@@ -47,11 +49,15 @@ func _ready() -> void:
 	play_button.pressed.connect(_on_play_button_clicked)
 	follow_button.pressed.connect(_on_follow_button_clicked)
 	close_button.pressed.connect(_on_close_button_clicked)
+	talk_button.pressed.connect(_on_talk_button_clicked)
 
 	_set_buttons_focus_mode(false)
 
 
 func _process(delta: float) -> void:
+	if DialogueManager.is_dialogue_active():
+		return
+
 	if not visible:
 		return
 
@@ -88,6 +94,9 @@ func _exit_tree() -> void:
 # ------------------------------------------------------------
 
 func open_for_npc(npc: Node) -> void:
+	if DialogueManager.is_dialogue_active():
+		return
+
 	current_npc = npc
 
 	if current_npc == null:
@@ -143,26 +152,25 @@ func _refresh_buttons() -> void:
 	if current_npc == null:
 		return
 
-	var locked: bool = false
+	var recruited := false
 
-	if current_npc.has_method("is_locked"):
-		locked = current_npc.is_locked()
+	if "progression_state" in current_npc:
+		recruited = (
+			current_npc.progression_state
+			== current_npc.NPCProgressionState.RECRUITED
+		)
 
 	play_button.text = _get_play_button_text(current_npc)
 	follow_button.text = _get_follow_button_text(current_npc)
 
-	play_button.visible = not locked
-	follow_button.visible = not locked
+	talk_button.visible = true
+
+	play_button.visible = recruited
+	follow_button.visible = recruited
 
 	close_button.visible = true
 
-	if locked:
-		selected_button_index = 0
-
-	if locked:
-		_select_button(2)
-	else:
-		_select_button(0)
+	_select_button(0)
 
 	_update_button_visuals()
 
@@ -221,18 +229,58 @@ func _get_npc_display_name(npc: Node) -> String:
 	return "Musician"
 
 
+func _get_visible_buttons() -> Array[Button]:
+
+	var visible_buttons: Array[Button] = []
+
+	for button in menu_buttons:
+		if button.visible:
+			visible_buttons.append(button)
+
+	return visible_buttons
+
+
 # ------------------------------------------------------------
 # Actions
 # ------------------------------------------------------------
 
 func _activate_selected_option() -> void:
-	match selected_button_index:
-		0:
-			_play_action()
-		1:
-			_follow_action()
-		2:
-			close()
+
+	var button := menu_buttons[selected_button_index]
+
+	if button == talk_button:
+		_talk_action()
+		return
+
+	if button == play_button:
+		_play_action()
+		return
+
+	if button == follow_button:
+		_follow_action()
+		return
+
+	if button == close_button:
+		close()
+		return
+
+
+func _talk_action() -> void:
+
+	if current_npc == null:
+		return
+
+	var npc := current_npc
+
+	close()
+
+	await get_tree().process_frame
+
+	if npc.get_current_dialogue() != null:
+		DialogueManager.start_dialogue(
+			npc.get_current_dialogue(),
+			npc
+		)
 
 
 func _play_action() -> void:
@@ -265,6 +313,10 @@ func _follow_action() -> void:
 	close()
 
 
+func _on_talk_button_clicked() -> void:
+	_talk_action()
+
+
 func _on_play_button_clicked() -> void:
 	_play_action()
 
@@ -282,24 +334,46 @@ func _on_close_button_clicked() -> void:
 # ------------------------------------------------------------
 
 func _move_selection(direction: int) -> void:
-	if menu_buttons.is_empty():
+
+	var visible_buttons := _get_visible_buttons()
+
+	if visible_buttons.is_empty():
 		return
 
-	selected_button_index += direction
+	var current_visible_index := 0
 
-	if selected_button_index < 0:
-		selected_button_index = menu_buttons.size() - 1
-	elif selected_button_index >= menu_buttons.size():
-		selected_button_index = 0
+	for i in visible_buttons.size():
+		if visible_buttons[i] == menu_buttons[selected_button_index]:
+			current_visible_index = i
+			break
+
+	current_visible_index += direction
+
+	if current_visible_index < 0:
+		current_visible_index = visible_buttons.size() - 1
+	elif current_visible_index >= visible_buttons.size():
+		current_visible_index = 0
+
+	var selected_button: Button = visible_buttons[current_visible_index]
+
+	selected_button_index = menu_buttons.find(selected_button)
 
 	_update_button_visuals()
 
 
 func _select_button(index: int) -> void:
-	if menu_buttons.is_empty():
+
+	var visible_buttons := _get_visible_buttons()
+
+	if visible_buttons.is_empty():
 		return
 
-	selected_button_index = clampi(index, 0, menu_buttons.size() - 1)
+	index = clampi(index, 0, visible_buttons.size() - 1)
+
+	var button: Button = visible_buttons[index]
+
+	selected_button_index = menu_buttons.find(button)
+
 	_update_button_visuals()
 
 

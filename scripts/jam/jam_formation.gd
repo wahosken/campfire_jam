@@ -211,7 +211,7 @@ func get_freeform_position(member: Node2D, leader_position: Vector2) -> Vector2:
 	return best_pos
 
 
-func get_field_position_for_npc(member: Node2D, members: Array[Node2D]) -> Vector2:
+func get_field_position_for_npc(member: Node2D, formation_members: Array[Node2D]) -> Vector2:
 	# fallback field logic for freeform (simple + stable)
 
 	var center: Vector2 = leader.global_position
@@ -220,7 +220,7 @@ func get_field_position_for_npc(member: Node2D, members: Array[Node2D]) -> Vecto
 	rng.seed = member.get_instance_id()
 
 	var angle: float = rng.randf_range(0.0, TAU)
-	var radius: float = get_radius_for_count(members.size())
+	var radius: float = get_radius_for_count(formation_members.size())
 
 	return center + Vector2.RIGHT.rotated(angle) * radius
 

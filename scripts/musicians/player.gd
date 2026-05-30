@@ -863,10 +863,11 @@ func get_selected_song_id() -> String:
 
 
 func get_current_playing_song_id() -> String:
-	if is_playing_instrument:
-		return current_playing_song_id
 
-	return selected_song_id
+	if not is_playing_instrument:
+		return ""
+
+	return current_playing_song_id
 
 
 # ------------------------------------------------------------

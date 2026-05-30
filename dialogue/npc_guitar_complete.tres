@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="DialogueSequence" format=3 uid="uid://cbsvl6w7ruwjk"]
+
+[ext_resource type="Script" uid="uid://opgri4swc804" path="res://scripts/dialogue/dialogue_line.gd" id="1_73gks"]
+[ext_resource type="Script" uid="uid://dp0aobj5pqnj3" path="res://scripts/dialogue/dialogue_sequence.gd" id="2_6cipd"]
+
+[sub_resource type="Resource" id="Resource_6cipd"]
+script = ExtResource("1_73gks")
+text = "The bridge hasn't budged for as long as I've been here."
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_nlupj"]
+script = ExtResource("1_73gks")
+text = "I knew there was something special about that music."
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_qt77x"]
+script = ExtResource("1_73gks")
+text = "Mind if I come along?"
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[resource]
+script = ExtResource("2_6cipd")
+sequence_name = "Guitar Complete"
+lines = Array[ExtResource("1_73gks")]([SubResource("Resource_6cipd"), SubResource("Resource_nlupj"), SubResource("Resource_qt77x")])

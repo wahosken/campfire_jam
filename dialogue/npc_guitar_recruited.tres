@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="DialogueSequence" format=3 uid="uid://bacrmonco0v8x"]
+
+[ext_resource type="Script" uid="uid://opgri4swc804" path="res://scripts/dialogue/dialogue_line.gd" id="1_d6gai"]
+[ext_resource type="Script" uid="uid://dp0aobj5pqnj3" path="res://scripts/dialogue/dialogue_sequence.gd" id="2_akkg4"]
+
+[sub_resource type="Resource" id="Resource_d6gai"]
+script = ExtResource("1_d6gai")
+text = "Where should we head next?"
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_akkg4"]
+script = ExtResource("1_d6gai")
+text = "There are probably more things out there that react to music."
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_q00ym"]
+script = ExtResource("1_d6gai")
+text = "There are probably more things out there that react to music."
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[resource]
+script = ExtResource("2_akkg4")
+sequence_name = "Guitar Recruited"
+lines = Array[ExtResource("1_d6gai")]([SubResource("Resource_d6gai"), SubResource("Resource_akkg4"), SubResource("Resource_q00ym")])

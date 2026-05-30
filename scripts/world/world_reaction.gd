@@ -1,5 +1,6 @@
 extends Node2D
 
+@export var target_npc: Node
 @export var unlock_npc_id := ""
 @export var activate_once := true
 
@@ -57,12 +58,15 @@ func activate() -> void:
 
 	update_visuals()
 
-	var unlock_manager := get_tree().get_first_node_in_group("npc_unlock_manager")
+	if target_npc != null:
 
-	if unlock_manager != null:
-		unlock_manager.unlock_npc_by_id(unlock_npc_id)
+		if target_npc.has_method("complete_task"):
+			target_npc.complete_task()
 
-	print("WorldReaction activated")
+#	var unlock_manager := get_tree().get_first_node_in_group("npc_unlock_manager")
+
+#	if unlock_manager != null:
+#		unlock_manager.unlock_npc_by_id(unlock_npc_id)
 
 
 func update_visuals() -> void:

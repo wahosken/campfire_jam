@@ -42,6 +42,10 @@ layout_mode = 2
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="TalkButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=867289664]
+layout_mode = 2
+text = "Talk"
+
 [node name="PlayButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1119360975]
 custom_minimum_size = Vector2(240, 36)
 layout_mode = 2

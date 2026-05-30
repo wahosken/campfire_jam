@@ -183,17 +183,19 @@ collision_mask = 2
 position = Vector2(3.5, 7)
 shape = SubResource("RectangleShape2D_bew7y")
 
-[node name="Bridge_WorldReaction" parent="." unique_id=323313496 node_paths=PackedStringArray("target_npc") instance=ExtResource("19_pm21f")]
-position = Vector2(-173, -1107)
-target_npc = NodePath("../NPC_Guitar")
+[node name="Bridge_WorldReaction" parent="." unique_id=323313496 instance=ExtResource("19_pm21f")]
+position = Vector2(-21, -1073)
 unlock_npc_id = "guitar"
-required_song_id = "song_01"
+required_song_id = "song_02"
+required_instrument_id = "bass"
+required_musician_count = 2
 label_text = "Bridge"
 
 [node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("6_ctatt")]
 position = Vector2(-495, -1135)
 primary_song_id = "song_02"
 dialogue_data = ExtResource("6_7iits")
+progression_state = 0
 start_locked = true
 
 [node name="NPC_Bass" parent="." unique_id=718845583 instance=ExtResource("7_xgqkh")]
