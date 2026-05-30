@@ -1093,9 +1093,13 @@ func get_playing_musician_count() -> int:
 		if not is_instance_valid(member):
 			continue
 
+		var playing := false
+
 		if member.has_method("is_actively_playing_jam"):
-			if member.is_actively_playing_jam():
-				count += 1
+			playing = member.is_actively_playing_jam()
+
+		if playing:
+			count += 1
 
 	return count
 

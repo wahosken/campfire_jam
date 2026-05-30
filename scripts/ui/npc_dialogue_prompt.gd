@@ -272,6 +272,12 @@ func _talk_action() -> void:
 
 	var npc := current_npc
 
+	if npc.has_method("is_manual_freeform"):
+		if npc.is_manual_freeform():
+
+			if npc.has_method("toggle_play_song_request"):
+				npc.toggle_play_song_request()
+
 	close()
 
 	await get_tree().process_frame
@@ -284,10 +290,17 @@ func _talk_action() -> void:
 
 
 func _play_action() -> void:
+
 	if current_npc == null:
 		return
 
 	var npc_to_use: Node = current_npc
+
+	if npc_to_use.has_method("is_following_player"):
+		if npc_to_use.is_following_player():
+
+			if npc_to_use.has_method("toggle_follow_player"):
+				npc_to_use.toggle_follow_player()
 
 	if npc_to_use.has_method("enable_interaction"):
 		npc_to_use.enable_interaction()
@@ -303,6 +316,13 @@ func _follow_action() -> void:
 		return
 
 	var npc_to_use: Node = current_npc
+
+	# If manually playing, stop that first.
+	if npc_to_use.has_method("is_manual_freeform"):
+		if npc_to_use.is_manual_freeform():
+
+			if npc_to_use.has_method("toggle_play_song_request"):
+				npc_to_use.toggle_play_song_request()
 
 	if npc_to_use.has_method("enable_interaction"):
 		npc_to_use.enable_interaction()

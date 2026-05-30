@@ -108,6 +108,15 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
+	if DialogueManager.is_dialogue_active():
+
+		if is_playing_instrument:
+			stop_instrument()
+
+		velocity = Vector2.ZERO
+		move_and_slide()
+		return
+
 	_handle_movement()
 	_handle_npc_interact_input()
 	_handle_instrument_cycle_input()
@@ -237,6 +246,10 @@ func _join_current_jam_context() -> void:
 
 	if current_jam_context.has_method("add_member"):
 		current_jam_context.add_member(self)
+
+	if jam_manager != null: 
+		if jam_manager.has_method("add_player_to_active_freeform"):
+			jam_manager.add_player_to_active_freeform(self)
 
 	if current_jam_context.has_method("set_member_requested_parts"):
 		current_jam_context.set_member_requested_parts(self, wants_rhythm, wants_melody)

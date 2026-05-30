@@ -106,10 +106,6 @@ func _process(delta: float) -> void:
 		_check_auto_freeform_leave(player.global_position)
 
 
-func on_game_started() -> void:
-	print("JamManager received game start.")
-
-
 # ------------------------------------------------------------
 # Player nearby jam state
 # ------------------------------------------------------------
@@ -327,6 +323,20 @@ func try_recruit_nearby_npcs_to_player(player: Node, player_position: Vector2) -
 		closest_distance,
 		true
 	)
+
+
+func add_player_to_active_freeform(player: Node) -> void:
+
+	if player == null:
+		return
+
+	if freeform_state.jam_context == null:
+		return
+
+	if not freeform_state.members.has(player):
+
+		freeform_state.members.append(player)
+		_record_freeform_member_join_time(player)
 
 
 func _create_player_carried_freeform_context(player: Node) -> void:
@@ -1051,7 +1061,6 @@ func _recruit_available_npcs_to_active_freeform_jam() -> void:
 
 		if _is_npc_near_any_freeform_anchor(npc, anchor_positions):
 			_add_npc_to_active_freeform_jam(npc, false)
-
 
 func _add_npc_to_active_freeform_jam(npc: Node, make_manual := false) -> bool:
 	if npc == null:
@@ -1794,6 +1803,7 @@ func get_freeform_anchor_positions() -> Array[Vector2]:
 
 		if member.has_method("is_manual_freeform"):
 			if member.is_manual_freeform():
+
 				if not positions.has(member.global_position):
 					positions.append(member.global_position)
 
@@ -1805,6 +1815,7 @@ func get_freeform_anchor_positions() -> Array[Vector2]:
 			continue
 
 		if member is Node2D:
+
 			if not positions.has(member.global_position):
 				positions.append(member.global_position)
 
@@ -1907,7 +1918,13 @@ func _get_npc_auto_stop_radius(npc: Node) -> float:
 
 
 func _get_player_freeform_join_radius() -> float:
-	return fallback_accompanist_radius + freeform_leave_padding
+
+	if freeform_state.anchor != null:
+		return _get_npc_join_radius(
+			freeform_state.anchor
+		)
+
+	return fallback_accompanist_radius
 
 
 func _get_player_freeform_leave_radius(npc: Node) -> float:
