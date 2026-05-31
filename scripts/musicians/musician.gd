@@ -992,6 +992,11 @@ func update_music_state(delta: float) -> void:
 
 
 func _update_jam_formation_movement(delta: float) -> void:
+
+	if task_controller != null:
+		if task_controller.is_traveling():
+			return
+
 	if not has_jam_formation_target:
 		return
 
@@ -1036,7 +1041,6 @@ func _update_jam_formation_movement(delta: float) -> void:
 		stop_distance,
 		delta
 	)
-
 
 func _move_toward_world_position(target_position: Vector2, move_speed: float, stop_distance: float, _delta: float) -> void:
 	var distance: float = global_position.distance_to(target_position)
@@ -1168,9 +1172,9 @@ func _update_traveling(delta: float) -> void:
 		delta
 	)
 
-	if global_position.distance_to(target_position) <= 16.0:
+	if current_jam_spot != null:
 		task_controller.clear_task()
-
+		return
 
 # ------------------------------------------------------------
 # Queries

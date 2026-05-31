@@ -16,15 +16,25 @@ var attraction_timer := 0.0
 
 @export var attraction_grace_time := 0.75
 
+var pending_travel_task := false
+var pending_target_position := Vector2.ZERO
+
+@export var task_accept_delay := 1.0
+var task_accept_timer := 0.0
+
+
 func assign_travel_task(position: Vector2) -> void:
 
-	print("TRAVEL TASK ASSIGNED")
+	if is_traveling():
+		return
 
-	current_task = TaskType.TRAVEL
-	target_position = position
-	has_target = true
+	if pending_travel_task:
+		return
 
-	task_changed.emit()
+	pending_travel_task = true
+	pending_target_position = position
+
+	task_accept_timer = task_accept_delay
 
 
 func clear_task() -> void:
@@ -32,6 +42,9 @@ func clear_task() -> void:
 	current_task = TaskType.NONE
 	target_position = Vector2.ZERO
 	has_target = false
+
+	pending_travel_task = false
+	task_accept_timer = 0.0
 
 	task_changed.emit()
 
@@ -51,6 +64,20 @@ func update_tasks(delta: float) -> void:
 
 		if attraction_timer <= 0.0:
 			clear_task()
+
+	if pending_travel_task:
+
+		task_accept_timer -= delta
+
+		if task_accept_timer <= 0.0:
+
+			pending_travel_task = false
+
+			current_task = TaskType.TRAVEL
+			target_position = pending_target_position
+			has_target = true
+
+			task_changed.emit()
 
 
 func get_target_position() -> Vector2:

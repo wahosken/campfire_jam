@@ -664,8 +664,6 @@ func get_field_position_for_npc(npc: Node, members: Array[Node]) -> Vector2:
 
 func _debug_recruitment_scan() -> void:
 
-	print("----- JAMSPOT SCAN -----")
-
 	for npc in get_tree().get_nodes_in_group("npc_musician"):
 
 		if registered_npcs.has(npc):
@@ -683,12 +681,6 @@ func _debug_recruitment_scan() -> void:
 			continue
 
 		if _is_npc_near_any_jamspot_anchor(npc):
-
-			print(
-				display_name,
-				" attracted ",
-				npc.name
-			)
 
 			task_controller.refresh_attraction()
 
