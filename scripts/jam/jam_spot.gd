@@ -57,7 +57,10 @@ func _process(delta: float) -> void:
 		return
 
 	active_refresh_timer = 0.0
+
 	_rescan_and_refresh_active_jam()
+
+	_debug_recruitment_scan()
 
 
 func _connect_jam_area_signals() -> void:
@@ -657,6 +660,110 @@ func get_field_position_for_npc(npc: Node, members: Array[Node]) -> Vector2:
 			best_pos = candidate
 
 	return best_pos
+
+
+func _debug_recruitment_scan() -> void:
+
+	print("----- JAMSPOT SCAN -----")
+
+	for npc in get_tree().get_nodes_in_group("npc_musician"):
+
+		if registered_npcs.has(npc):
+			continue
+
+		if not npc.has_method("is_available_for_player_accompaniment"):
+			continue
+
+		if not npc.is_available_for_player_accompaniment():
+			continue
+
+		var task_controller := npc.get_node_or_null("NPCTaskController")
+
+		if task_controller == null:
+			continue
+
+		if _is_npc_near_any_jamspot_anchor(npc):
+
+			print(
+				display_name,
+				" attracted ",
+				npc.name
+			)
+
+			task_controller.refresh_attraction()
+
+			if not task_controller.is_traveling():
+				task_controller.assign_travel_task(
+					global_position
+				)
+
+
+func _get_jamspot_anchor_positions() -> Array[Vector2]:
+
+	var positions: Array[Vector2] = []
+
+	# Registered NPC musicians
+	for npc in registered_npcs:
+
+		if npc == null:
+			continue
+
+		if not is_instance_valid(npc):
+			continue
+
+		if not npc is Node2D:
+			continue
+
+		if "wants_to_play" in npc:
+			if npc.wants_to_play:
+				positions.append(npc.global_position)
+
+	# Player if inside this JamSpot
+	var player := get_tree().get_first_node_in_group("player")
+
+	if player != null:
+		if player is Node2D:
+
+			if "is_playing_instrument" in player:
+				if player.is_playing_instrument:
+
+					if is_position_inside_join_radius(
+						player.global_position
+					):
+						positions.append(
+							player.global_position
+						)
+
+	return positions
+
+
+func _is_npc_near_any_jamspot_anchor(npc: Node) -> bool:
+
+	if not npc is Node2D:
+		return false
+
+	var anchor_positions := _get_jamspot_anchor_positions()
+
+	for anchor_position in anchor_positions:
+
+		var distance: float = npc.global_position.distance_to(
+			anchor_position
+		)
+
+		if distance <= npc.auto_accompany_radius:
+			return true
+
+	return false
+
+
+func _debug_anchor_positions() -> void:
+
+	var positions := _get_jamspot_anchor_positions()
+
+	print("ANCHOR COUNT: ", positions.size())
+
+	for position in positions:
+		print(position)
 
 
 # ------------------------------------------------------------

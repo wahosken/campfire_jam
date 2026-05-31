@@ -6,6 +6,7 @@
 [ext_resource type="AudioStream" uid="uid://cfsa07ynnm60u" path="res://audio/song 1/song1-008-mandolin_lead.wav" id="4_r3l87"]
 [ext_resource type="AudioStream" uid="uid://di4x51xuio6a1" path="res://audio/song 2/song2-007-mandolin_rhythm.wav" id="5_mgt4s"]
 [ext_resource type="AudioStream" uid="uid://708bjc8fkg1t" path="res://audio/song 2/song2-008-mandolin_lead.wav" id="6_l3r6c"]
+[ext_resource type="PackedScene" uid="uid://cbc1xf2odpyw4" path="res://scenes/npc_task_controller.tscn" id="7_r3l87"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ps8is"]
 radius = 24.0
@@ -21,6 +22,7 @@ script = ExtResource("1_yt5au")
 instrument_name = "mandolin"
 display_name = "Mandolin"
 unlock_id = "mandolin"
+progression_state = 3
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8
@@ -81,3 +83,5 @@ attenuation = 0.75
 path_desired_distance = 16.0
 target_desired_distance = 16.0
 debug_path_custom_color = Color(0.7806942, 4.548356e-06, 4.813075e-07, 1)
+
+[node name="NPCTaskController" parent="." unique_id=1235074422 instance=ExtResource("7_r3l87")]

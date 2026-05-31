@@ -6,6 +6,7 @@
 [ext_resource type="AudioStream" uid="uid://cir28v33uqdmo" path="res://audio/song 1/song1-002-guitar_lead.wav" id="4_uuwsd"]
 [ext_resource type="AudioStream" uid="uid://x654xn2eyq6f" path="res://audio/song 2/song2-001-guitar_rhythm.wav" id="5_8mojk"]
 [ext_resource type="AudioStream" uid="uid://tmin5vxqlo6m" path="res://audio/song 2/song2-002-guitar_lead.wav" id="6_b1ygu"]
+[ext_resource type="PackedScene" uid="uid://cbc1xf2odpyw4" path="res://scenes/npc_task_controller.tscn" id="7_uuwsd"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_csoos"]
 radius = 24.0
@@ -80,3 +81,5 @@ attenuation = 0.75
 path_desired_distance = 16.0
 target_desired_distance = 16.0
 debug_path_custom_color = Color(0.7806942, 4.548356e-06, 4.813075e-07, 1)
+
+[node name="NPCTaskController" parent="." unique_id=1235074422 instance=ExtResource("7_uuwsd")]

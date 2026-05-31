@@ -33,11 +33,13 @@ extends CharacterBody2D
 
 @export var primary_song_id := "song_01"
 
+@export var travel_speed := 180.0
+
 @export var follow_speed := 180.0
 @export var follow_min_distance := 56.0
 @export var follow_max_distance := 96.0
 
-@export var jam_formation_move_speed := 120.0
+@export var jam_formation_move_speed := 180.0
 @export var jam_formation_min_distance := 125.0
 @export var jam_formation_max_distance := 150.0
 @export var jam_formation_slow_radius := 140.0
@@ -61,6 +63,7 @@ extends CharacterBody2D
 @onready var sprite: ColorRect = $ColorRect
 @onready var label: Label = $Label
 @onready var audio_source: Node = $InstrumentAudioSource
+@onready var task_controller: Node = $NPCTaskController
 
 @export var unlock_id := ""
 
@@ -188,13 +191,23 @@ func _ready() -> void:
 		audio_source.owner_type = "npc"
 
 	_set_visual_idle()
+
+	if task_controller != null:
+		if task_controller.has_signal("task_changed"):
+			task_controller.task_changed.connect(_on_task_changed)
+
 	_update_label()
 
 
 func _physics_process(delta: float) -> void:
+
+	if task_controller != null:
+		task_controller.update_tasks(delta)
+
 	update_music_state(delta)
 	_update_jam_formation_movement(delta)
 	_update_follow_player(delta)
+	_update_traveling(delta)
 
 
 # ------------------------------------------------------------
@@ -1134,6 +1147,31 @@ func _update_follow_player(delta: float) -> void:
 	)
 
 
+func _on_task_changed() -> void:
+	_update_label()
+
+
+func _update_traveling(delta: float) -> void:
+
+	if task_controller == null:
+		return
+
+	if not task_controller.is_traveling():
+		return
+
+	var target_position: Vector2 = task_controller.get_target_position()
+
+	_move_toward_world_position(
+		target_position,
+		travel_speed,
+		16.0,
+		delta
+	)
+
+	if global_position.distance_to(target_position) <= 16.0:
+		task_controller.clear_task()
+
+
 # ------------------------------------------------------------
 # Queries
 # ------------------------------------------------------------
@@ -1269,6 +1307,11 @@ func _update_label() -> void:
 
 	if npc_state == NPCState.FOLLOW:
 		mode_text += " [FOLLOW_STATE]"
+
+	if task_controller != null:
+		if task_controller.has_method("is_traveling"):
+			if task_controller.is_traveling():
+				mode_text += " [TRAVEL]"
 
 	if current_part == "waiting":
 		label.text = "%s%s: Waiting" % [

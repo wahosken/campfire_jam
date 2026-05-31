@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cbc1xf2odpyw4"]
+
+[ext_resource type="Script" uid="uid://ciiol4jaylyfj" path="res://scripts/npc_task_controller.gd" id="1_xmsp5"]
+
+[node name="NPCTaskController" type="Node" unique_id=1235074422]
+script = ExtResource("1_xmsp5")

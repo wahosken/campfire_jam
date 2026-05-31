@@ -6,6 +6,7 @@
 [ext_resource type="AudioStream" uid="uid://b8jfefgc2no43" path="res://audio/song 1/song1-006-harmonica_lead.wav" id="4_fco0b"]
 [ext_resource type="AudioStream" uid="uid://dqc34kbx2ly41" path="res://audio/song 2/song2-005-harmonica_rhythm.wav" id="5_y4ir2"]
 [ext_resource type="AudioStream" uid="uid://cijbrfxnev2g3" path="res://audio/song 2/song2-006-harmonica_lead.wav" id="6_1lae6"]
+[ext_resource type="PackedScene" uid="uid://cbc1xf2odpyw4" path="res://scenes/npc_task_controller.tscn" id="7_fco0b"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_e5rru"]
 radius = 24.0
@@ -81,3 +82,5 @@ attenuation = 0.75
 path_desired_distance = 16.0
 target_desired_distance = 16.0
 debug_path_custom_color = Color(0.7806942, 4.548356e-06, 4.813075e-07, 1)
+
+[node name="NPCTaskController" parent="." unique_id=1235074422 instance=ExtResource("7_fco0b")]
