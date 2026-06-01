@@ -358,8 +358,8 @@ func _release_npc_from_inactive_jam(npc: Node) -> void:
 
 func _claim_npc_for_active_jam(npc: Node) -> void:
 
-	if npc.has_method("is_locked"):
-		if npc.is_locked():
+	if npc.has_method("is_recruited"):
+		if not npc.is_recruited():
 			return
 
 	if _npc_is_already_claimed_by_this_jam(npc):
@@ -549,8 +549,8 @@ func _sync_jamspot_formation() -> void:
 
 		formation_members.append(npc)
 
-		if npc.has_method("is_locked"):
-			if npc.is_locked():
+		if npc.has_method("is_recruited"):
+			if not npc.is_recruited():
 				continue
 
 	if jam_spot_formation.has_method("set_members"):

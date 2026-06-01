@@ -23,9 +23,9 @@
 [ext_resource type="PackedScene" uid="uid://c3cgstnsdvuoa" path="res://scenes/wall.tscn" id="22_oo54l"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_s3408"]
-vertices = PackedVector2Array(-1121, -1617.9922, 3724, -1617, 700.03906, -1203, 354.9297, -1203, -1121.9922, -47, 357.0703, -900, 3724, -47, 698.97656, -900)
-polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(4, 0, 3, 5), PackedInt32Array(6, 4, 5, 7), PackedInt32Array(1, 6, 7, 2)])
-outlines = Array[PackedVector2Array]([PackedVector2Array(-1131, -1628, 3734, -1627, 3734, -37, -1132, -37)])
+vertices = PackedVector2Array(1794.0391, -1240, 2133, -1617, 2133, -47, 1792.9609, -944, -1121, -1617.9922, 1460.0391, -1240, -1121.9922, -47, 1458.9609, -944)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(4, 1, 0, 5), PackedInt32Array(3, 2, 6, 7), PackedInt32Array(7, 6, 4, 5)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(-1131, -1628, 2143, -1627, 2143, -37, -1132, -37)])
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_s3408"]
 radius = 400.0
@@ -44,7 +44,7 @@ navigation_polygon = SubResource("NavigationPolygon_s3408")
 [node name="Polygon2D" type="Polygon2D" parent="NavigationRegion2D" unique_id=1807826442]
 position = Vector2(4.246155, 0)
 scale = Vector2(0.9938462, 1)
-polygon = PackedVector2Array(362.9876, -1193, 690, -1193, 689, -910, 365, -910)
+polygon = PackedVector2Array(1474.8297, -1230, 1790.774, -1230, 1789.7678, -954, 1473.8235, -954)
 
 [node name="Ground" type="ColorRect" parent="." unique_id=53549327]
 anchors_preset = 8
@@ -54,7 +54,7 @@ anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -1130.0
 offset_top = -1627.0
-offset_right = 3734.0
+offset_right = 2137.0
 offset_bottom = -37.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -124,7 +124,7 @@ position = Vector2(4, 8.5)
 shape = SubResource("RectangleShape2D_bew7y")
 
 [node name="CampfireJamSpot" parent="." unique_id=111465224 instance=ExtResource("2_2lf6f")]
-position = Vector2(2598, -570)
+position = Vector2(1612, -395)
 
 [node name="Node2D" type="Node2D" parent="CampfireJamSpot" unique_id=1183798559]
 
@@ -190,12 +190,29 @@ unlock_npc_id = "guitar"
 label_text = "Bridge"
 
 [node name="Fountain_WorldReaction" parent="." unique_id=1412666453 node_paths=PackedStringArray("target_npc", "required_jamspot") instance=ExtResource("19_pm21f")]
-position = Vector2(-767, -329)
+position = Vector2(182, -642)
 target_npc = NodePath("../NPC_Mandolin")
 unlock_npc_id = "mandolin"
 required_npc_id = "guitar"
 jam_requirement = 3
 required_jamspot = NodePath("../FountainJamSpot")
+
+[node name="Harmonica_WorldReaction" parent="." unique_id=1080485223 node_paths=PackedStringArray("target_npc") instance=ExtResource("19_pm21f")]
+position = Vector2(764, -958)
+target_npc = NodePath("../NPC_Harmonica")
+unlock_npc_id = "harmonica"
+required_song_id = "song_02"
+required_instrument_id = "mandolin"
+required_musician_count = 3
+jam_requirement = 1
+
+[node name="Bass_WorldReaction" parent="." unique_id=511018841 node_paths=PackedStringArray("target_npc", "required_jamspot") instance=ExtResource("19_pm21f")]
+position = Vector2(2027, -179)
+target_npc = NodePath("../NPC_Bass")
+unlock_npc_id = "bass"
+required_musician_count = 4
+jam_requirement = 3
+required_jamspot = NodePath("../CampfireJamSpot")
 
 [node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("6_ctatt")]
 position = Vector2(-354, -1298)
@@ -203,11 +220,11 @@ primary_song_id = "song_02"
 start_locked = true
 
 [node name="NPC_Bass" parent="." unique_id=718845583 instance=ExtResource("7_xgqkh")]
-position = Vector2(1479, -1032)
+position = Vector2(1865, -641)
 start_locked = true
 
 [node name="NPC_Harmonica" parent="." unique_id=1800832853 instance=ExtResource("8_munwf")]
-position = Vector2(1715, -1081)
+position = Vector2(846, -853)
 primary_song_id = "song_02"
 start_locked = true
 
@@ -216,7 +233,7 @@ position = Vector2(-407, -515)
 start_locked = true
 
 [node name="House" parent="." unique_id=1834173392 instance=ExtResource("10_0nbtd")]
-position = Vector2(527, -914)
+position = Vector2(1626, -954)
 
 [node name="JamManager" parent="." unique_id=841948683 instance=ExtResource("11_37qwj")]
 freeform_jam_context_scene = ExtResource("12_navra")
@@ -303,9 +320,24 @@ position = Vector2(-660, -989)
 position = Vector2(-281, -989)
 
 [node name="Wall4" parent="." unique_id=410433232 instance=ExtResource("22_oo54l")]
-position = Vector2(-125, -1146)
+position = Vector2(32, -989)
+
+[node name="Wall5" parent="." unique_id=971156227 instance=ExtResource("22_oo54l")]
+position = Vector2(173, -1162)
 rotation = 1.5707964
 
-[node name="Wall5" parent="." unique_id=2137025211 instance=ExtResource("22_oo54l")]
-position = Vector2(-125, -1459)
+[node name="Wall6" parent="." unique_id=1550654800 instance=ExtResource("22_oo54l")]
+position = Vector2(173, -1470)
+rotation = 1.5707964
+
+[node name="Wall7" parent="." unique_id=756349801 instance=ExtResource("22_oo54l")]
+position = Vector2(173, -834)
+rotation = 1.5707964
+
+[node name="Wall8" parent="." unique_id=2003542745 instance=ExtResource("22_oo54l")]
+position = Vector2(173, -452)
+rotation = 1.5707964
+
+[node name="Wall9" parent="." unique_id=254565389 instance=ExtResource("22_oo54l")]
+position = Vector2(173, -195)
 rotation = 1.5707964
