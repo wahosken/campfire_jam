@@ -113,6 +113,13 @@ func update_visuals() -> void:
 
 func try_activate(song_id: String) -> bool:
 
+	print(
+		"REACTION CHECK | ",
+		name,
+		" | song=",
+		song_id
+	)
+
 	# Only enforce song requirements if one is specified.
 	if required_song_id != "":
 		if song_id != required_song_id:
@@ -132,6 +139,11 @@ func try_activate(song_id: String) -> bool:
 		musician_count = get_jamspot_musician_count()
 	else:
 		musician_count = get_player_jam_size()
+
+	print(
+		"FINAL MUSICIAN COUNT = ",
+		musician_count
+	)
 
 	if musician_count < required_musician_count:
 		return false
@@ -194,58 +206,60 @@ func has_required_instrument() -> bool:
 
 func satisfies_jam_requirement() -> bool:
 
-	var jam_manager := get_tree().get_first_node_in_group("jam_manager")
-
-	if jam_manager == null:
-		return false
-
-	var context: Node = jam_manager.get_current_nearby_jam_context()
-
 	match jam_requirement:
 
 		JamRequirement.ANY:
 			return true
 
 		JamRequirement.FREEFORM:
+
+			var jam_manager := get_tree().get_first_node_in_group("jam_manager")
+
+			if jam_manager == null:
+				return false
+
+			var context: Node = jam_manager.get_current_nearby_jam_context()
+
 			return context != null and "Freeform" in str(context)
 
 		JamRequirement.JAMSPOT:
-			return context != null and not ("Freeform" in str(context))
+
+			if required_jamspot == null:
+				return false
+
+			if not required_jamspot.has_method("is_jam_active"):
+				return false
+
+			return required_jamspot.is_jam_active()
 
 		JamRequirement.SPECIFIC_JAMSPOT:
 
 			if required_jamspot == null:
 				return false
 
-			for jamspot in get_tree().get_nodes_in_group("jam_spot"):
+			if not required_jamspot.has_method("is_jam_active"):
+				return false
 
-				if not jamspot.has_method("get_jam_context"):
-					continue
-
-				if jamspot.get_jam_context() == context:
-					return jamspot == required_jamspot
-
-			return false
+			return required_jamspot.is_jam_active()
 
 	return false
 
 
 func get_jamspot_musician_count() -> int:
 
-	var jam_manager := get_tree().get_first_node_in_group("jam_manager")
-
-	if jam_manager == null:
+	if required_jamspot == null:
 		return 0
 
-	var context: Node = jam_manager.get_current_nearby_jam_context()
+	if not required_jamspot.has_method("get_jam_context"):
+		return 0
+
+	var context: Node = required_jamspot.get_jam_context()
 
 	if context == null:
 		return 0
 
 	if context.has_method("get_playing_musician_count"):
-		var count: int = context.get_playing_musician_count()
-
-		return count
+		return context.get_playing_musician_count()
 
 	return 0
 
