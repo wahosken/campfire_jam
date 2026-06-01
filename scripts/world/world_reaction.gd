@@ -1,5 +1,12 @@
 extends Node2D
 
+enum JamRequirement {
+	ANY,
+	FREEFORM,
+	JAMSPOT,
+	SPECIFIC_JAMSPOT
+}
+
 @export var target_npc: Node
 @export var unlock_npc_id := ""
 @export var activate_once := true
@@ -7,6 +14,10 @@ extends Node2D
 @export var required_song_id := ""
 @export var required_instrument_id := ""
 @export var required_musician_count := 1
+
+@export var jam_requirement := JamRequirement.ANY
+
+@export var required_jamspot: Node
 
 @export var broken_visual: NodePath
 @export var repaired_visual: NodePath
@@ -26,13 +37,12 @@ var check_timer := 0.0
 
 func _ready() -> void:
 	add_to_group("world_reaction")
-	update_label()
 
+	update_label()
 	update_visuals()
 
 	reaction_area.body_entered.connect(_on_reaction_area_body_entered)
 	reaction_area.body_exited.connect(_on_reaction_area_body_exited)
-
 
 func _process(delta: float) -> void:
 
@@ -47,6 +57,21 @@ func _process(delta: float) -> void:
 	check_timer = 0.0
 
 	try_current_player_jam()
+
+
+func _startup_refresh() -> void:
+
+	var player := get_tree().get_first_node_in_group("player")
+
+	if player == null:
+		return
+
+	if not player.has_method("get_current_playing_song_id"):
+		return
+
+	var song_id: String = player.get_current_playing_song_id()
+
+	try_activate(song_id)
 
 
 func activate() -> void:
@@ -88,16 +113,27 @@ func update_visuals() -> void:
 
 func try_activate(song_id: String) -> bool:
 
-	if player_in_range == null:
-		return false
-
-	if song_id != required_song_id:
-		return false
+	# Only enforce song requirements if one is specified.
+	if required_song_id != "":
+		if song_id != required_song_id:
+			return false
 
 	if not has_required_instrument():
 		return false
 
-	if get_player_jam_size() < required_musician_count:
+	if not satisfies_jam_requirement():
+		return false
+
+	var musician_count := 0
+
+	if jam_requirement == JamRequirement.JAMSPOT \
+	or jam_requirement == JamRequirement.SPECIFIC_JAMSPOT:
+
+		musician_count = get_jamspot_musician_count()
+	else:
+		musician_count = get_player_jam_size()
+
+	if musician_count < required_musician_count:
 		return false
 
 	activate()
@@ -107,13 +143,22 @@ func try_activate(song_id: String) -> bool:
 
 func try_current_player_jam() -> void:
 
-	if player_in_range == null:
+	# JamSpot objectives should evaluate continuously.
+	if jam_requirement == JamRequirement.JAMSPOT \
+	or jam_requirement == JamRequirement.SPECIFIC_JAMSPOT:
+
+		try_activate("")
 		return
 
-	if not player_in_range.has_method("get_current_playing_song_id"):
+	var player: Node = player_in_range
+
+	if player == null:
 		return
 
-	var song_id: String = player_in_range.get_current_playing_song_id()
+	if not player.has_method("get_current_playing_song_id"):
+		return
+
+	var song_id: String = player.get_current_playing_song_id()
 
 	try_activate(song_id)
 
@@ -147,29 +192,84 @@ func has_required_instrument() -> bool:
 	return player_in_range.get_current_instrument_id() == required_instrument_id
 
 
+func satisfies_jam_requirement() -> bool:
+
+	var jam_manager := get_tree().get_first_node_in_group("jam_manager")
+
+	if jam_manager == null:
+		return false
+
+	var context: Node = jam_manager.get_current_nearby_jam_context()
+
+	match jam_requirement:
+
+		JamRequirement.ANY:
+			return true
+
+		JamRequirement.FREEFORM:
+			return context != null and "Freeform" in str(context)
+
+		JamRequirement.JAMSPOT:
+			return context != null and not ("Freeform" in str(context))
+
+		JamRequirement.SPECIFIC_JAMSPOT:
+
+			if required_jamspot == null:
+				return false
+
+			for jamspot in get_tree().get_nodes_in_group("jam_spot"):
+
+				if not jamspot.has_method("get_jam_context"):
+					continue
+
+				if jamspot.get_jam_context() == context:
+					return jamspot == required_jamspot
+
+			return false
+
+	return false
+
+
+func get_jamspot_musician_count() -> int:
+
+	var jam_manager := get_tree().get_first_node_in_group("jam_manager")
+
+	if jam_manager == null:
+		return 0
+
+	var context: Node = jam_manager.get_current_nearby_jam_context()
+
+	if context == null:
+		return 0
+
+	if context.has_method("get_playing_musician_count"):
+		var count: int = context.get_playing_musician_count()
+
+		return count
+
+	return 0
+
+
 func get_player_jam_size() -> int:
 
 	if player_in_range == null:
 		return 0
 
-	# Player alone counts as 1 musician.
-	var count := 1
-
-	if not "current_jam_context" in player_in_range:
-		return count
-
 	var context: Node = player_in_range.current_jam_context
 
 	if context == null:
-		return count
+		return 1
 
 	if not is_instance_valid(context):
-		return count
+		return 1
 
-	if context.has_method("get_active_musician_count"):
+	if context.has_method("get_playing_musician_count"):
 		return context.get_playing_musician_count()
 
-	return count
+	if context.has_method("get_active_musician_count"):
+		return context.get_active_musician_count()
+
+	return 1
 
 
 func update_label() -> void:

@@ -238,6 +238,7 @@ func stop_instrument() -> void:
 
 
 func _join_current_jam_context() -> void:
+
 	current_playing_song_id = _get_song_id_from_context(current_jam_context)
 
 	started_in_synced_jam = true

@@ -92,6 +92,7 @@ func _process(delta: float) -> void:
 # ------------------------------------------------------------
 
 func add_member(member: Node) -> void:
+
 	if member == null:
 		return
 
@@ -149,6 +150,7 @@ func remove_member(member: Node) -> void:
 
 
 func set_member_active(member: Node, should_be_active: bool) -> void:
+
 	if member == null:
 		return
 
@@ -1083,23 +1085,28 @@ func get_active_musician_count() -> int:
 
 func get_playing_musician_count() -> int:
 
+	print("ACTIVE MEMBERS:")
+
 	var count := 0
 
 	for member in active_members:
 
-		if member == null:
-			continue
-
-		if not is_instance_valid(member):
-			continue
+		print("  ", member.name)
 
 		var playing := false
 
 		if member.has_method("is_actively_playing_jam"):
 			playing = member.is_actively_playing_jam()
 
+		print(
+			"    PLAYING=",
+			playing
+		)
+
 		if playing:
 			count += 1
+
+	print("FINAL COUNT = ", count)
 
 	return count
 

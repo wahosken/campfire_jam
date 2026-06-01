@@ -150,9 +150,11 @@ func get_current_nearby_jam_context() -> Node:
 	var player: Node = get_tree().get_first_node_in_group("player")
 
 	if player == null:
+		print("NO PLAYER")
 		return null
 
 	if not player is Node2D:
+		print("PLAYER NOT NODE2D")
 		return null
 
 	var player_position: Vector2 = player.global_position
@@ -167,12 +169,13 @@ func get_current_nearby_jam_context() -> Node:
 			if jam_spot.has_method("get_jam_context"):
 				return jam_spot.get_jam_context()
 
+
 	# Freeform only matters if no JamSpot is valid.
 	if freeform_state.jam_context != null and is_instance_valid(freeform_state.jam_context):
 		if _is_player_near_any_freeform_anchor(player_position):
 			return freeform_state.jam_context
 
-	return null
+	return null  
 
 
 func get_current_nearby_jam_source() -> Node:

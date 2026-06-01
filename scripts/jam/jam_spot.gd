@@ -46,6 +46,8 @@ func _ready() -> void:
 	_sync_jam_context_song()
 	_update_label()
 
+	call_deferred("_startup_rescan")
+
 
 func _process(delta: float) -> void:
 	if not jam_is_active:
@@ -61,6 +63,28 @@ func _process(delta: float) -> void:
 	_rescan_and_refresh_active_jam()
 
 	_debug_recruitment_scan()
+
+
+func _startup_rescan() -> void:
+
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	for npc in get_tree().get_nodes_in_group("npc_musician"):
+
+		if not npc is Node2D:
+			continue
+
+		if is_position_inside_join_radius(
+			npc.global_position
+		):
+			register_npc(npc)
+
+	# Force the exact same refresh path used during gameplay.
+	refresh_all_npc_activity()
+
+	if jam_is_active:
+		_rescan_and_refresh_active_jam()
 
 
 func _connect_jam_area_signals() -> void:
@@ -115,8 +139,12 @@ func start_jam() -> void:
 	active_refresh_timer = 0.0
 
 	_sync_jam_context_song()
-	_rescan_npcs_inside_jam_area()
+
+	# Rebuild registration from distance checks.
+	await _startup_rescan()
+
 	refresh_all_npc_activity()
+
 	_update_label()
 
 
@@ -204,15 +232,14 @@ func unregister_npc(npc: Node) -> void:
 
 
 func _rescan_npcs_inside_jam_area() -> void:
+
 	registered_npcs.clear()
 
 	if jam_area == null:
 		return
 
-	# Important:
-	# Actual JamSpot ownership should use NPC body collision only,
-	# not the larger InteractionArea.
 	for body in jam_area.get_overlapping_bodies():
+
 		if _is_valid_npc(body):
 			register_npc(body)
 
@@ -236,11 +263,13 @@ func _rescan_and_refresh_active_jam() -> void:
 
 	# Remove NPCs that are no longer actually inside the JamArea.
 	for npc in registered_npcs.duplicate():
+
 		if npc == null or not is_instance_valid(npc):
 			registered_npcs.erase(npc)
 			continue
 
 		if not found_npcs.has(npc):
+
 			unregister_npc(npc)
 
 	# Refresh the whole group together.
@@ -249,17 +278,16 @@ func _rescan_and_refresh_active_jam() -> void:
 
 
 func _get_npcs_currently_inside_jam_area() -> Array[Node]:
+
 	var found_npcs: Array[Node] = []
 
-	if jam_area == null:
-		return found_npcs
+	for npc in get_tree().get_nodes_in_group("npc_musician"):
 
-	# Important:
-	# Actual JamSpot ownership should use NPC body collision only.
-	for body in jam_area.get_overlapping_bodies():
-		if _is_valid_npc(body):
-			if not found_npcs.has(body):
-				found_npcs.append(body)
+		if not npc is Node2D:
+			continue
+
+		if is_position_inside_join_radius(npc.global_position):
+			found_npcs.append(npc)
 
 	return found_npcs
 
@@ -333,11 +361,9 @@ func _claim_npc_for_active_jam(npc: Node) -> void:
 	if npc.has_method("is_locked"):
 		if npc.is_locked():
 			return
-			
-	# JamSpot is active and NPC is enabled, so JamSpot takes priority.
-	# Any freeform/manual state should reset before the fixed JamSpot controls it.
 
 	if _npc_is_already_claimed_by_this_jam(npc):
+
 		_request_npc_both_parts(npc)
 
 		if jam_context != null and jam_context.has_method("set_member_active"):
@@ -348,8 +374,13 @@ func _claim_npc_for_active_jam(npc: Node) -> void:
 	var jam_manager: Node = get_tree().get_first_node_in_group("jam_manager")
 
 	if jam_manager != null:
+
 		if jam_manager.has_method("request_jamspot_handoff_if_needed"):
-			var handoff_started: bool = jam_manager.request_jamspot_handoff_if_needed(npc, self)
+
+			var handoff_started: bool = jam_manager.request_jamspot_handoff_if_needed(
+				npc,
+				self
+			)
 
 			if handoff_started:
 				return
@@ -363,6 +394,7 @@ func _claim_npc_for_active_jam(npc: Node) -> void:
 	if npc.has_method("begin_jam_spot_control"):
 		npc.begin_jam_spot_control(self, jam_context)
 	else:
+
 		if npc.has_method("set_current_jam_spot"):
 			npc.set_current_jam_spot(self)
 
@@ -746,16 +778,6 @@ func _is_npc_near_any_jamspot_anchor(npc: Node) -> bool:
 			return true
 
 	return false
-
-
-func _debug_anchor_positions() -> void:
-
-	var positions := _get_jamspot_anchor_positions()
-
-	print("ANCHOR COUNT: ", positions.size())
-
-	for position in positions:
-		print(position)
 
 
 # ------------------------------------------------------------

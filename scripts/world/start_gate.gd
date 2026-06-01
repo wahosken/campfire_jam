@@ -67,9 +67,23 @@ func _start_game() -> void:
 
 
 func _start_auto_jam_spots() -> void:
+
 	for jam_spot in get_tree().get_nodes_in_group("jam_spot"):
+
 		if not is_instance_valid(jam_spot):
 			continue
 
 		if jam_spot.has_method("start_if_auto_enabled"):
 			jam_spot.start_if_auto_enabled()
+
+	# Give the JamSpots one frame to start,
+	# then perform startup registration.
+	await get_tree().process_frame
+
+	for jam_spot in get_tree().get_nodes_in_group("jam_spot"):
+
+		if not is_instance_valid(jam_spot):
+			continue
+
+		if jam_spot.has_method("_startup_rescan"):
+			jam_spot._startup_rescan()

@@ -183,11 +183,12 @@ collision_mask = 2
 position = Vector2(3.5, 7)
 shape = SubResource("RectangleShape2D_bew7y")
 
-[node name="Bridge_WorldReaction" parent="." unique_id=323313496 node_paths=PackedStringArray("target_npc") instance=ExtResource("19_pm21f")]
-position = Vector2(-173, -1107)
+[node name="Bridge_WorldReaction" parent="." unique_id=323313496 node_paths=PackedStringArray("target_npc", "required_jamspot") instance=ExtResource("19_pm21f")]
+position = Vector2(-45, -1092)
 target_npc = NodePath("../NPC_Guitar")
 unlock_npc_id = "guitar"
-required_song_id = "song_01"
+jam_requirement = 3
+required_jamspot = NodePath("../FountainJamSpot")
 label_text = "Bridge"
 
 [node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("6_ctatt")]
@@ -197,10 +198,10 @@ dialogue_data = ExtResource("6_7iits")
 start_locked = true
 
 [node name="NPC_Bass" parent="." unique_id=718845583 instance=ExtResource("7_xgqkh")]
-position = Vector2(942, -495)
+position = Vector2(1264, -823)
 
 [node name="NPC_Harmonica" parent="." unique_id=1800832853 instance=ExtResource("8_munwf")]
-position = Vector2(-250, -537)
+position = Vector2(-353, -745)
 primary_song_id = "song_02"
 
 [node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("9_ts3gi")]
