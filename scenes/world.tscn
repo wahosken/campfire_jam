@@ -188,7 +188,7 @@ position = Vector2(-45, -1092)
 target_npc = NodePath("../NPC_Guitar")
 unlock_npc_id = "guitar"
 jam_requirement = 3
-required_jamspot = NodePath("../FountainJamSpot")
+required_jamspot = NodePath("../CampfireJamSpot")
 label_text = "Bridge"
 
 [node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("6_ctatt")]
@@ -201,7 +201,7 @@ start_locked = true
 position = Vector2(1264, -823)
 
 [node name="NPC_Harmonica" parent="." unique_id=1800832853 instance=ExtResource("8_munwf")]
-position = Vector2(-353, -745)
+position = Vector2(55, -808)
 primary_song_id = "song_02"
 
 [node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("9_ts3gi")]

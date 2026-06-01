@@ -1085,28 +1085,17 @@ func get_active_musician_count() -> int:
 
 func get_playing_musician_count() -> int:
 
-	print("ACTIVE MEMBERS:")
-
 	var count := 0
 
 	for member in active_members:
-
-		print("  ", member.name)
 
 		var playing := false
 
 		if member.has_method("is_actively_playing_jam"):
 			playing = member.is_actively_playing_jam()
 
-		print(
-			"    PLAYING=",
-			playing
-		)
-
 		if playing:
 			count += 1
-
-	print("FINAL COUNT = ", count)
 
 	return count
 

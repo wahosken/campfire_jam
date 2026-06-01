@@ -113,13 +113,6 @@ func update_visuals() -> void:
 
 func try_activate(song_id: String) -> bool:
 
-	print(
-		"REACTION CHECK | ",
-		name,
-		" | song=",
-		song_id
-	)
-
 	# Only enforce song requirements if one is specified.
 	if required_song_id != "":
 		if song_id != required_song_id:
@@ -139,11 +132,6 @@ func try_activate(song_id: String) -> bool:
 		musician_count = get_jamspot_musician_count()
 	else:
 		musician_count = get_player_jam_size()
-
-	print(
-		"FINAL MUSICIAN COUNT = ",
-		musician_count
-	)
 
 	if musician_count < required_musician_count:
 		return false
@@ -224,13 +212,27 @@ func satisfies_jam_requirement() -> bool:
 
 		JamRequirement.JAMSPOT:
 
-			if required_jamspot == null:
-				return false
+			for jamspot in get_tree().get_nodes_in_group("jam_spot"):
 
-			if not required_jamspot.has_method("is_jam_active"):
-				return false
+				if jamspot == null:
+					continue
 
-			return required_jamspot.is_jam_active()
+				if not jamspot.has_method("is_jam_active"):
+					continue
+
+				if not jamspot.is_jam_active():
+					continue
+
+				var jam_context: Node = jamspot.get_jam_context()
+
+				if jam_context == null:
+					continue
+
+				if jam_context.has_method("get_playing_musician_count"):
+					if jam_context.get_playing_musician_count() > 0:
+						return true
+
+			return false
 
 		JamRequirement.SPECIFIC_JAMSPOT:
 
@@ -247,21 +249,46 @@ func satisfies_jam_requirement() -> bool:
 
 func get_jamspot_musician_count() -> int:
 
-	if required_jamspot == null:
+	# SPECIFIC JAMSPOT
+	if jam_requirement == JamRequirement.SPECIFIC_JAMSPOT:
+
+		if required_jamspot == null:
+			return 0
+
+		if not required_jamspot.has_method("get_jam_context"):
+			return 0
+
+		var context: Node = required_jamspot.get_jam_context()
+
+		if context == null:
+			return 0
+
+		if context.has_method("get_playing_musician_count"):
+			return context.get_playing_musician_count()
+
 		return 0
 
-	if not required_jamspot.has_method("get_jam_context"):
-		return 0
+	# ANY JAMSPOT
+	var highest_count := 0
 
-	var context: Node = required_jamspot.get_jam_context()
+	for jamspot in get_tree().get_nodes_in_group("jam_spot"):
 
-	if context == null:
-		return 0
+		if not jamspot.has_method("get_jam_context"):
+			continue
 
-	if context.has_method("get_playing_musician_count"):
-		return context.get_playing_musician_count()
+		var context: Node = jamspot.get_jam_context()
 
-	return 0
+		if context == null:
+			continue
+
+		if context.has_method("get_playing_musician_count"):
+
+			highest_count = max(
+				highest_count,
+				context.get_playing_musician_count()
+			)
+
+	return highest_count
 
 
 func get_player_jam_size() -> int:
