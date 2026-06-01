@@ -13,6 +13,7 @@ enum JamRequirement {
 
 @export var required_song_id := ""
 @export var required_instrument_id := ""
+@export var required_npc_id := ""
 @export var required_musician_count := 1
 
 @export var jam_requirement := JamRequirement.ANY
@@ -85,13 +86,8 @@ func activate() -> void:
 
 	if target_npc != null:
 
-		if target_npc.has_method("complete_task"):
-			target_npc.complete_task()
-
-#	var unlock_manager := get_tree().get_first_node_in_group("npc_unlock_manager")
-
-#	if unlock_manager != null:
-#		unlock_manager.unlock_npc_by_id(unlock_npc_id)
+		if target_npc.has_method("unlock_npc"):
+			target_npc.unlock_npc()
 
 
 func update_visuals() -> void:
@@ -121,6 +117,9 @@ func try_activate(song_id: String) -> bool:
 	if not has_required_instrument():
 		return false
 
+	if not has_required_npc():
+		return false
+
 	if not satisfies_jam_requirement():
 		return false
 
@@ -143,7 +142,7 @@ func try_activate(song_id: String) -> bool:
 
 func try_current_player_jam() -> void:
 
-	# JamSpot objectives should evaluate continuously.
+	# JamSpot objectives evaluate continuously.
 	if jam_requirement == JamRequirement.JAMSPOT \
 	or jam_requirement == JamRequirement.SPECIFIC_JAMSPOT:
 
@@ -154,6 +153,10 @@ func try_current_player_jam() -> void:
 
 	if player == null:
 		return
+
+	if "is_playing_instrument" in player:
+		if not player.is_playing_instrument:
+			return
 
 	if not player.has_method("get_current_playing_song_id"):
 		return
@@ -183,13 +186,54 @@ func has_required_instrument() -> bool:
 	if required_instrument_id == "":
 		return true
 
-	if player_in_range == null:
-		return false
+	# Check player
+	var player := get_tree().get_first_node_in_group("player")
 
-	if not player_in_range.has_method("get_current_instrument_id"):
-		return false
+	if player != null:
 
-	return player_in_range.get_current_instrument_id() == required_instrument_id
+		if player.has_method("get_current_instrument_id"):
+
+			if player.get_current_instrument_id() == required_instrument_id:
+
+				if "is_playing_instrument" in player:
+					if player.is_playing_instrument:
+						return true
+
+	for npc in get_tree().get_nodes_in_group("npc_musician"):
+
+		if not is_instance_valid(npc):
+			continue
+
+		if not npc.has_method("get_current_instrument_id"):
+			continue
+
+		if npc.get_current_instrument_id() != required_instrument_id:
+			continue
+
+		if npc.has_method("is_actively_playing_jam"):
+			if npc.is_actively_playing_jam():
+				return true
+
+	return false
+
+
+func has_required_npc() -> bool:
+
+	if required_npc_id == "":
+		return true
+
+	for npc in get_tree().get_nodes_in_group("npc_musician"):
+
+		if not is_instance_valid(npc):
+			continue
+
+		if npc.npc_id != required_npc_id:
+			continue
+
+		if npc.is_actively_playing_jam():
+			return true
+
+	return false
 
 
 func satisfies_jam_requirement() -> bool:
@@ -201,14 +245,20 @@ func satisfies_jam_requirement() -> bool:
 
 		JamRequirement.FREEFORM:
 
-			var jam_manager := get_tree().get_first_node_in_group("jam_manager")
+			var player := get_tree().get_first_node_in_group("player")
 
-			if jam_manager == null:
+			if player == null:
 				return false
 
-			var context: Node = jam_manager.get_current_nearby_jam_context()
+			if not "current_jam_context" in player:
+				return false
 
-			return context != null and "Freeform" in str(context)
+			var context = player.current_jam_context
+
+			if context == null:
+				return false
+
+			return true
 
 		JamRequirement.JAMSPOT:
 
@@ -305,10 +355,14 @@ func get_player_jam_size() -> int:
 		return 1
 
 	if context.has_method("get_playing_musician_count"):
-		return context.get_playing_musician_count()
+		var count: int = context.get_playing_musician_count()
+
+		return count
 
 	if context.has_method("get_active_musician_count"):
-		return context.get_active_musician_count()
+		var count: int = context.get_active_musician_count()
+
+		return count
 
 	return 1
 

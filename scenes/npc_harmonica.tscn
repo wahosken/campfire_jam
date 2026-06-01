@@ -7,12 +7,59 @@
 [ext_resource type="AudioStream" uid="uid://dqc34kbx2ly41" path="res://audio/song 2/song2-005-harmonica_rhythm.wav" id="5_y4ir2"]
 [ext_resource type="AudioStream" uid="uid://cijbrfxnev2g3" path="res://audio/song 2/song2-006-harmonica_lead.wav" id="6_1lae6"]
 [ext_resource type="PackedScene" uid="uid://cbc1xf2odpyw4" path="res://scenes/npc_task_controller.tscn" id="7_fco0b"]
+[ext_resource type="Script" uid="uid://twvvm82k05yr" path="res://scripts/npc_dialogue_controller.gd" id="8_y4ir2"]
+[ext_resource type="Script" uid="uid://opgri4swc804" path="res://scripts/dialogue/dialogue_line.gd" id="9_xemgl"]
+[ext_resource type="Script" uid="uid://dp0aobj5pqnj3" path="res://scripts/dialogue/dialogue_sequence.gd" id="10_7w0uy"]
+[ext_resource type="Script" uid="uid://cxymkcbaj7wk2" path="res://scripts/dialogue/npc_dialogue_data.gd" id="11_m6heo"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_e5rru"]
 radius = 24.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_uqgcj"]
 radius = 50.0
+
+[sub_resource type="Resource" id="Resource_0tbxj"]
+script = ExtResource("9_xemgl")
+text = "The best jams aren't solos.
+
+They're the kind where everyone joins in."
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_jxr2l"]
+script = ExtResource("10_7w0uy")
+lines = Array[ExtResource("9_xemgl")]([SubResource("Resource_0tbxj")])
+metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
+
+[sub_resource type="Resource" id="Resource_mxouj"]
+script = ExtResource("9_xemgl")
+text = "Nothing beats playing with a full group.
+
+Let's make some music."
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_xlnwc"]
+script = ExtResource("10_7w0uy")
+lines = Array[ExtResource("9_xemgl")]([SubResource("Resource_mxouj")])
+metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
+
+[sub_resource type="Resource" id="Resource_8fjan"]
+script = ExtResource("9_xemgl")
+text = "I want to hear a proper group performance.
+
+Get four musicians playing together and show me what you've got."
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_3eer7"]
+script = ExtResource("10_7w0uy")
+lines = Array[ExtResource("9_xemgl")]([SubResource("Resource_8fjan")])
+metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
+
+[sub_resource type="Resource" id="Resource_qf7em"]
+script = ExtResource("11_m6heo")
+intro_dialogue = SubResource("Resource_jxr2l")
+task_dialogue = SubResource("Resource_3eer7")
+recruited_dialogue = SubResource("Resource_xlnwc")
+metadata/_custom_type_script = "uid://cxymkcbaj7wk2"
 
 [node name="NPC_Harmonica" type="CharacterBody2D" unique_id=1907244749 groups=["interactable", "musician", "npc_musician"]]
 collision_layer = 4
@@ -22,6 +69,7 @@ script = ExtResource("1_khbeg")
 instrument_name = "harmonica"
 display_name = "Harmonica"
 unlock_id = "harmonica"
+npc_id = "harmonica"
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8
@@ -84,3 +132,7 @@ target_desired_distance = 16.0
 debug_path_custom_color = Color(0.7806942, 4.548356e-06, 4.813075e-07, 1)
 
 [node name="NPCTaskController" parent="." unique_id=1235074422 instance=ExtResource("7_fco0b")]
+
+[node name="NPCDialogueController" type="Node" parent="." unique_id=1130382744]
+script = ExtResource("8_y4ir2")
+dialogue_data = SubResource("Resource_qf7em")

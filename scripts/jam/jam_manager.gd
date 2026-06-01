@@ -150,11 +150,9 @@ func get_current_nearby_jam_context() -> Node:
 	var player: Node = get_tree().get_first_node_in_group("player")
 
 	if player == null:
-		print("NO PLAYER")
 		return null
 
 	if not player is Node2D:
-		print("PLAYER NOT NODE2D")
 		return null
 
 	var player_position: Vector2 = player.global_position
@@ -343,6 +341,7 @@ func add_player_to_active_freeform(player: Node) -> void:
 
 
 func _create_player_carried_freeform_context(player: Node) -> void:
+
 	_debug_player_freeform("_create_player_carried_freeform_context START")
 
 	if player == null:
@@ -384,6 +383,11 @@ func _create_player_carried_freeform_context(player: Node) -> void:
 		freeform_state.jam_context.start_from_existing_member(player)
 
 	_set_player_request_on_context(player, freeform_state.jam_context)
+
+	if player.has_method("set_current_jam_context"):
+		player.set_current_jam_context(freeform_state.jam_context)
+	elif "current_jam_context" in player:
+		player.current_jam_context = freeform_state.jam_context
 
 	var player_audio_source: Node = null
 

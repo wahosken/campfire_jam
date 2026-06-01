@@ -7,12 +7,57 @@
 [ext_resource type="AudioStream" uid="uid://26yo666jqypi" path="res://audio/song 2/song2-003-bass_rhythm.wav" id="5_4jck1"]
 [ext_resource type="AudioStream" uid="uid://dgm72bsip4rv7" path="res://audio/song 2/song2-004-bass_lead.wav" id="6_kfjlm"]
 [ext_resource type="PackedScene" uid="uid://cbc1xf2odpyw4" path="res://scenes/npc_task_controller.tscn" id="7_1pmlb"]
+[ext_resource type="Script" uid="uid://twvvm82k05yr" path="res://scripts/npc_dialogue_controller.gd" id="8_4jck1"]
+[ext_resource type="Script" uid="uid://opgri4swc804" path="res://scripts/dialogue/dialogue_line.gd" id="9_v66fy"]
+[ext_resource type="Script" uid="uid://dp0aobj5pqnj3" path="res://scripts/dialogue/dialogue_sequence.gd" id="10_lm4vc"]
+[ext_resource type="Script" uid="uid://cxymkcbaj7wk2" path="res://scripts/dialogue/npc_dialogue_data.gd" id="11_fmlal"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_s00xo"]
 radius = 24.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_uqgcj"]
 radius = 50.0
+
+[sub_resource type="Resource" id="Resource_v66fy"]
+script = ExtResource("9_v66fy")
+text = "I can hear little jams all over the place."
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_xprhu"]
+script = ExtResource("10_lm4vc")
+lines = Array[ExtResource("9_v66fy")]([SubResource("Resource_v66fy")])
+metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
+
+[sub_resource type="Resource" id="Resource_lm4vc"]
+script = ExtResource("9_v66fy")
+text = "The campfire sounds better every night.
+
+Seems like the village is finally coming back to life."
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_wbben"]
+script = ExtResource("10_lm4vc")
+lines = Array[ExtResource("9_v66fy")]([SubResource("Resource_lm4vc")])
+metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
+
+[sub_resource type="Resource" id="Resource_fmlal"]
+script = ExtResource("9_v66fy")
+text = "What this village really needs is a big campfire jam.
+
+Get everyone together around the campfire and show me what this village can sound like."
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_nmkdh"]
+script = ExtResource("10_lm4vc")
+lines = Array[ExtResource("9_v66fy")]([SubResource("Resource_fmlal")])
+metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
+
+[sub_resource type="Resource" id="Resource_i514d"]
+script = ExtResource("11_fmlal")
+intro_dialogue = SubResource("Resource_xprhu")
+task_dialogue = SubResource("Resource_nmkdh")
+recruited_dialogue = SubResource("Resource_wbben")
+metadata/_custom_type_script = "uid://cxymkcbaj7wk2"
 
 [node name="NPC_Bass" type="CharacterBody2D" unique_id=567739236 groups=["interactable", "musician", "npc_musician"]]
 collision_layer = 4
@@ -21,6 +66,7 @@ wall_min_slide_angle = 0.0
 script = ExtResource("1_iubrl")
 display_name = "Bass"
 unlock_id = "bass"
+npc_id = "bass"
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8
@@ -81,3 +127,7 @@ target_desired_distance = 16.0
 debug_path_custom_color = Color(0.7806942, 4.548356e-06, 4.813075e-07, 1)
 
 [node name="NPCTaskController" parent="." unique_id=1235074422 instance=ExtResource("7_1pmlb")]
+
+[node name="NPCDialogueController" type="Node" parent="." unique_id=26409942]
+script = ExtResource("8_4jck1")
+dialogue_data = SubResource("Resource_i514d")

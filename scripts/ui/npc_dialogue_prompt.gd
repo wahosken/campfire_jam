@@ -154,11 +154,8 @@ func _refresh_buttons() -> void:
 
 	var recruited := false
 
-	if "progression_state" in current_npc:
-		recruited = (
-			current_npc.progression_state
-			== current_npc.NPCProgressionState.RECRUITED
-		)
+	if current_npc.has_method("is_recruited"):
+		recruited = current_npc.is_recruited()
 
 	play_button.text = _get_play_button_text(current_npc)
 	follow_button.text = _get_follow_button_text(current_npc)

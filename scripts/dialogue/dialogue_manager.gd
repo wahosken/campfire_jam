@@ -59,18 +59,8 @@ func end_dialogue() -> void:
 #	var finished_sequence = current_sequence
 
 	if current_speaker != null:
-
-		# First conversation finished.
-		if current_speaker.has_method("begin_task"):
-
-			if current_speaker.progression_state == current_speaker.NPCProgressionState.INTRO:
-				current_speaker.begin_task()
-
-		# Completion conversation finished.
-		if current_speaker.has_method("recruit"):
-
-			if current_speaker.progression_state == current_speaker.NPCProgressionState.TASK_COMPLETE:
-				current_speaker.recruit()
+		if current_speaker.has_method("advance_after_dialogue"):
+			current_speaker.advance_after_dialogue()
 
 	dialogue_active = false
 

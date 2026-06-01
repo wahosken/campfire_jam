@@ -7,12 +7,60 @@
 [ext_resource type="AudioStream" uid="uid://x654xn2eyq6f" path="res://audio/song 2/song2-001-guitar_rhythm.wav" id="5_8mojk"]
 [ext_resource type="AudioStream" uid="uid://tmin5vxqlo6m" path="res://audio/song 2/song2-002-guitar_lead.wav" id="6_b1ygu"]
 [ext_resource type="PackedScene" uid="uid://cbc1xf2odpyw4" path="res://scenes/npc_task_controller.tscn" id="7_uuwsd"]
+[ext_resource type="Script" uid="uid://twvvm82k05yr" path="res://scripts/npc_dialogue_controller.gd" id="8_8mojk"]
+[ext_resource type="Script" uid="uid://opgri4swc804" path="res://scripts/dialogue/dialogue_line.gd" id="9_51nrr"]
+[ext_resource type="Script" uid="uid://dp0aobj5pqnj3" path="res://scripts/dialogue/dialogue_sequence.gd" id="10_jqmpd"]
+[ext_resource type="Script" uid="uid://cxymkcbaj7wk2" path="res://scripts/dialogue/npc_dialogue_data.gd" id="11_yk8p0"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_csoos"]
 radius = 24.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_uqgcj"]
 radius = 50.0
+
+[sub_resource type="Resource" id="Resource_56ksa"]
+script = ExtResource("9_51nrr")
+text = "Oh! A traveler.
+
+I was headed for the village, but that bridge collapsed before I could cross."
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_l580g"]
+script = ExtResource("10_jqmpd")
+lines = Array[ExtResource("9_51nrr")]([SubResource("Resource_56ksa")])
+metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
+
+[sub_resource type="Resource" id="Resource_51nrr"]
+script = ExtResource("9_51nrr")
+text = "Good to see you again.
+
+Now that I'm here, let's make some music.
+"
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_jqmpd"]
+script = ExtResource("10_jqmpd")
+lines = Array[ExtResource("9_51nrr")]([SubResource("Resource_51nrr")])
+metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
+
+[sub_resource type="Resource" id="Resource_dmog3"]
+script = ExtResource("9_51nrr")
+text = "I've been stuck here ever since.
+
+If someone could repair that bridge, I'd finally be able to make it to town."
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_el8ik"]
+script = ExtResource("10_jqmpd")
+lines = Array[ExtResource("9_51nrr")]([SubResource("Resource_dmog3")])
+metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
+
+[sub_resource type="Resource" id="Resource_eo1ym"]
+script = ExtResource("11_yk8p0")
+intro_dialogue = SubResource("Resource_l580g")
+task_dialogue = SubResource("Resource_el8ik")
+recruited_dialogue = SubResource("Resource_jqmpd")
+metadata/_custom_type_script = "uid://cxymkcbaj7wk2"
 
 [node name="NPC_Guitar" type="CharacterBody2D" unique_id=1894937099 groups=["interactable", "musician", "npc_musician"]]
 collision_layer = 4
@@ -22,6 +70,7 @@ script = ExtResource("1_njmx8")
 instrument_name = "guitar"
 display_name = "Guitar"
 unlock_id = "guitar"
+npc_id = "guitar"
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8
@@ -83,3 +132,7 @@ target_desired_distance = 16.0
 debug_path_custom_color = Color(0.7806942, 4.548356e-06, 4.813075e-07, 1)
 
 [node name="NPCTaskController" parent="." unique_id=1235074422 instance=ExtResource("7_uuwsd")]
+
+[node name="NPCDialogueController" type="Node" parent="." unique_id=959172280]
+script = ExtResource("8_8mojk")
+dialogue_data = SubResource("Resource_eo1ym")

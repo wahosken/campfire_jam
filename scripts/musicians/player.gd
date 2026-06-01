@@ -154,6 +154,12 @@ func start_or_update_instrument_parts(rhythm: bool, melody: bool) -> void:
 
 				if current_audio_source.has_method("start_solo_tracks"):
 					current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
+
+				if jam_manager != null:
+					if jam_manager.has_method("_create_player_carried_freeform_context"):
+						if jam_manager.freeform_state.jam_context == null:
+							jam_manager._create_player_carried_freeform_context(self)
+
 		else:
 			if current_jam_context != null and is_instance_valid(current_jam_context):
 				if current_jam_context.has_method("set_member_requested_parts"):
@@ -263,6 +269,7 @@ func _join_current_jam_context() -> void:
 	notify_world_reactions()
 
 func _start_direct_solo() -> void:
+
 	is_playing_direct_solo = true
 	current_actual_part = current_requested_part
 	current_playing_song_id = selected_song_id
@@ -277,6 +284,11 @@ func _start_direct_solo() -> void:
 
 	if current_audio_source.has_method("start_solo_tracks"):
 		current_audio_source.start_solo_tracks(wants_rhythm, wants_melody)
+
+	# Create a freeform context immediately for solo play.
+	if jam_manager != null:
+		if jam_manager.has_method("_create_player_carried_freeform_context"):
+			jam_manager._create_player_carried_freeform_context(self)
 
 	notify_world_reactions()
 

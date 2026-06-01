@@ -64,19 +64,10 @@ extends CharacterBody2D
 @onready var label: Label = $Label
 @onready var audio_source: Node = $InstrumentAudioSource
 @onready var task_controller: Node = $NPCTaskController
+@onready var dialogue_controller: Node = $NPCDialogueController
 
 @export var unlock_id := ""
-
-@export var dialogue_data: NPCDialogueData
-
-@export var progression_state := NPCProgressionState.INTRO
-
-enum NPCProgressionState {
-	INTRO,
-	TASK_GIVEN,
-	TASK_COMPLETE,
-	RECRUITED
-}
+@export var npc_id := ""
 
 enum BehaviorState {
 	IDLE,
@@ -172,10 +163,8 @@ func _ready() -> void:
 
 	npc_state = NPCState.IDLE
 
-	if start_locked:
-		progression_state = NPCProgressionState.INTRO
-	else:
-		progression_state = NPCProgressionState.RECRUITED
+	if dialogue_controller != null:
+		dialogue_controller.initialize(start_locked)
 		
 	add_to_group("npc_musician")
 	add_to_group("musician")
@@ -215,14 +204,6 @@ func _physics_process(delta: float) -> void:
 # ------------------------------------------------------------
 
 
-func is_locked() -> bool:
-	return progression_state == NPCProgressionState.INTRO
-
-
-func is_recruited() -> bool:
-	return progression_state == NPCProgressionState.RECRUITED
-
-
 # Basic interact only opens the prompt.
 # NPC music should only start/stop through NPCDialoguePrompt.
 func interact() -> void:
@@ -230,9 +211,10 @@ func interact() -> void:
 	if DialogueManager.is_dialogue_active():
 		return
 
-	if not is_recruited():
+	if not is_recruited() \
+	or (dialogue_controller != null and dialogue_controller.has_pending_dialogue_events()):
 
-		var dialogue := get_current_dialogue()
+		var dialogue: DialogueSequence = get_current_dialogue()
 
 		if dialogue != null:
 			DialogueManager.start_dialogue(
@@ -281,11 +263,7 @@ func is_interaction_temporarily_disabled() -> bool:
 	return interaction_temporarily_disabled
 
 
-func begin_task() -> void:
 
-	set_progression_state(
-		NPCProgressionState.TASK_GIVEN
-	)
 
 
 # ------------------------------------------------------------
@@ -658,24 +636,6 @@ func is_controlled_by_active_jam_spot() -> bool:
 # ------------------------------------------------------------
 
 
-func unlock_npc() -> void:
-
-	start_locked = false
-	progression_state = NPCProgressionState.RECRUITED
-
-	enable_interaction()
-	_update_label()
-
-
-func lock_npc() -> void:
-	progression_state = NPCProgressionState.INTRO
-
-	stop_following_player()
-	stop_freeform_immediately()
-
-	_update_label()
-
-
 func set_npc_enabled(is_enabled: bool) -> void:
 	_debug_state("set_npc_enabled -> " + str(is_enabled))
 
@@ -930,14 +890,61 @@ func _request_both_parts_from_current_context_or_start_solo() -> void:
 	set_actual_playing(true)
 
 
-func set_progression_state(new_state: NPCProgressionState) -> void:
+func is_recruited() -> bool:
+	return dialogue_controller.is_recruited()
 
-	if progression_state == new_state:
+func is_locked() -> bool:
+	return dialogue_controller.is_locked()
+
+func get_current_dialogue():
+	return dialogue_controller.get_current_dialogue()
+
+
+func unlock_npc() -> void:
+	if dialogue_controller != null:
+		dialogue_controller.unlock_npc()
+
+
+func lock_npc() -> void:
+	if dialogue_controller != null:
+		dialogue_controller.lock_npc()
+
+
+func begin_task() -> void:
+	if dialogue_controller != null:
+		dialogue_controller.begin_task()
+
+
+func complete_task() -> void:
+	if dialogue_controller != null:
+		dialogue_controller.complete_task()
+
+
+func recruit() -> void:
+	if dialogue_controller != null:
+		dialogue_controller.recruit()
+
+
+func get_progression_state():
+	if dialogue_controller == null:
+		return -1
+
+	return dialogue_controller.progression_state
+
+
+func get_intro_state():
+	return dialogue_controller.NPCProgressionState.INTRO
+
+
+func advance_after_dialogue() -> void:
+
+	if dialogue_controller == null:
 		return
 
-	progression_state = new_state
+	if dialogue_controller.progression_state \
+	== dialogue_controller.NPCProgressionState.INTRO:
 
-	_update_label()
+		begin_task()
 
 
 # ------------------------------------------------------------
@@ -1071,7 +1078,10 @@ func _move_toward_world_position(target_position: Vector2, move_speed: float, st
 
 
 func can_participate_as_recruited_musician() -> bool:
-	return progression_state == NPCProgressionState.RECRUITED
+	if dialogue_controller == null:
+		return false
+
+	return dialogue_controller.is_recruited()
 
 
 # ------------------------------------------------------------
@@ -1242,41 +1252,6 @@ func get_music_intent() -> String:
 	return "idle"
 
 
-func get_current_dialogue() -> DialogueSequence:
-
-	if dialogue_data == null:
-		return null
-
-	match progression_state:
-
-		NPCProgressionState.INTRO:
-			return dialogue_data.intro_dialogue
-
-		NPCProgressionState.TASK_GIVEN:
-			return dialogue_data.task_dialogue
-
-		NPCProgressionState.TASK_COMPLETE:
-			return dialogue_data.completion_dialogue
-
-		NPCProgressionState.RECRUITED:
-			return dialogue_data.recruited_dialogue
-
-		_:
-			return dialogue_data.intro_dialogue
-
-
-func complete_task() -> void:
-	set_progression_state(
-		NPCProgressionState.TASK_COMPLETE
-	)
-
-
-func recruit() -> void:
-	set_progression_state(
-		NPCProgressionState.RECRUITED
-	)
-
-
 # ------------------------------------------------------------
 # Label and visuals
 # ------------------------------------------------------------
@@ -1288,16 +1263,22 @@ func _update_label() -> void:
 
 	if not is_recruited():
 
-		match progression_state:
+		if dialogue_controller == null:
+			label.text = display_name
+			return
 
-			NPCProgressionState.INTRO:
+		var state = dialogue_controller.progression_state
+
+		match state:
+
+			dialogue_controller.NPCProgressionState.INTRO:
 				label.text = "%s [!]" % display_name
 
-			NPCProgressionState.TASK_GIVEN:
+			dialogue_controller.NPCProgressionState.TASK_GIVEN:
 				label.text = "%s [TASK]" % display_name
 
-			NPCProgressionState.TASK_COMPLETE:
-				label.text = "%s [READY]" % display_name
+			dialogue_controller.NPCProgressionState.RECRUITED:
+				label.text = display_name
 
 		return
 
@@ -1317,42 +1298,25 @@ func _update_label() -> void:
 			if task_controller.is_traveling():
 				mode_text += " [TRAVEL]"
 
-	if current_part == "waiting":
-		label.text = "%s%s: Waiting" % [
-			display_name,
-			mode_text
-		]
-		return
+	match current_part:
 
-	if current_part == "silent":
-		label.text = "%s%s: ----" % [
-			display_name,
-			mode_text
-		]
-		return
+		"waiting":
+			label.text = "%s%s: Waiting" % [display_name, mode_text]
 
-	if current_part == "melody":
-		label.text = "%s%s: Melody" % [
-			display_name,
-			mode_text
-		]
-		return
+		"silent":
+			label.text = "%s%s: ----" % [display_name, mode_text]
 
-	if current_part == "rhythm":
-		label.text = "%s%s: Rhythm" % [
-			display_name,
-			mode_text
-		]
-		return
+		"melody":
+			label.text = "%s%s: Melody" % [display_name, mode_text]
 
-	if current_part == "both":
-		label.text = "%s%s: Both" % [
-			display_name,
-			mode_text
-		]
-		return
+		"rhythm":
+			label.text = "%s%s: Rhythm" % [display_name, mode_text]
 
-	label.text = display_name + mode_text
+		"both":
+			label.text = "%s%s: Both" % [display_name, mode_text]
+
+		_:
+			label.text = display_name + mode_text
 
 
 func _update_visual_from_current_part() -> void:
