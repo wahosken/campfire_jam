@@ -65,6 +65,20 @@ var instruments := [
 	}
 ]
 
+var unlocked_instruments: Array[String] = [
+	"guitar"
+]
+
+var unlocked_songs: Array[String] = [
+	"song_01"
+]
+
+var available_songs := [
+	"song_01",
+	"song_02"
+]
+
+var current_song_index := 0
 
 # ------------------------------------------------------------
 # Lifecycle
@@ -125,8 +139,43 @@ func _physics_process(delta: float) -> void:
 
 
 # ------------------------------------------------------------
-# Instrument start / stop
+# Instrument / Songs
 # ------------------------------------------------------------
+
+
+func is_instrument_unlocked(instrument_id: String) -> bool:
+	return unlocked_instruments.has(instrument_id)
+
+
+func unlock_instrument(instrument_id: String) -> void:
+
+	if instrument_id.is_empty():
+		return
+
+	if unlocked_instruments.has(instrument_id):
+		return
+
+	unlocked_instruments.append(instrument_id)
+
+	print("UNLOCKED INSTRUMENT: ", instrument_id)
+
+
+func is_song_unlocked(song_id: String) -> bool:
+	return unlocked_songs.has(song_id)
+
+
+func unlock_song(song_id: String) -> void:
+
+	if song_id.is_empty():
+		return
+
+	if unlocked_songs.has(song_id):
+		return
+
+	unlocked_songs.append(song_id)
+
+	print("UNLOCKED SONG: ", song_id)
+
 
 func start_or_update_instrument_parts(rhythm: bool, melody: bool) -> void:
 	var requested_part: String = get_requested_part_from_flags(rhythm, melody)
@@ -516,10 +565,21 @@ func cycle_instrument() -> void:
 		elif previous_audio_source.has_method("stop_solo_jam"):
 			previous_audio_source.stop_solo_jam()
 
-	current_instrument_index += 1
+	var attempts := 0
 
-	if current_instrument_index >= instruments.size():
-		current_instrument_index = 0
+	while attempts < instruments.size():
+
+		current_instrument_index += 1
+
+		if current_instrument_index >= instruments.size():
+			current_instrument_index = 0
+
+		var instrument_id: String = instruments[current_instrument_index]["id"]
+
+		if is_instrument_unlocked(instrument_id):
+			break
+
+		attempts += 1
 
 	wants_rhythm = saved_rhythm
 	wants_melody = saved_melody
@@ -577,21 +637,32 @@ func cycle_instrument() -> void:
 
 
 func cycle_song() -> void:
-	# Song selection only affects the next fresh start from silence.
-	# It should not change the song while the player is already playing/carrying a jam.
+
 	if is_playing_instrument:
 		return
 
-	if selected_song_id == "song_01":
-		selected_song_id = "song_02"
-	else:
-		selected_song_id = "song_01"
+	var attempts := 0
 
-	current_playing_song_id = selected_song_id
+	while attempts < available_songs.size():
 
-	print("Selected Song: ", selected_song_id)
+		current_song_index += 1
 
-	_update_part_label()
+		if current_song_index >= available_songs.size():
+			current_song_index = 0
+
+		var song_id: String = available_songs[current_song_index]
+
+		if is_song_unlocked(song_id):
+
+			selected_song_id = song_id
+			current_playing_song_id = song_id
+
+			print("Selected Song: ", song_id)
+
+			_update_part_label()
+			return
+
+		attempts += 1
 
 
 func _get_song_id_from_context(jam_context: Node) -> String:

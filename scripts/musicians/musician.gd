@@ -69,6 +69,9 @@ extends CharacterBody2D
 @export var unlock_id := ""
 @export var npc_id := ""
 
+@export var unlocks_player_instrument := ""
+@export var unlocks_player_song := ""
+
 enum BehaviorState {
 	IDLE,
 	SCHEDULED,
@@ -901,9 +904,29 @@ func get_current_dialogue():
 
 
 func unlock_npc() -> void:
+
 	if dialogue_controller != null:
 		dialogue_controller.unlock_npc()
 
+	if unlocks_player_instrument != "":
+
+		var player := get_tree().get_first_node_in_group("player")
+
+		if player != null:
+			if player.has_method("unlock_instrument"):
+				player.unlock_instrument(
+					unlocks_player_instrument
+				)
+
+	if unlocks_player_song != "":
+
+		var player := get_tree().get_first_node_in_group("player")
+
+		if player != null:
+			if player.has_method("unlock_song"):
+				player.unlock_song(
+					unlocks_player_song
+				)
 
 func lock_npc() -> void:
 	if dialogue_controller != null:

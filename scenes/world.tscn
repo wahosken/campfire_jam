@@ -230,6 +230,7 @@ start_locked = true
 
 [node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("9_ts3gi")]
 position = Vector2(-407, -515)
+unlocks_player_song = "song_02"
 start_locked = true
 
 [node name="House" parent="." unique_id=1834173392 instance=ExtResource("10_0nbtd")]

@@ -70,6 +70,7 @@ instrument_name = "harmonica"
 display_name = "Harmonica"
 unlock_id = "harmonica"
 npc_id = "harmonica"
+unlocks_player_instrument = "harmonica"
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8

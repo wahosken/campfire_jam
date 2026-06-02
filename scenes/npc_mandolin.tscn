@@ -70,6 +70,7 @@ instrument_name = "mandolin"
 display_name = "Mandolin"
 unlock_id = "mandolin"
 npc_id = "mandolin"
+unlocks_player_instrument = "mandolin"
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8

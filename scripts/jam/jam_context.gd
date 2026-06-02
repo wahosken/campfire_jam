@@ -574,8 +574,12 @@ func _apply_arrangement_to_member(member: Node, rhythm_counts: Dictionary) -> vo
 				rhythm_on = true
 				melody_on = false
 			"melody":
-				rhythm_on = false
-				melody_on = true
+				if is_featured:
+					rhythm_on = false
+					melody_on = true
+				else:
+					rhythm_on = true
+					melody_on = false
 			"both":
 				# Both means this NPC is allowed to participate in normal arrangement.
 				if is_featured:
