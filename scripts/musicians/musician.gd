@@ -1002,7 +1002,7 @@ func update_music_state(delta: float) -> void:
 	if is_controlled_by_active_jam_spot():
 		desired_state = MusicState.JAMMING
 
-	# FREEFORM / FOLLOW LOGIC (important missing piece)
+	# FREEFORM / FOLLOW LOGIC
 	elif following_player:
 		desired_state = MusicState.FOLLOWING
 

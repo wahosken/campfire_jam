@@ -268,8 +268,7 @@ func _rescan_and_refresh_active_jam() -> void:
 			registered_npcs.erase(npc)
 			continue
 
-		if not found_npcs.has(npc):
-
+		if not is_position_inside_leave_radius(npc.global_position):
 			unregister_npc(npc)
 
 	# Refresh the whole group together.
