@@ -1,10 +1,80 @@
 extends Node
 
+const CHARACTER_FOLDER := "user://characters/"
+
+const WORLD_FOLDER := "user://worlds/"
+
 const SAVE_PATH := "user://campfirejam_save.json"
 
 var world_data := WorldSaveData.new()
 
 var character_data := CharacterSaveData.new()
+
+var current_character_id := ""
+
+var current_world_id := ""
+
+
+func _ready() -> void:
+
+	DirAccess.make_dir_absolute(
+		CHARACTER_FOLDER
+	)
+
+	DirAccess.make_dir_absolute(
+		WORLD_FOLDER
+	)
+
+
+func get_character_path(character_id: String) -> String:
+
+	return CHARACTER_FOLDER + character_id + ".json"
+
+
+func get_world_path(world_id: String) -> String:
+
+	return WORLD_FOLDER + \
+		world_id + ".json"
+
+
+func create_character(character_name: String) -> String:
+
+	var id := "character_" + str(Time.get_ticks_msec())
+
+	var current_time := \
+		Time.get_unix_time_from_system()
+
+	var character_dict := {
+
+		"version": 0.1,
+
+		"character_id": id,
+		"character_name": character_name,
+
+		"created_at": current_time,
+		"last_played": current_time,
+
+		"unlocked_instruments": [
+			"guitar"
+		],
+
+		"unlocked_songs": [
+			"song_01"
+		],
+
+		"collected_items": []
+	}
+
+	var file := FileAccess.open(get_character_path(id),FileAccess.WRITE)
+
+	if file == null:
+		return ""
+
+	file.store_string(JSON.stringify(character_dict,"\t"))
+
+	file.close()
+
+	return id
 
 
 func capture_game_state() -> void:

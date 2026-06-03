@@ -16,7 +16,6 @@
 [ext_resource type="Script" uid="uid://cevh1omjrnc6a" path="res://scripts/ui/jam_ui.gd" id="16_4kbfs"]
 [ext_resource type="PackedScene" uid="uid://d1ifhrg7vlxou" path="res://scenes/npc_dialogue_prompt.tscn" id="17_f17e3"]
 [ext_resource type="PackedScene" uid="uid://cor2o2sb3weio" path="res://scenes/npc_unlock_manager.tscn" id="18_lakw3"]
-[ext_resource type="PackedScene" uid="uid://dtm7ryrpuv7qa" path="res://scenes/start_gate.tscn" id="18_x2olw"]
 [ext_resource type="PackedScene" uid="uid://dlglwi6aqtsgh" path="res://scenes/pause_menu.tscn" id="19_817gm"]
 [ext_resource type="PackedScene" uid="uid://cvwoetb5xfwfp" path="res://scenes/community_board.tscn" id="19_oo54l"]
 [ext_resource type="PackedScene" uid="uid://s724hjaak62t" path="res://scenes/world_reaction.tscn" id="19_pm21f"]
@@ -282,11 +281,8 @@ text = "Interact"
 
 [node name="NPCDialoguePrompt" parent="." unique_id=1416366564 instance=ExtResource("17_f17e3")]
 
-[node name="StartGate" parent="." unique_id=185219785 instance=ExtResource("18_x2olw")]
-
 [node name="PauseMenu" parent="." unique_id=2135615612 instance=ExtResource("19_817gm")]
 touch_overlay_path = NodePath("../TouchOverlay")
-start_gate_path = NodePath("../StartGate")
 
 [node name="DebugOverlay" type="Label" parent="PauseMenu" unique_id=1345672760]
 anchors_preset = 1

@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="campfire_jam"
-run/main_scene="uid://caabunylbva7i"
+run/main_scene="uid://0uxtlnuwitqm"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 
 [audio]

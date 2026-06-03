@@ -1,0 +1,64 @@
+[gd_scene format=3 uid="uid://0uxtlnuwitqm"]
+
+[ext_resource type="Script" uid="uid://c8mt5uksx13no" path="res://scripts/title/title_screen.gd" id="1_fgkus"]
+[ext_resource type="PackedScene" uid="uid://byd4okwt36wwg" path="res://scenes/character_creation_menu.tscn" id="2_sa3yf"]
+
+[node name="TitleScreen" type="Control" unique_id=1343893080]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_fgkus")
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=1301291049]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=412761045]
+layout_mode = 2
+
+[node name="GameTitleLabel" type="Label" parent="CenterContainer/VBoxContainer" unique_id=659146849]
+layout_mode = 2
+text = "Camfire Jam"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CharacterSelector" type="OptionButton" parent="CenterContainer/VBoxContainer" unique_id=1544668567]
+layout_mode = 2
+alignment = 1
+
+[node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=761934999]
+layout_mode = 2
+text = "Continue"
+
+[node name="NewCharacterButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=484045702]
+layout_mode = 2
+text = "Create Character"
+
+[node name="LoadWorldButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=514317442]
+layout_mode = 2
+text = "Load"
+
+[node name="SettingsButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1598071585]
+layout_mode = 2
+text = "Settings"
+
+[node name="QuitButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1217300356]
+layout_mode = 2
+text = "Quit"
+
+[node name="CharacterCreationMenu" parent="." unique_id=1306261687 instance=ExtResource("2_sa3yf")]
+visible = false
+
+[connection signal="item_selected" from="CenterContainer/VBoxContainer/CharacterSelector" to="." method="_on_character_selector_item_selected"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/ContinueButton" to="." method="_on_continue_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/NewCharacterButton" to="." method="_on_new_character_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/LoadWorldButton" to="." method="_on_load_world_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/SettingsButton" to="." method="_on_settings_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]

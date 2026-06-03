@@ -1,0 +1,173 @@
+extends Control
+
+@onready var character_creation_menu: CanvasLayer = \
+	$CharacterCreationMenu
+
+@onready var character_selector: OptionButton = \
+	$CenterContainer/VBoxContainer/CharacterSelector
+
+
+func _ready() -> void:
+
+	load_character_list()
+
+
+func _on_continue_button_pressed() -> void:
+
+	get_tree().change_scene_to_file(
+		"res://scenes/world.tscn"
+	)
+
+
+func _on_new_character_button_pressed() -> void:
+
+	character_creation_menu.open_menu()
+
+
+func _on_load_world_button_pressed() -> void:
+
+	print("LOAD WORLD")
+
+
+func _on_settings_button_pressed() -> void:
+
+	print("OPEN SETTINGS")
+
+
+func _on_quit_button_pressed() -> void:
+
+	get_tree().quit()
+
+
+func load_character_list() -> void:
+
+	character_selector.clear()
+
+	var dir := DirAccess.open(
+		SaveManager.CHARACTER_FOLDER
+	)
+
+	if dir == null:
+		return
+
+	dir.list_dir_begin()
+
+	var file_name := dir.get_next()
+
+	while file_name != "":
+
+		if file_name.ends_with(".json"):
+
+			var path := \
+				SaveManager.CHARACTER_FOLDER + \
+				file_name
+
+			var file := FileAccess.open(
+				path,
+				FileAccess.READ
+			)
+
+			if file != null:
+
+				var json_text := \
+					file.get_as_text()
+
+				file.close()
+
+				var json := JSON.new()
+
+				if json.parse(json_text) == OK:
+
+					var data = json.data
+
+					var character_name: String = \
+						data.get(
+							"character_name",
+							"Unknown"
+						)
+
+					var character_id: String = \
+						data.get(
+							"character_id",
+							""
+						)
+
+					character_selector.add_item(
+						character_name
+					)
+
+					var index := \
+						character_selector.item_count - 1
+
+					character_selector.set_item_metadata(
+						index,
+						character_id
+					)
+
+		file_name = dir.get_next()
+
+	dir.list_dir_end()
+
+	# Restore current selection if possible
+
+	for i in range(
+		character_selector.item_count
+	):
+
+		var id := str(
+			character_selector.get_item_metadata(
+				i
+			)
+		)
+
+		if id == SaveManager.current_character_id:
+
+			character_selector.select(i)
+
+			return
+
+	# Otherwise select first character
+
+	if character_selector.item_count > 0:
+
+		character_selector.select(0)
+
+		SaveManager.current_character_id = str(
+			character_selector.get_item_metadata(
+				0
+			)
+		)
+
+		print(
+			"SELECTED CHARACTER:",
+			SaveManager.current_character_id
+		)
+
+
+func get_selected_character_id() -> String:
+
+	var selected := \
+		character_selector.get_selected()
+
+	if selected < 0:
+		return ""
+
+	return str(
+		character_selector.get_item_metadata(
+			selected
+		)
+	)
+
+
+func _on_character_selector_item_selected(index: int) -> void:
+
+	SaveManager.current_character_id = str(
+		character_selector.get_item_metadata(
+			index
+		)
+	)
+
+	print(
+		"SELECTED CHARACTER:",
+		SaveManager.current_character_id
+	)

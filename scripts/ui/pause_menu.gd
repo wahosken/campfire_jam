@@ -1,8 +1,6 @@
 extends CanvasLayer
 
 @export var touch_overlay_path: NodePath
-@export var require_start_gate_open := true
-@export var start_gate_path: NodePath
 
 @onready var panel: Control = $PanelContainer
 @onready var resume_button: Button = $PanelContainer/VBoxContainer/BodyTabContainer/SystemTab/ResumeButton
@@ -122,6 +120,13 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+func _can_pause_now() -> bool:
+
+	if DialogueManager.is_dialogue_active():
+		return false
+
+	return true
+
 func _handle_touch_press(touch_position: Vector2) -> void:
 	var buttons: Array[Button] = [
 		resume_button,
@@ -153,24 +158,6 @@ func _handle_touch_press(touch_position: Vector2) -> void:
 				button.pressed.emit()
 
 			return
-
-
-func _can_pause_now() -> bool:
-	if not require_start_gate_open:
-		return true
-
-	if start_gate_path == NodePath():
-		return false
-
-	var start_gate := get_node_or_null(start_gate_path)
-
-	if start_gate == null:
-		return true
-
-	if "has_started" in start_gate:
-		return start_gate.has_started
-
-	return false
 
 
 func toggle_pause() -> void:
