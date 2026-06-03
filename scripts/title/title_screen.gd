@@ -1,32 +1,47 @@
 extends Control
 
-@onready var character_creation_menu: CanvasLayer = \
-	$CharacterCreationMenu
+@onready var character_creation_menu: CanvasLayer = $CharacterCreationMenu
+@onready var world_creation_menu: CanvasLayer = $WorldCreationMenu
+@onready var load_game_menu = $LoadGameMenu
 
-@onready var character_selector: OptionButton = \
-	$CenterContainer/VBoxContainer/CharacterSelector
-
+@onready var character_selector: OptionButton = $CenterContainer/VBoxContainer/CharacterSelector
 
 func _ready() -> void:
 
-	load_character_list()
+	refresh_character_list()
 
 
 func _on_continue_button_pressed() -> void:
 
-	get_tree().change_scene_to_file(
-		"res://scenes/world.tscn"
-	)
+	if SaveManager.continue_game():
+
+		get_tree().change_scene_to_file(
+			"res://scenes/world.tscn"
+		)
+
+	else:
+
+		print(
+			"NO GAME TO CONTINUE"
+		)
 
 
-func _on_new_character_button_pressed() -> void:
+func _on_new_world_button_pressed() -> void:
 
-	character_creation_menu.open_menu()
+	if SaveManager.current_character_id.is_empty():
+
+		print(
+			"SELECT A CHARACTER FIRST"
+		)
+
+		return
+
+	world_creation_menu.open_menu()
 
 
-func _on_load_world_button_pressed() -> void:
+func _on_load_game_button_pressed():
 
-	print("LOAD WORLD")
+	load_game_menu.open_menu()
 
 
 func _on_settings_button_pressed() -> void:
@@ -39,7 +54,7 @@ func _on_quit_button_pressed() -> void:
 	get_tree().quit()
 
 
-func load_character_list() -> void:
+func refresh_character_list() -> void:
 
 	character_selector.clear()
 
@@ -143,6 +158,17 @@ func load_character_list() -> void:
 			SaveManager.current_character_id
 		)
 
+	character_selector.add_item(
+		"Create Character..."
+	)
+
+	var create_index := \
+		character_selector.item_count - 1
+
+	character_selector.set_item_metadata(
+		create_index,
+		"create_character"
+	)
 
 func get_selected_character_id() -> String:
 
@@ -159,13 +185,23 @@ func get_selected_character_id() -> String:
 	)
 
 
-func _on_character_selector_item_selected(index: int) -> void:
+func _on_character_selector_item_selected(
+	index: int
+) -> void:
 
-	SaveManager.current_character_id = str(
+	var value := str(
 		character_selector.get_item_metadata(
 			index
 		)
 	)
+
+	if value == "create_character":
+
+		character_creation_menu.open_menu()
+
+		return
+
+	SaveManager.current_character_id = value
 
 	print(
 		"SELECTED CHARACTER:",

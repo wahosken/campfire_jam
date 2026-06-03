@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://c8mt5uksx13no" path="res://scripts/title/title_screen.gd" id="1_fgkus"]
 [ext_resource type="PackedScene" uid="uid://byd4okwt36wwg" path="res://scenes/character_creation_menu.tscn" id="2_sa3yf"]
+[ext_resource type="PackedScene" uid="uid://duama1dqvmr2l" path="res://scenes/world_creation_menu.tscn" id="3_s4lrb"]
+[ext_resource type="PackedScene" uid="uid://3ggfa8bqc5y1" path="res://scenes/load_game_menu.tscn" id="4_mgrm8"]
 
 [node name="TitleScreen" type="Control" unique_id=1343893080]
 layout_mode = 3
@@ -37,13 +39,13 @@ alignment = 1
 layout_mode = 2
 text = "Continue"
 
-[node name="NewCharacterButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=484045702]
+[node name="NewWorldButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=484045702]
 layout_mode = 2
-text = "Create Character"
+text = "New Game"
 
-[node name="LoadWorldButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=514317442]
+[node name="LoadGameButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=514317442]
 layout_mode = 2
-text = "Load"
+text = "Load Game"
 
 [node name="SettingsButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1598071585]
 layout_mode = 2
@@ -56,9 +58,15 @@ text = "Quit"
 [node name="CharacterCreationMenu" parent="." unique_id=1306261687 instance=ExtResource("2_sa3yf")]
 visible = false
 
+[node name="WorldCreationMenu" parent="." unique_id=1832897957 instance=ExtResource("3_s4lrb")]
+visible = false
+
+[node name="LoadGameMenu" parent="." unique_id=962619876 instance=ExtResource("4_mgrm8")]
+visible = false
+
 [connection signal="item_selected" from="CenterContainer/VBoxContainer/CharacterSelector" to="." method="_on_character_selector_item_selected"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/ContinueButton" to="." method="_on_continue_button_pressed"]
-[connection signal="pressed" from="CenterContainer/VBoxContainer/NewCharacterButton" to="." method="_on_new_character_button_pressed"]
-[connection signal="pressed" from="CenterContainer/VBoxContainer/LoadWorldButton" to="." method="_on_load_world_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/NewWorldButton" to="." method="_on_new_world_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/LoadGameButton" to="." method="_on_load_game_button_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/SettingsButton" to="." method="_on_settings_button_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]

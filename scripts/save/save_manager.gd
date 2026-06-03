@@ -4,6 +4,8 @@ const CHARACTER_FOLDER := "user://characters/"
 
 const WORLD_FOLDER := "user://worlds/"
 
+const PROFILE_PATH := "user://profile.json"
+
 const SAVE_PATH := "user://campfirejam_save.json"
 
 var world_data := WorldSaveData.new()
@@ -17,14 +19,11 @@ var current_world_id := ""
 
 func _ready() -> void:
 
-	DirAccess.make_dir_absolute(
-		CHARACTER_FOLDER
-	)
+	DirAccess.make_dir_absolute(CHARACTER_FOLDER)
 
-	DirAccess.make_dir_absolute(
-		WORLD_FOLDER
-	)
+	DirAccess.make_dir_absolute(WORLD_FOLDER)
 
+	ensure_profile_exists()
 
 func get_character_path(character_id: String) -> String:
 
@@ -33,8 +32,34 @@ func get_character_path(character_id: String) -> String:
 
 func get_world_path(world_id: String) -> String:
 
-	return WORLD_FOLDER + \
-		world_id + ".json"
+	return WORLD_FOLDER + world_id + ".json"
+
+
+func ensure_profile_exists() -> void:
+
+	if FileAccess.file_exists(PROFILE_PATH):
+		return
+
+	var profile := {
+		"last_world_id": ""
+	}
+
+	var file := FileAccess.open(
+		PROFILE_PATH,
+		FileAccess.WRITE
+	)
+
+	if file == null:
+		return
+
+	file.store_string(
+		JSON.stringify(
+			profile,
+			"\t"
+		)
+	)
+
+	file.close()
 
 
 func create_character(character_name: String) -> String:
@@ -73,6 +98,56 @@ func create_character(character_name: String) -> String:
 	file.store_string(JSON.stringify(character_dict,"\t"))
 
 	file.close()
+
+	return id
+
+
+func create_world(world_name: String) -> String:
+
+	var id := "world_" + str(Time.get_ticks_msec())
+
+	var current_time := Time.get_unix_time_from_system()
+
+	var world_dict := {
+
+		"version": 1,
+
+		"world_id": id,
+
+		"world_name": world_name,
+
+		"created_at": current_time,
+
+		"last_played": current_time,
+
+		"last_character_id": current_character_id,
+
+		"recruited_npcs": [],
+
+		"completed_quests": []
+	}
+
+	var file := FileAccess.open(
+		get_world_path(id),
+		FileAccess.WRITE
+	)
+
+	if file == null:
+		return ""
+
+	file.store_string(
+		JSON.stringify(
+			world_dict,
+			"\t"
+		)
+	)
+
+	file.close()
+
+	print(
+		"WORLD CREATED:",
+		id
+	)
 
 	return id
 
@@ -429,3 +504,199 @@ func load_game() -> void:
 
 		if collectible.has_method("restore_state"):
 			collectible.restore_state()
+
+
+
+func save_profile() -> void:
+
+	print("SAVE_PROFILE CALLED")
+
+	var profile := {
+		"last_world_id": current_world_id
+	}
+
+	var file := FileAccess.open(
+		PROFILE_PATH,
+		FileAccess.WRITE
+	)
+
+	if file == null:
+		return
+
+	file.store_string(
+		JSON.stringify(
+			profile,
+			"\t"
+		)
+	)
+
+	file.close()
+
+
+func load_profile() -> void:
+
+	if not FileAccess.file_exists(
+		PROFILE_PATH
+	):
+		return
+
+	var file := FileAccess.open(
+		PROFILE_PATH,
+		FileAccess.READ
+	)
+
+	if file == null:
+		return
+
+	var json_text := file.get_as_text()
+
+	file.close()
+
+	var json := JSON.new()
+
+	if json.parse(json_text) != OK:
+		return
+
+	var data = json.data
+
+	current_world_id = str(
+		data.get(
+			"last_world_id",
+			""
+		)
+	)
+
+
+
+func get_world_data(
+	world_id: String
+) -> Dictionary:
+
+	var path := get_world_path(
+		world_id
+	)
+
+	if not FileAccess.file_exists(
+		path
+	):
+		return {}
+
+	var file := FileAccess.open(
+		path,
+		FileAccess.READ
+	)
+
+	if file == null:
+		return {}
+
+	var json_text := file.get_as_text()
+
+	file.close()
+
+	var json := JSON.new()
+
+	if json.parse(json_text) != OK:
+		return {}
+
+	return json.data
+
+
+func set_world_last_character(
+	world_id: String,
+	character_id: String
+) -> void:
+
+	var data := get_world_data(
+		world_id
+	)
+
+	if data.is_empty():
+		return
+
+	data["last_character_id"] = \
+		character_id
+
+	data["last_played"] = \
+		Time.get_unix_time_from_system()
+
+	var file := FileAccess.open(
+		get_world_path(world_id),
+		FileAccess.WRITE
+	)
+
+	if file == null:
+		return
+
+	file.store_string(
+		JSON.stringify(
+			data,
+			"\t"
+		)
+	)
+
+	file.close()
+
+	print(
+		"WORLD UPDATED:",
+		world_id,
+		" Character:",
+		character_id
+	)
+
+
+func continue_game() -> bool:
+
+	load_profile()
+
+	if current_world_id.is_empty():
+		return false
+
+	var world_dict: Dictionary = \
+		get_world_data(
+			current_world_id
+		)
+
+	if world_dict.is_empty():
+		return false
+
+	current_character_id = str(
+		world_dict.get(
+			"last_character_id",
+			""
+		)
+	)
+
+	print(
+		"CONTINUE GAME"
+	)
+
+	print(
+		"WORLD:",
+		current_world_id
+	)
+
+	print(
+		"CHARACTER:",
+		current_character_id
+	)
+
+	return true
+
+
+func start_game(
+	world_id: String,
+	character_id: String
+) -> bool:
+
+	current_world_id = world_id
+
+	current_character_id = character_id
+
+	set_world_last_character(
+		world_id,
+		character_id
+	)
+
+	save_profile()
+
+	return true
