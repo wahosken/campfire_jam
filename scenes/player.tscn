@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://blfnmt5xbykgs"]
 
-[ext_resource type="Script" uid="uid://d0me22e12st41" path="res://scripts/player.gd" id="1_lttm1"]
-[ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/instrument_audio_source.gd" id="2_g2els"]
+[ext_resource type="Script" uid="uid://d0me22e12st41" path="res://scripts/musicians/player.gd" id="1_lttm1"]
+[ext_resource type="Texture2D" uid="uid://bc6r56i2o1nha" path="res://assets/character_sprite.png" id="2_4r5pv"]
+[ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/audio/instrument_audio_source.gd" id="2_g2els"]
 [ext_resource type="AudioStream" uid="uid://cc4y5lg137oam" path="res://audio/song 1/song1-001-guitar_rhythm.wav" id="3_qfm1y"]
 [ext_resource type="AudioStream" uid="uid://cir28v33uqdmo" path="res://audio/song 1/song1-002-guitar_lead.wav" id="4_fulsm"]
 [ext_resource type="AudioStream" uid="uid://x654xn2eyq6f" path="res://audio/song 2/song2-001-guitar_rhythm.wav" id="5_4r5pv"]
@@ -19,15 +20,20 @@
 [ext_resource type="AudioStream" uid="uid://di4x51xuio6a1" path="res://audio/song 2/song2-007-mandolin_rhythm.wav" id="16_wqfne"]
 [ext_resource type="AudioStream" uid="uid://708bjc8fkg1t" path="res://audio/song 2/song2-008-mandolin_lead.wav" id="17_wnwbv"]
 
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_4r5pv"]
+radius = 3.3333335
+height = 21.333334
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_u8vuu"]
-size = Vector2(48, 48)
+size = Vector2(16, 32)
 
 [node name="player" type="CharacterBody2D" unique_id=685309387 groups=["musician", "player", "player_musician"]]
 collision_layer = 2
 script = ExtResource("1_lttm1")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1532319942]
-shape = SubResource("RectangleShape2D_u8vuu")
+scale = Vector2(1.5, 1.5)
+shape = SubResource("CapsuleShape2D_4r5pv")
 
 [node name="InteractionArea" type="Area2D" parent="." unique_id=1739513096]
 collision_layer = 2
@@ -36,7 +42,12 @@ collision_mask = 24
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=684937592]
 shape = SubResource("RectangleShape2D_u8vuu")
 
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=19714540]
+position = Vector2(7.1525574e-07, -1.4305115e-06)
+texture = ExtResource("2_4r5pv")
+
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
+visible = false
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -57,12 +68,15 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -24.5
-offset_top = -11.5
+offset_top = -36.0
 offset_right = 24.5
-offset_bottom = 11.5
+offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_font_sizes/font_size = 8
 text = "Player"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="PlayerAudioSources" type="Node2D" parent="." unique_id=1014702348]
 

@@ -12,8 +12,9 @@
 [ext_resource type="Script" uid="uid://dp0aobj5pqnj3" path="res://scripts/dialogue/dialogue_sequence.gd" id="10_jqmpd"]
 [ext_resource type="Script" uid="uid://cxymkcbaj7wk2" path="res://scripts/dialogue/npc_dialogue_data.gd" id="11_yk8p0"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_csoos"]
-radius = 24.0
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_51nrr"]
+radius = 8.0
+height = 32.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_uqgcj"]
 radius = 50.0
@@ -95,16 +96,16 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -24.0
-offset_top = -24.0
-offset_right = 24.0
-offset_bottom = 24.0
+offset_left = -8.0
+offset_top = -16.0
+offset_right = 8.0
+offset_bottom = 16.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.19076231, 0.19076234, 0.19076231, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1899097799]
-shape = SubResource("CircleShape2D_csoos")
+shape = SubResource("CapsuleShape2D_51nrr")
 
 [node name="InteractionArea" type="Area2D" parent="." unique_id=392024863]
 collision_layer = 8
@@ -120,13 +121,15 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -35.0
-offset_top = -11.5
+offset_top = -35.0
 offset_right = 35.0
-offset_bottom = 11.5
+offset_bottom = -23.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_font_sizes/font_size = 8
 text = "Musician"
 horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="InstrumentAudioSource" type="Node2D" parent="." unique_id=1158120352]
 script = ExtResource("2_v3fsn")

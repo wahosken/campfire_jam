@@ -1,14 +1,14 @@
 [gd_scene format=3 uid="uid://s724hjaak62t"]
 
-[ext_resource type="Script" path="res://scripts/world/world_reaction.gd" id="1_vnkwq"]
+[ext_resource type="Script" uid="uid://cyrr24qs3ahpf" path="res://scripts/world/world_reaction.gd" id="1_vnkwq"]
 [ext_resource type="Texture2D" uid="uid://im0s3co4ep8v" path="res://assets/locked_placeholder.png" id="2_vnkwq"]
 [ext_resource type="Texture2D" uid="uid://cfg36ba86p8di" path="res://assets/unlocked_placeholder.png" id="3_14kj6"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_65rm0"]
-size = Vector2(64, 64)
+size = Vector2(32, 32)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_65rm0"]
-radius = 150.0
+radius = 100.0
 
 [node name="WorldReaction" type="Node2D" unique_id=323313496 groups=["world_reaction"]]
 script = ExtResource("1_vnkwq")
@@ -17,10 +17,12 @@ repaired_visual = NodePath("RepairedSprite")
 collision_shape = NodePath("StaticBody2D/CollisionShape2D")
 
 [node name="BrokenSprite" type="Sprite2D" parent="." unique_id=1278027056]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("2_vnkwq")
 
 [node name="RepairedSprite" type="Sprite2D" parent="." unique_id=1563550351]
 visible = false
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("3_14kj6")
 
 [node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=548052218]
@@ -47,6 +49,7 @@ offset_right = 25.0
 offset_bottom = 11.5
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_font_sizes/font_size = 8
 text = "Puzzle"
 horizontal_alignment = 1
 vertical_alignment = 1

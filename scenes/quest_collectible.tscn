@@ -11,10 +11,17 @@ collision_mask = 2
 script = ExtResource("1_3yrsd")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=1178111357]
-offset_left = -20.0
-offset_top = -20.0
-offset_right = 20.0
-offset_bottom = 20.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
 color = Color(0.93318444, 2.4257899e-05, 0.6576945, 0.6627451)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1613160525]
@@ -25,6 +32,7 @@ offset_left = -42.0
 offset_top = -12.0
 offset_right = 44.0
 offset_bottom = 11.0
+theme_override_font_sizes/font_size = 8
 text = "Collectable"
 horizontal_alignment = 1
 vertical_alignment = 1
