@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://dlglwi6aqtsgh"]
 
-[ext_resource type="Script" uid="uid://d3ot5bkby3kvn" path="res://scripts/pause_menu.gd" id="1_n87rw"]
+[ext_resource type="Script" uid="uid://d3ot5bkby3kvn" path="res://scripts/ui/pause_menu.gd" id="1_n87rw"]
 
-[node name="PauseMenu" type="CanvasLayer" unique_id=2135615612]
+[node name="PauseMenu" type="CanvasLayer" unique_id=2135615612 groups=["pause_menu"]]
 process_mode = 3
 script = ExtResource("1_n87rw")
 
@@ -13,58 +13,159 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -69.5
-offset_right = 20.0
-offset_bottom = 69.5
+offset_left = -225.0
+offset_top = -125.0
+offset_right = 225.0
+offset_bottom = 125.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer" unique_id=1956417957]
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer" unique_id=1308598080]
 layout_mode = 2
 
-[node name="ResumeButton" type="Button" parent="PanelContainer/VBoxContainer" unique_id=1462036541]
+[node name="Tabs" type="HBoxContainer" parent="PanelContainer/VBoxContainer" unique_id=1610515880]
 layout_mode = 2
+size_flags_vertical = 0
+
+[node name="SongbookButton" type="Button" parent="PanelContainer/VBoxContainer/Tabs" unique_id=857877326]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_neighbor_right = NodePath("../JournalButton")
+theme_override_font_sizes/font_size = 12
+text = "Songbook"
+
+[node name="JournalButton" type="Button" parent="PanelContainer/VBoxContainer/Tabs" unique_id=1029029552]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_neighbor_left = NodePath("../SongbookButton")
+focus_neighbor_right = NodePath("../CommunityButton")
+theme_override_font_sizes/font_size = 12
+text = "Journal"
+
+[node name="CommunityButton" type="Button" parent="PanelContainer/VBoxContainer/Tabs" unique_id=364110036]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_neighbor_left = NodePath("../JournalButton")
+focus_neighbor_right = NodePath("../SystemButton")
+theme_override_font_sizes/font_size = 12
+text = "Community"
+
+[node name="SystemButton" type="Button" parent="PanelContainer/VBoxContainer/Tabs" unique_id=1848653575]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_neighbor_left = NodePath("../CommunityButton")
+theme_override_font_sizes/font_size = 12
+text = "System"
+
+[node name="BodyTabContainer" type="TabContainer" parent="PanelContainer/VBoxContainer" unique_id=986808846]
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 0
+tabs_visible = false
+
+[node name="SongbookTab" type="VBoxContainer" parent="PanelContainer/VBoxContainer/BodyTabContainer" unique_id=526278022]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="SongbookText" type="RichTextLabel" parent="PanelContainer/VBoxContainer/BodyTabContainer/SongbookTab" unique_id=1689266901]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 12
+theme_override_font_sizes/bold_font_size = 12
+theme_override_font_sizes/bold_italics_font_size = 12
+theme_override_font_sizes/italics_font_size = 12
+theme_override_font_sizes/mono_font_size = 12
+
+[node name="JournalTab" type="VBoxContainer" parent="PanelContainer/VBoxContainer/BodyTabContainer" unique_id=373718569]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="JournalText" type="RichTextLabel" parent="PanelContainer/VBoxContainer/BodyTabContainer/JournalTab" unique_id=816966653]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 12
+theme_override_font_sizes/bold_font_size = 12
+theme_override_font_sizes/bold_italics_font_size = 12
+theme_override_font_sizes/italics_font_size = 12
+theme_override_font_sizes/mono_font_size = 12
+
+[node name="CommunityTab" type="VBoxContainer" parent="PanelContainer/VBoxContainer/BodyTabContainer" unique_id=168333402]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="CommunityText" type="RichTextLabel" parent="PanelContainer/VBoxContainer/BodyTabContainer/CommunityTab" unique_id=986411946]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 12
+theme_override_font_sizes/bold_font_size = 12
+theme_override_font_sizes/bold_italics_font_size = 12
+theme_override_font_sizes/italics_font_size = 12
+theme_override_font_sizes/mono_font_size = 12
+
+[node name="SystemTab" type="VBoxContainer" parent="PanelContainer/VBoxContainer/BodyTabContainer" unique_id=1956417957]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 3
+
+[node name="ResumeButton" type="Button" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1462036541]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "Resume"
 
-[node name="RestartSceneButton" type="Button" parent="PanelContainer/VBoxContainer" unique_id=1109334909]
+[node name="RestartSceneButton" type="Button" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1109334909]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "Restart"
 
-[node name="Label" type="Label" parent="PanelContainer/VBoxContainer" unique_id=1851644040]
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1851644040]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "Volume"
 horizontal_alignment = 1
 
-[node name="VolumeSlider" type="HSlider" parent="PanelContainer/VBoxContainer" unique_id=1479561821]
+[node name="VolumeSlider" type="HSlider" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1479561821]
 layout_mode = 2
 
-[node name="MuteButton" type="Button" parent="PanelContainer/VBoxContainer" unique_id=1192045965]
+[node name="MuteButton" type="Button" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1192045965]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "Mute"
 
-[node name="TouchArrowsButton" type="Button" parent="PanelContainer/VBoxContainer" unique_id=449643817]
+[node name="TouchArrowsButton" type="Button" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=449643817]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "Touch Arrows"
 
-[node name="TouchJoystickButton" type="Button" parent="PanelContainer/VBoxContainer" unique_id=96710952]
+[node name="TouchJoystickButton" type="Button" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=96710952]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "Touch Joystick"
 
-[node name="DebugSectionLabel" type="Label" parent="PanelContainer/VBoxContainer" unique_id=1197200820]
+[node name="DebugSectionLabel" type="Label" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1197200820]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "Debugs"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ShowJamRadiusButton" type="CheckButton" parent="PanelContainer/VBoxContainer" unique_id=1352949287]
+[node name="ShowJamRadiusButton" type="CheckButton" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1352949287]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "Show Jam Radius"
 
-[node name="ShowFPSButton" type="CheckButton" parent="PanelContainer/VBoxContainer" unique_id=1950585196]
+[node name="ShowFPSButton" type="CheckButton" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1950585196]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "Show FPS"
 
-[node name="CloseButton" type="Button" parent="PanelContainer/VBoxContainer" unique_id=1241672334]
+[node name="CloseButton" type="Button" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1241672334]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "Close"
+
+[connection signal="pressed" from="PanelContainer/VBoxContainer/Tabs/SongbookButton" to="." method="_on_songbook_button_pressed"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/Tabs/JournalButton" to="." method="_on_journal_button_pressed"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/Tabs/CommunityButton" to="." method="_on_community_button_pressed"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/Tabs/SystemButton" to="." method="_on_system_button_pressed"]

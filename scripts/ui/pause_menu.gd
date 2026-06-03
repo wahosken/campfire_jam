@@ -5,16 +5,26 @@ extends CanvasLayer
 @export var start_gate_path: NodePath
 
 @onready var panel: Control = $PanelContainer
-@onready var resume_button: Button = $PanelContainer/VBoxContainer/ResumeButton
-@onready var restart_scene_button: Button = $PanelContainer/VBoxContainer/RestartSceneButton
-@onready var mute_button: Button = $PanelContainer/VBoxContainer/MuteButton
-@onready var touch_arrows_button: Button = $PanelContainer/VBoxContainer/TouchArrowsButton
-@onready var touch_joystick_button: Button = $PanelContainer/VBoxContainer/TouchJoystickButton
-@onready var show_jam_radius_button: CheckButton = $PanelContainer/VBoxContainer/ShowJamRadiusButton
-@onready var show_fps_button: CheckButton = $PanelContainer/VBoxContainer/ShowFPSButton
-@onready var close_button: Button = $PanelContainer/VBoxContainer/CloseButton
+@onready var resume_button: Button = $PanelContainer/VBoxContainer/BodyTabContainer/SystemTab/ResumeButton
+@onready var restart_scene_button: Button = $PanelContainer/VBoxContainer/BodyTabContainer/SystemTab/RestartSceneButton
+@onready var mute_button: Button = $PanelContainer/VBoxContainer/BodyTabContainer/SystemTab/MuteButton
+@onready var touch_arrows_button: Button = $PanelContainer/VBoxContainer/BodyTabContainer/SystemTab/TouchArrowsButton
+@onready var touch_joystick_button: Button = $PanelContainer/VBoxContainer/BodyTabContainer/SystemTab/TouchJoystickButton
+@onready var show_jam_radius_button: CheckButton = $PanelContainer/VBoxContainer/BodyTabContainer/SystemTab/ShowJamRadiusButton
+@onready var show_fps_button: CheckButton = $PanelContainer/VBoxContainer/BodyTabContainer/SystemTab/ShowFPSButton
+@onready var close_button: Button = $PanelContainer/VBoxContainer/BodyTabContainer/SystemTab/CloseButton
 
 @onready var debug_overlay: Label = $DebugOverlay
+
+@onready var body_tab_container: TabContainer = $PanelContainer/VBoxContainer/BodyTabContainer
+@onready var songbook_text: RichTextLabel = $PanelContainer/VBoxContainer/BodyTabContainer/SongbookTab/SongbookText
+@onready var journal_text: RichTextLabel = $PanelContainer/VBoxContainer/BodyTabContainer/JournalTab/JournalText
+@onready var community_text: RichTextLabel = $PanelContainer/VBoxContainer/BodyTabContainer/CommunityTab/CommunityText
+
+@onready var songbook_button: Button = $PanelContainer/VBoxContainer/Tabs/SongbookButton
+@onready var journal_button: Button = $PanelContainer/VBoxContainer/Tabs/JournalButton
+@onready var community_button: Button = $PanelContainer/VBoxContainer/Tabs/CommunityButton
+@onready var system_button: Button = $PanelContainer/VBoxContainer/Tabs/SystemButton
 
 var volume_slider: HSlider
 
@@ -69,6 +79,38 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	_position_debug_overlay()
 	_update_debug_overlay()
+
+
+func open_tab(tab_index: int) -> void:
+
+	body_tab_container.current_tab = tab_index
+
+	match tab_index:
+
+		0:
+			songbook_button.grab_focus()
+
+		1:
+			journal_button.grab_focus()
+
+		2:
+			community_button.grab_focus()
+
+		3:
+			resume_button.grab_focus()
+
+
+func _on_songbook_button_pressed() -> void:
+	open_tab(0)
+
+func _on_journal_button_pressed() -> void:
+	open_tab(1)
+
+func _on_community_button_pressed() -> void:
+	open_tab(2)
+
+func _on_system_button_pressed() -> void:
+	open_tab(3)
 
 
 func _input(event: InputEvent) -> void:
@@ -139,11 +181,21 @@ func toggle_pause() -> void:
 
 
 func pause_game() -> void:
+
 	is_paused = true
+
 	get_tree().paused = true
+
+	refresh_songbook()
+	refresh_journal()
+	refresh_community()
+
 	panel.visible = true
 
+	open_tab(3)
+
 	await get_tree().process_frame
+
 	resume_button.grab_focus()
 
 
@@ -267,3 +319,115 @@ func _position_debug_overlay() -> void:
 		20
 	)
 	debug_overlay.size = Vector2(400, 120)
+
+
+func refresh_songbook() -> void:
+
+	var player := get_tree().get_first_node_in_group(
+		"player"
+	)
+
+	if player == null:
+		return
+
+	var text := ""
+
+	text += "SONGS\n"
+	text += "-----\n"
+
+	for song in player.unlocked_songs:
+		text += "♪ %s\n" % song
+
+	text += "\n"
+
+	text += "INSTRUMENTS\n"
+	text += "-----------\n"
+
+	for instrument in player.unlocked_instruments:
+		text += "%s\n" % instrument.capitalize()
+
+	text += "\n"
+
+	text += "ITEMS\n"
+	text += "-----\n"
+
+	for item in player.collected_items:
+		text += "%s\n" % item
+
+	songbook_text.text = text
+
+
+func refresh_journal() -> void:
+
+	if QuestManager == null:
+		return
+
+	var text := ""
+
+	text += "JOURNAL\n"
+	text += "=======\n\n"
+
+	for quest in QuestManager.quests:
+
+		if quest == null:
+			continue
+
+		if quest.journal_text.is_empty():
+			continue
+
+		text += quest.journal_text
+		text += "\n\n"
+
+	journal_text.text = text
+
+
+func refresh_community() -> void:
+
+	var player := get_tree().get_first_node_in_group(
+		"player"
+	)
+
+	if player == null:
+		return
+
+	var recruited_count := 0
+
+	for npc in get_tree().get_nodes_in_group(
+		"npc_musician"
+	):
+
+		if not is_instance_valid(npc):
+			continue
+
+		if npc.is_recruited():
+			recruited_count += 1
+
+	var text := ""
+
+	text += "COMMUNITY\n"
+	text += "=========\n\n"
+
+	text += "Musicians Recruited: "
+	text += str(recruited_count)
+	text += " / 4\n"
+
+	text += "Songs Learned: "
+	text += str(player.unlocked_songs.size())
+	text += " / 2\n"
+
+	text += "Instruments Collected: "
+	text += str(player.unlocked_instruments.size())
+	text += " / 4\n"
+
+	text += "Village Projects: "
+	text += str(QuestManager.completed_quests.size())
+	text += " / 4\n"
+
+	text += "\n"
+
+	if recruited_count >= 4:
+		text += "Festival Ready: YES"
+	else:
+		text += "Festival Ready: NO"
+
+	community_text.text = text

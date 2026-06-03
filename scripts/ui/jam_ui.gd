@@ -149,16 +149,21 @@ func _update_interact_prompt() -> void:
 	if closest_interactable.has_meta("jam_spot"):
 		interaction_target = closest_interactable.get_meta("jam_spot")
 
-	var interact_name := "Interact"
+	var prompt_text := "Interact"
 
-	if interaction_target.has_method("get_display_name"):
-		interact_name = interaction_target.get_display_name()
-	elif "display_name" in interaction_target:
-		interact_name = str(interaction_target.display_name)
-	elif interaction_target.name != "":
-		interact_name = interaction_target.name
+	if interaction_target.is_in_group("npc_musician"):
+		prompt_text = "Talk"
 
-	interact_prompt_label.text = "Interact: %s" % interact_name
+	elif interaction_target.is_in_group("collectible"):
+		prompt_text = "Collect"
+
+	elif interaction_target.is_in_group("community_board"):
+		prompt_text = "Read Board"
+
+	elif interaction_target.is_in_group("jamspot"):
+		prompt_text = "On/Off"
+
+	interact_prompt_label.text = "Interact: " + "%s" % prompt_text
 
 
 # ------------------------------------------------------------

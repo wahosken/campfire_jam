@@ -1,11 +1,12 @@
 [gd_resource type="Resource" script_class="QuestData" format=3 uid="uid://ltm18y0y7nnd"]
 
-[ext_resource type="Script" uid="uid://b3nawtancgvv6" path="res://scripts/quest_data.gd" id="1_bpr2s"]
+[ext_resource type="Script" uid="uid://b3nawtancgvv6" path="res://scripts/quest/quest_data.gd" id="1_bpr2s"]
 
 [resource]
 script = ExtResource("1_bpr2s")
 quest_id = "play_fountain_song"
 display_name = "Wake the Fountain"
 description = "Play music at the old fountain and see if it responds."
+journal_text = "A musician misplaced a bass somewhere near the village."
 starts_unlocked = true
 metadata/_custom_type_script = "uid://b3nawtancgvv6"

@@ -1,6 +1,11 @@
 extends Node
 
-@export var quests: Array[QuestData] = []
+@export var quests: Array[QuestData] = [
+	preload("res://quests/repair_bridge.tres"),
+	preload("res://quests/find_lost_bass.tres"),
+	preload("res://quests/find_the_flask.tres"),
+	preload("res://quests/play_fountain_song.tres")
+]
 
 var completed_quests: Array[String] = []
 
@@ -13,8 +18,6 @@ func complete_quest(quest_id: String) -> void:
 		return
 
 	completed_quests.append(quest_id)
-
-	print("QUEST COMPLETE: ", quest_id)
 
 	_activate_jamspots_for_quest(quest_id)
 
