@@ -20,12 +20,12 @@
 [ext_resource type="PackedScene" uid="uid://dlglwi6aqtsgh" path="res://scenes/pause_menu.tscn" id="19_817gm"]
 [ext_resource type="PackedScene" uid="uid://s724hjaak62t" path="res://scenes/world_reaction.tscn" id="19_pm21f"]
 [ext_resource type="PackedScene" uid="uid://sago7pta8rx" path="res://scenes/dialogue_box.tscn" id="20_2lf6f"]
-[ext_resource type="PackedScene" uid="uid://c3cgstnsdvuoa" path="res://scenes/wall.tscn" id="22_oo54l"]
+[ext_resource type="PackedScene" uid="uid://c2pemq1w77ykf" path="res://scenes/quest_collectible.tscn" id="21_7iits"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_s3408"]
-vertices = PackedVector2Array(1794.0391, -1240, 2133, -1617, 2133, -47, 1792.9609, -944, -1121, -1617.9922, 1460.0391, -1240, -1121.9922, -47, 1458.9609, -944)
-polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(4, 1, 0, 5), PackedInt32Array(3, 2, 6, 7), PackedInt32Array(7, 6, 4, 5)])
-outlines = Array[PackedVector2Array]([PackedVector2Array(-1131, -1628, 2143, -1627, 2143, -37, -1132, -37)])
+vertices = PackedVector2Array(1794.0391, -1240, 1860, -2998.9922, 1860, -18, 1792.9609, -944, -1120, -18, 1458.9609, -944, -1120, -2998, 1460.0391, -1240)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(3, 2, 4, 5), PackedInt32Array(5, 4, 6, 7), PackedInt32Array(7, 6, 1, 0)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(-1130, -3008, 1870, -3009, 1870, -8, -1130, -8)])
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_s3408"]
 radius = 400.0
@@ -53,15 +53,15 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -1130.0
-offset_top = -1627.0
-offset_right = 2137.0
-offset_bottom = -37.0
+offset_top = -3008.0
+offset_right = 1870.0
+offset_bottom = -8.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0.19558403, 0.10315802, 1)
 
 [node name="FountainJamSpot" parent="." unique_id=1582202994 instance=ExtResource("2_2lf6f")]
-position = Vector2(-580, -414)
+position = Vector2(1195, -490)
 jam_id = "fountain_jam"
 display_name = "Fountain Jam"
 song_id = "song_02"
@@ -89,6 +89,7 @@ offset_bottom = 40.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0.3647059, 0.9137255, 1)
+metadata/_edit_use_anchors_ = true
 
 [node name="Label" type="Label" parent="FountainJamSpot" unique_id=158522758]
 anchors_preset = 8
@@ -124,7 +125,8 @@ position = Vector2(4, 8.5)
 shape = SubResource("RectangleShape2D_bew7y")
 
 [node name="CampfireJamSpot" parent="." unique_id=111465224 instance=ExtResource("2_2lf6f")]
-position = Vector2(1612, -395)
+position = Vector2(326, -1192)
+required_quest_ids = Array[String](["repair_bridge", "play_fountain_song", "find_water_flask", "find_lost_bass"])
 
 [node name="Node2D" type="Node2D" parent="CampfireJamSpot" unique_id=1183798559]
 
@@ -184,52 +186,38 @@ position = Vector2(3.5, 7)
 shape = SubResource("RectangleShape2D_bew7y")
 
 [node name="Bridge_WorldReaction" parent="." unique_id=323313496 node_paths=PackedStringArray("target_npc") instance=ExtResource("19_pm21f")]
-position = Vector2(-470, -997)
+position = Vector2(-284, -2031)
 target_npc = NodePath("../NPC_Guitar")
-unlock_npc_id = "guitar"
+unlock_npc_id = "npc_guitar"
 label_text = "Bridge"
+quest_id = "repair_bridge"
 
 [node name="Fountain_WorldReaction" parent="." unique_id=1412666453 node_paths=PackedStringArray("target_npc", "required_jamspot") instance=ExtResource("19_pm21f")]
-position = Vector2(182, -642)
+position = Vector2(1576, -734)
 target_npc = NodePath("../NPC_Mandolin")
-unlock_npc_id = "mandolin"
-required_npc_id = "guitar"
+unlock_npc_id = "npc_mandolin"
 jam_requirement = 3
 required_jamspot = NodePath("../FountainJamSpot")
-
-[node name="Harmonica_WorldReaction" parent="." unique_id=1080485223 node_paths=PackedStringArray("target_npc") instance=ExtResource("19_pm21f")]
-position = Vector2(764, -958)
-target_npc = NodePath("../NPC_Harmonica")
-unlock_npc_id = "harmonica"
-required_song_id = "song_02"
-required_instrument_id = "mandolin"
-required_musician_count = 3
-jam_requirement = 1
-
-[node name="Bass_WorldReaction" parent="." unique_id=511018841 node_paths=PackedStringArray("target_npc", "required_jamspot") instance=ExtResource("19_pm21f")]
-position = Vector2(2027, -179)
-target_npc = NodePath("../NPC_Bass")
-unlock_npc_id = "bass"
-required_musician_count = 4
-jam_requirement = 3
-required_jamspot = NodePath("../CampfireJamSpot")
+quest_id = "play_fountain_song"
 
 [node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("6_ctatt")]
-position = Vector2(-354, -1298)
+position = Vector2(-553, -2266)
 primary_song_id = "song_02"
 start_locked = true
 
 [node name="NPC_Bass" parent="." unique_id=718845583 instance=ExtResource("7_xgqkh")]
-position = Vector2(1865, -641)
+position = Vector2(-285, -668)
+required_item_id = "lost_bass"
 start_locked = true
 
 [node name="NPC_Harmonica" parent="." unique_id=1800832853 instance=ExtResource("8_munwf")]
-position = Vector2(846, -853)
+position = Vector2(1045, -2032)
 primary_song_id = "song_02"
+required_item_id = "water_flask"
 start_locked = true
 
 [node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("9_ts3gi")]
-position = Vector2(-407, -515)
+position = Vector2(1400, -801)
 unlocks_player_song = "song_02"
 start_locked = true
 
@@ -241,7 +229,7 @@ freeform_jam_context_scene = ExtResource("12_navra")
 jamspot_handoff_delay = 2.5
 
 [node name="player" parent="." unique_id=685309387 instance=ExtResource("13_luhhm")]
-position = Vector2(-663, -1249)
+position = Vector2(326, -1503)
 
 [node name="Camera2D" type="Camera2D" parent="player" unique_id=1166826738]
 zoom = Vector2(0.5, 0.5)
@@ -311,34 +299,10 @@ text = "Debug"
 
 [node name="DialogueBox" parent="." unique_id=178478530 instance=ExtResource("20_2lf6f")]
 
-[node name="Wall" parent="." unique_id=592128518 instance=ExtResource("22_oo54l")]
-position = Vector2(-973, -989)
+[node name="LostBass_QuestCollectable" parent="." unique_id=1042241573 instance=ExtResource("21_7iits")]
+position = Vector2(-602, -411)
+item_id = "lost_bass"
 
-[node name="Wall2" parent="." unique_id=366467807 instance=ExtResource("22_oo54l")]
-position = Vector2(-660, -989)
-
-[node name="Wall3" parent="." unique_id=77678035 instance=ExtResource("22_oo54l")]
-position = Vector2(-281, -989)
-
-[node name="Wall4" parent="." unique_id=410433232 instance=ExtResource("22_oo54l")]
-position = Vector2(32, -989)
-
-[node name="Wall5" parent="." unique_id=971156227 instance=ExtResource("22_oo54l")]
-position = Vector2(173, -1162)
-rotation = 1.5707964
-
-[node name="Wall6" parent="." unique_id=1550654800 instance=ExtResource("22_oo54l")]
-position = Vector2(173, -1470)
-rotation = 1.5707964
-
-[node name="Wall7" parent="." unique_id=756349801 instance=ExtResource("22_oo54l")]
-position = Vector2(173, -834)
-rotation = 1.5707964
-
-[node name="Wall8" parent="." unique_id=2003542745 instance=ExtResource("22_oo54l")]
-position = Vector2(173, -452)
-rotation = 1.5707964
-
-[node name="Wall9" parent="." unique_id=254565389 instance=ExtResource("22_oo54l")]
-position = Vector2(173, -195)
-rotation = 1.5707964
+[node name="WaterFlask_QuestCollectable" parent="." unique_id=1393443570 instance=ExtResource("21_7iits")]
+position = Vector2(1425, -2251)
+item_id = "water_flask"

@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://c3a2r6heroi5f"]
+
+[ext_resource type="Script" uid="uid://dpp2wc603utrs" path="res://scripts/quest_manager.gd" id="1_v4nlo"]
+[ext_resource type="Script" uid="uid://b3nawtancgvv6" path="res://scripts/quest_data.gd" id="2_hawao"]
+[ext_resource type="Resource" uid="uid://bumlwk50arjls" path="res://quests/repair_bridge.tres" id="3_qdx25"]
+[ext_resource type="Resource" uid="uid://ltm18y0y7nnd" path="res://quests/play_fountain_song.tres" id="4_2oil3"]
+[ext_resource type="Resource" uid="uid://v74r0gw75c7f" path="res://quests/find_the_flask.tres" id="5_865fx"]
+[ext_resource type="Resource" uid="uid://di4d4w7kocrso" path="res://quests/find_lost_bass.tres" id="6_skrq0"]
+
+[node name="QuestManager" type="Node" unique_id=732516058]
+script = ExtResource("1_v4nlo")
+quests = Array[ExtResource("2_hawao")]([ExtResource("3_qdx25"), ExtResource("4_2oil3"), ExtResource("5_865fx"), ExtResource("6_skrq0")])

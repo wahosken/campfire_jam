@@ -7,7 +7,7 @@
 [ext_resource type="AudioStream" uid="uid://di4x51xuio6a1" path="res://audio/song 2/song2-007-mandolin_rhythm.wav" id="5_mgt4s"]
 [ext_resource type="AudioStream" uid="uid://708bjc8fkg1t" path="res://audio/song 2/song2-008-mandolin_lead.wav" id="6_l3r6c"]
 [ext_resource type="PackedScene" uid="uid://cbc1xf2odpyw4" path="res://scenes/npc_task_controller.tscn" id="7_r3l87"]
-[ext_resource type="Script" uid="uid://twvvm82k05yr" path="res://scripts/npc_dialogue_controller.gd" id="8_mgt4s"]
+[ext_resource type="Script" uid="uid://twvvm82k05yr" path="res://scripts/musicians/npc_dialogue_controller.gd" id="8_mgt4s"]
 [ext_resource type="Script" uid="uid://opgri4swc804" path="res://scripts/dialogue/dialogue_line.gd" id="9_fiknp"]
 [ext_resource type="Script" uid="uid://dp0aobj5pqnj3" path="res://scripts/dialogue/dialogue_sequence.gd" id="10_6auh4"]
 [ext_resource type="Script" uid="uid://cxymkcbaj7wk2" path="res://scripts/dialogue/npc_dialogue_data.gd" id="11_7neta"]
@@ -18,11 +18,27 @@ radius = 24.0
 [sub_resource type="CircleShape2D" id="CircleShape2D_uqgcj"]
 radius = 50.0
 
+[sub_resource type="Resource" id="Resource_6auh4"]
+script = ExtResource("9_fiknp")
+text = "Listen to that!
+
+The fountain's singing again.
+
+I knew it still remembered the old melodies."
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_7neta"]
+script = ExtResource("10_6auh4")
+lines = Array[ExtResource("9_fiknp")]([SubResource("Resource_6auh4")])
+metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
+
 [sub_resource type="Resource" id="Resource_pkf02"]
 script = ExtResource("9_fiknp")
-text = "It's a lovely fountain, isn't it?
+text = "Isn't this fountain beautiful?
 
-I used to play here with a guitarist, but I haven't heard one in ages."
+It used to sing along with the musicians who gathered here.
+
+These days it's gone quiet."
 metadata/_custom_type_script = "uid://opgri4swc804"
 
 [sub_resource type="Resource" id="Resource_c5ui3"]
@@ -32,9 +48,11 @@ metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
 
 [sub_resource type="Resource" id="Resource_fiknp"]
 script = ExtResource("9_fiknp")
-text = "The fountain always sounds brighter with music nearby.
+text = "Music has a way of bringing places back to life.
 
-Let me know if you'd like to play."
+Let me know if you'd like to play together.
+
+I'd love to play together sometime."
 metadata/_custom_type_script = "uid://opgri4swc804"
 
 [sub_resource type="Resource" id="Resource_sjxf6"]
@@ -44,9 +62,9 @@ metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
 
 [sub_resource type="Resource" id="Resource_tx3q8"]
 script = ExtResource("9_fiknp")
-text = "Music sounds better when it's shared.
+text = "Maybe it just needs someone willing to play.
 
-Bring a guitar player here and let's play together by the fountain."
+Try making a little music by the fountain and see what happens."
 metadata/_custom_type_script = "uid://opgri4swc804"
 
 [sub_resource type="Resource" id="Resource_7v0tl"]
@@ -58,6 +76,7 @@ metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
 script = ExtResource("11_7neta")
 intro_dialogue = SubResource("Resource_c5ui3")
 task_dialogue = SubResource("Resource_7v0tl")
+completion_dialogue = SubResource("Resource_7neta")
 recruited_dialogue = SubResource("Resource_sjxf6")
 metadata/_custom_type_script = "uid://cxymkcbaj7wk2"
 
@@ -69,8 +88,9 @@ script = ExtResource("1_yt5au")
 instrument_name = "mandolin"
 display_name = "Mandolin"
 unlock_id = "mandolin"
-npc_id = "mandolin"
+npc_id = "npc_mandolin"
 unlocks_player_instrument = "mandolin"
+recruit_quest_id = "play_fountain_song"
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8

@@ -30,6 +30,8 @@ enum JamRequirement {
 
 @onready var label: Label = $Label
 
+@export var quest_id := ""
+
 var player_in_range: Node = null
 
 var activated := false
@@ -58,6 +60,18 @@ func _process(delta: float) -> void:
 	check_timer = 0.0
 
 	try_current_player_jam()
+
+
+func restore_completed_state() -> void:
+
+	activated = true
+
+	update_visuals()
+
+	if target_npc != null:
+
+		if target_npc.has_method("unlock_npc"):
+			target_npc.unlock_npc()
 
 
 func _startup_refresh() -> void:

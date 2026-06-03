@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="QuestData" format=3 uid="uid://bumlwk50arjls"]
+
+[ext_resource type="Script" uid="uid://b3nawtancgvv6" path="res://scripts/quest_data.gd" id="1_nyv43"]
+
+[resource]
+script = ExtResource("1_nyv43")
+quest_id = "repair_bridge"
+display_name = "Repair the Bridge"
+description = "Help the Guitar musician reach the village by repairing the bridge."
+starts_unlocked = true
+metadata/_custom_type_script = "uid://b3nawtancgvv6"

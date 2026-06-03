@@ -6,6 +6,8 @@ extends Node2D
 @export var display_name := "Campfire Jam"
 @export var song_id := "song_01"
 
+@export var required_quest_ids: Array[String] = []
+
 @export var auto_start_on_ready := true
 @export var leave_radius_padding := 50.0
 @export var buffer_radius_padding := 150.0
@@ -114,6 +116,14 @@ func start_if_auto_enabled() -> void:
 
 
 func interact() -> void:
+
+	if not is_unlocked():
+		print(
+			"JAMSPOT LOCKED: ",
+			required_quest_ids
+		)
+		return
+
 	toggle_jam()
 
 
@@ -132,6 +142,10 @@ func toggle_jam() -> void:
 
 
 func start_jam() -> void:
+
+	if not is_unlocked():
+		return
+
 	if jam_is_active:
 		return
 
@@ -777,6 +791,21 @@ func _is_npc_near_any_jamspot_anchor(npc: Node) -> bool:
 			return true
 
 	return false
+
+
+func is_unlocked() -> bool:
+
+	if required_quest_ids.is_empty():
+		return true
+
+	for quest_id in required_quest_ids:
+
+		if not QuestManager.is_quest_complete(
+			quest_id
+		):
+			return false
+
+	return true
 
 
 # ------------------------------------------------------------

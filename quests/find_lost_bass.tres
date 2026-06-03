@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="QuestData" format=3 uid="uid://di4d4w7kocrso"]
+
+[ext_resource type="Script" uid="uid://b3nawtancgvv6" path="res://scripts/quest_data.gd" id="1_2rxkn"]
+
+[resource]
+script = ExtResource("1_2rxkn")
+quest_id = "find_lost_bass"
+display_name = "Find the Lost Bass"
+description = "Look around the old campfire for Bass's missing instrument."
+starts_unlocked = true
+metadata/_custom_type_script = "uid://b3nawtancgvv6"

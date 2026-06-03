@@ -80,6 +80,8 @@ var available_songs := [
 
 var current_song_index := 0
 
+var collected_items: Array[String] = []
+
 # ------------------------------------------------------------
 # Lifecycle
 # ------------------------------------------------------------
@@ -136,6 +138,44 @@ func _physics_process(delta: float) -> void:
 	_handle_instrument_cycle_input()
 	_handle_song_cycle_input()
 	_handle_play_instrument_input()
+
+
+func collect_item(item_id: String) -> void:
+
+	if collected_items.has(item_id):
+		return
+
+	collected_items.append(item_id)
+
+	print(
+		"COLLECTED ITEM: ",
+		item_id
+	)
+
+	print(
+		"ALL ITEMS: ",
+		collected_items
+	)
+
+	for npc in get_tree().get_nodes_in_group("npc_musician"):
+
+		if not is_instance_valid(npc):
+			continue
+
+		if npc.required_item_id != item_id:
+			continue
+
+		if npc.dialogue_controller == null:
+			continue
+
+		if npc.dialogue_controller.progression_state \
+		!= npc.dialogue_controller.NPCProgressionState.TASK_GIVEN:
+			continue
+
+		npc.complete_task()
+
+func has_item(item_id: String) -> bool:
+	return collected_items.has(item_id)
 
 
 # ------------------------------------------------------------

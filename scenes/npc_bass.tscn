@@ -7,7 +7,7 @@
 [ext_resource type="AudioStream" uid="uid://26yo666jqypi" path="res://audio/song 2/song2-003-bass_rhythm.wav" id="5_4jck1"]
 [ext_resource type="AudioStream" uid="uid://dgm72bsip4rv7" path="res://audio/song 2/song2-004-bass_lead.wav" id="6_kfjlm"]
 [ext_resource type="PackedScene" uid="uid://cbc1xf2odpyw4" path="res://scenes/npc_task_controller.tscn" id="7_1pmlb"]
-[ext_resource type="Script" uid="uid://twvvm82k05yr" path="res://scripts/npc_dialogue_controller.gd" id="8_4jck1"]
+[ext_resource type="Script" uid="uid://twvvm82k05yr" path="res://scripts/musicians/npc_dialogue_controller.gd" id="8_4jck1"]
 [ext_resource type="Script" uid="uid://opgri4swc804" path="res://scripts/dialogue/dialogue_line.gd" id="9_v66fy"]
 [ext_resource type="Script" uid="uid://dp0aobj5pqnj3" path="res://scripts/dialogue/dialogue_sequence.gd" id="10_lm4vc"]
 [ext_resource type="Script" uid="uid://cxymkcbaj7wk2" path="res://scripts/dialogue/npc_dialogue_data.gd" id="11_fmlal"]
@@ -18,9 +18,25 @@ radius = 24.0
 [sub_resource type="CircleShape2D" id="CircleShape2D_uqgcj"]
 radius = 50.0
 
+[sub_resource type="Resource" id="Resource_sw24v"]
+script = ExtResource("9_v66fy")
+text = "There it is!
+
+I can't believe you found it.
+
+Feels good to have my instrument back."
+metadata/_custom_type_script = "uid://opgri4swc804"
+
+[sub_resource type="Resource" id="Resource_nmqfo"]
+script = ExtResource("10_lm4vc")
+lines = Array[ExtResource("9_v66fy")]([SubResource("Resource_sw24v")])
+metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
+
 [sub_resource type="Resource" id="Resource_v66fy"]
 script = ExtResource("9_v66fy")
-text = "I can hear little jams all over the place."
+text = "I'd join your little jam right now if I could.
+
+Problem is, I can't seem to find my bass."
 metadata/_custom_type_script = "uid://opgri4swc804"
 
 [sub_resource type="Resource" id="Resource_xprhu"]
@@ -30,9 +46,11 @@ metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
 
 [sub_resource type="Resource" id="Resource_lm4vc"]
 script = ExtResource("9_v66fy")
-text = "The campfire sounds better every night.
+text = "Now we're talking.
 
-Seems like the village is finally coming back to life."
+Every good jam needs a bass line.
+
+Let's hear what this village can really sound like."
 metadata/_custom_type_script = "uid://opgri4swc804"
 
 [sub_resource type="Resource" id="Resource_wbben"]
@@ -42,9 +60,11 @@ metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
 
 [sub_resource type="Resource" id="Resource_fmlal"]
 script = ExtResource("9_v66fy")
-text = "What this village really needs is a big campfire jam.
+text = "Last place I remember seeing it was near the old campfire.
 
-Get everyone together around the campfire and show me what this village can sound like."
+I've looked everywhere else.
+
+If you spot it, let me know."
 metadata/_custom_type_script = "uid://opgri4swc804"
 
 [sub_resource type="Resource" id="Resource_nmkdh"]
@@ -56,6 +76,7 @@ metadata/_custom_type_script = "uid://dp0aobj5pqnj3"
 script = ExtResource("11_fmlal")
 intro_dialogue = SubResource("Resource_xprhu")
 task_dialogue = SubResource("Resource_nmkdh")
+completion_dialogue = SubResource("Resource_nmqfo")
 recruited_dialogue = SubResource("Resource_wbben")
 metadata/_custom_type_script = "uid://cxymkcbaj7wk2"
 
@@ -66,8 +87,9 @@ wall_min_slide_angle = 0.0
 script = ExtResource("1_iubrl")
 display_name = "Bass"
 unlock_id = "bass"
-npc_id = "bass"
+npc_id = "npc_bass"
 unlocks_player_instrument = "bass"
+recruit_quest_id = "find_lost_bass"
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
 anchors_preset = 8

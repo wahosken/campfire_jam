@@ -72,6 +72,9 @@ extends CharacterBody2D
 @export var unlocks_player_instrument := ""
 @export var unlocks_player_song := ""
 
+@export var recruit_quest_id := ""
+@export var required_item_id := ""
+
 enum BehaviorState {
 	IDLE,
 	SCHEDULED,
@@ -200,6 +203,26 @@ func _physics_process(delta: float) -> void:
 	_update_jam_formation_movement(delta)
 	_update_follow_player(delta)
 	_update_traveling(delta)
+
+
+func has_required_item() -> bool:
+
+	if required_item_id == "":
+		return true
+
+	var player := get_tree().get_first_node_in_group(
+		"player"
+	)
+
+	if player == null:
+		return false
+
+	if not player.has_method("has_item"):
+		return false
+
+	return player.has_item(
+		required_item_id
+	)
 
 
 # ------------------------------------------------------------
@@ -908,6 +931,9 @@ func unlock_npc() -> void:
 	if dialogue_controller != null:
 		dialogue_controller.unlock_npc()
 
+	if recruit_quest_id != "":
+		QuestManager.complete_quest(recruit_quest_id)
+
 	if unlocks_player_instrument != "":
 
 		var player := get_tree().get_first_node_in_group("player")
@@ -927,6 +953,7 @@ func unlock_npc() -> void:
 				player.unlock_song(
 					unlocks_player_song
 				)
+
 
 func lock_npc() -> void:
 	if dialogue_controller != null:
@@ -959,15 +986,46 @@ func get_intro_state():
 	return dialogue_controller.NPCProgressionState.INTRO
 
 
+func restore_recruited_state() -> void:
+
+	if dialogue_controller != null:
+		dialogue_controller.restore_recruited_state()
+
+	enable_interaction()
+
+	_update_label()
+
+
 func advance_after_dialogue() -> void:
 
 	if dialogue_controller == null:
 		return
 
+	# INTRO -> TASK
 	if dialogue_controller.progression_state \
 	== dialogue_controller.NPCProgressionState.INTRO:
 
 		begin_task()
+		return
+
+	# TASK -> RECRUITED
+	if dialogue_controller.progression_state \
+	== dialogue_controller.NPCProgressionState.TASK_GIVEN:
+
+		if has_item_objective() and has_required_item():
+			complete_task()
+
+		return
+
+	if dialogue_controller.progression_state \
+	== dialogue_controller.NPCProgressionState.TASK_COMPLETE:
+
+		unlock_npc()
+		return
+
+
+func has_item_objective() -> bool:
+	return required_item_id != ""
 
 
 # ------------------------------------------------------------
@@ -1299,6 +1357,9 @@ func _update_label() -> void:
 
 			dialogue_controller.NPCProgressionState.TASK_GIVEN:
 				label.text = "%s [TASK]" % display_name
+
+			dialogue_controller.NPCProgressionState.TASK_COMPLETE:
+				label.text = "%s [READY]" % display_name
 
 			dialogue_controller.NPCProgressionState.RECRUITED:
 				label.text = display_name

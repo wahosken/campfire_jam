@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="QuestData" format=3 uid="uid://v74r0gw75c7f"]
+
+[ext_resource type="Script" uid="uid://b3nawtancgvv6" path="res://scripts/quest_data.gd" id="1_upbuo"]
+
+[resource]
+script = ExtResource("1_upbuo")
+quest_id = "find_the_flask"
+display_name = "Find the Water Flask"
+description = "Search the nearby area for Harmonica's missing water flask."
+starts_unlocked = true
+metadata/_custom_type_script = "uid://b3nawtancgvv6"

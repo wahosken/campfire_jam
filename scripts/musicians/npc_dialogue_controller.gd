@@ -10,6 +10,7 @@ const EVENT_RECRUITMENT := "recruitment"
 enum NPCProgressionState {
 	INTRO,
 	TASK_GIVEN,
+	TASK_COMPLETE,
 	RECRUITED
 }
 
@@ -40,7 +41,7 @@ func get_current_dialogue() -> DialogueSequence:
 
 		match event_id:
 
-			"recruitment":
+			EVENT_RECRUITMENT:
 				return dialogue_data.recruited_dialogue
 
 			_:
@@ -53,6 +54,9 @@ func get_current_dialogue() -> DialogueSequence:
 
 		NPCProgressionState.TASK_GIVEN:
 			return dialogue_data.task_dialogue
+
+		NPCProgressionState.TASK_COMPLETE:
+			return dialogue_data.completion_dialogue
 
 		NPCProgressionState.RECRUITED:
 			return dialogue_data.recruited_dialogue
@@ -85,6 +89,13 @@ func begin_task() -> void:
 
 	set_progression_state(
 		NPCProgressionState.TASK_GIVEN
+	)
+
+
+func complete_task() -> void:
+
+	set_progression_state(
+		NPCProgressionState.TASK_COMPLETE
 	)
 
 
@@ -134,6 +145,20 @@ func is_locked() -> bool:
 
 func is_recruited() -> bool:
 	return progression_state == NPCProgressionState.RECRUITED
+
+
+func restore_recruited_state() -> void:
+
+	progression_state = NPCProgressionState.RECRUITED
+
+	pending_dialogue_events.clear()
+
+	var npc := get_npc()
+
+	if npc != null:
+
+		if npc.has_method("_update_label"):
+			npc._update_label()
 
 
 func set_progression_state(new_state: NPCProgressionState) -> void:
