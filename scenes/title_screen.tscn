@@ -15,12 +15,12 @@ grow_vertical = 2
 script = ExtResource("1_fgkus")
 
 [node name="CenterContainer" type="CenterContainer" parent="." unique_id=1301291049]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+layout_mode = 0
+offset_right = 318.0
+offset_bottom = 360.0
 grow_horizontal = 2
 grow_vertical = 2
+size_flags_horizontal = 3
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=412761045]
 layout_mode = 2
@@ -31,29 +31,91 @@ text = "Camfire Jam"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="CharacterSelector" type="OptionButton" parent="CenterContainer/VBoxContainer" unique_id=1544668567]
-layout_mode = 2
-alignment = 1
-
 [node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=761934999]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "Continue"
 
 [node name="NewWorldButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=484045702]
 layout_mode = 2
-text = "New Game"
+theme_override_font_sizes/font_size = 12
+text = "New World"
 
 [node name="LoadGameButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=514317442]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "Load Game"
 
 [node name="SettingsButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1598071585]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "Settings"
 
 [node name="QuitButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1217300356]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "Quit"
+
+[node name="CharacterPanel" type="Panel" parent="." unique_id=1166973337]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -201.0
+offset_top = -113.0
+offset_right = -72.0
+offset_bottom = -35.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="SelectCharacterLabel" type="Label" parent="CharacterPanel" unique_id=589100163]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -51.0
+offset_right = 51.0
+offset_bottom = 25.0
+grow_horizontal = 2
+size_flags_vertical = 8
+theme_override_font_sizes/font_size = 12
+text = "Select Character: "
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CharacterSelector" type="OptionButton" parent="CharacterPanel" unique_id=1544668567]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -16.0
+offset_top = -10.0
+offset_right = 16.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 12
+alignment = 1
+allow_reselect = true
+
+[node name="Label" type="Label" parent="." unique_id=1857940418]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -19.0
+offset_right = 56.0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 8
+text = "v0.1.0"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="CharacterCreationMenu" parent="." unique_id=1306261687 instance=ExtResource("2_sa3yf")]
 visible = false
@@ -64,9 +126,9 @@ visible = false
 [node name="LoadGameMenu" parent="." unique_id=962619876 instance=ExtResource("4_mgrm8")]
 visible = false
 
-[connection signal="item_selected" from="CenterContainer/VBoxContainer/CharacterSelector" to="." method="_on_character_selector_item_selected"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/ContinueButton" to="." method="_on_continue_button_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/NewWorldButton" to="." method="_on_new_world_button_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/LoadGameButton" to="." method="_on_load_game_button_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/SettingsButton" to="." method="_on_settings_button_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]
+[connection signal="item_selected" from="CharacterPanel/CharacterSelector" to="." method="_on_character_selector_item_selected"]

@@ -4,7 +4,7 @@ extends Control
 @onready var world_creation_menu: CanvasLayer = $WorldCreationMenu
 @onready var load_game_menu = $LoadGameMenu
 
-@onready var character_selector: OptionButton = $CenterContainer/VBoxContainer/CharacterSelector
+@onready var character_selector: OptionButton = $CharacterPanel/CharacterSelector
 
 func _ready() -> void:
 
@@ -125,38 +125,34 @@ func refresh_character_list() -> void:
 
 	# Restore current selection if possible
 
+	var found_selection := false
+
 	for i in range(
 		character_selector.item_count
 	):
 
 		var id := str(
-			character_selector.get_item_metadata(
-				i
-			)
+			character_selector.get_item_metadata(i)
 		)
 
 		if id == SaveManager.current_character_id:
 
 			character_selector.select(i)
 
-			return
+			found_selection = true
+
+			break
 
 	# Otherwise select first character
 
-	if character_selector.item_count > 0:
+	if not found_selection \
+		and character_selector.item_count > 0:
 
-		character_selector.select(0)
+			character_selector.select(0)
 
-		SaveManager.current_character_id = str(
-			character_selector.get_item_metadata(
-				0
+			SaveManager.current_character_id = str(
+				character_selector.get_item_metadata(0)
 			)
-		)
-
-		print(
-			"SELECTED CHARACTER:",
-			SaveManager.current_character_id
-		)
 
 	character_selector.add_item(
 		"Create Character..."
@@ -185,9 +181,7 @@ func get_selected_character_id() -> String:
 	)
 
 
-func _on_character_selector_item_selected(
-	index: int
-) -> void:
+func _on_character_selector_item_selected(index: int) -> void:
 
 	var value := str(
 		character_selector.get_item_metadata(
@@ -199,11 +193,10 @@ func _on_character_selector_item_selected(
 
 		character_creation_menu.open_menu()
 
+		var _selected := get_selected_character_id()
+
+		refresh_character_list()
+
 		return
 
 	SaveManager.current_character_id = value
-
-	print(
-		"SELECTED CHARACTER:",
-		SaveManager.current_character_id
-	)
