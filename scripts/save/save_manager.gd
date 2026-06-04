@@ -230,22 +230,22 @@ func save_character_file() -> void:
 
 	if FileAccess.file_exists(path):
 
-		var file := FileAccess.open(
+		var read_file := FileAccess.open(
 			path,
 			FileAccess.READ
 		)
 
-		if file != null:
+		if read_file != null:
 
 			var json := JSON.new()
 
 			if json.parse(
-				file.get_as_text()
+				read_file.get_as_text()
 			) == OK:
 
 				data = json.data
 
-			file.close()
+			read_file.close()
 
 	data["last_played"] = \
 		Time.get_unix_time_from_system()
@@ -259,22 +259,22 @@ func save_character_file() -> void:
 	data["collected_items"] = \
 		character_data.collected_items
 
-	var file := FileAccess.open(
+	var write_file := FileAccess.open(
 		path,
 		FileAccess.WRITE
 	)
 
-	if file == null:
+	if write_file == null:
 		return
 
-	file.store_string(
+	write_file.store_string(
 		JSON.stringify(
 			data,
 			"\t"
 		)
 	)
 
-	file.close()
+	write_file.close()
 
 	print(
 		"CHARACTER SAVED:",
