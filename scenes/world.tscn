@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://caabunylbva7i"]
 
+[ext_resource type="Script" uid="uid://bihk7de3l3aj2" path="res://scripts/world/world.gd" id="1_oo54l"]
 [ext_resource type="PackedScene" uid="uid://cuy8oa3i1e11g" path="res://scenes/jam_spot.tscn" id="2_2lf6f"]
 [ext_resource type="AudioStream" uid="uid://bdt0nd08g1i2s" path="res://audio/Fountain-Sound-Effect.mp3" id="3_7iits"]
 [ext_resource type="AudioStream" uid="uid://wnyybsp2f1ks" path="res://audio/Campfire-Sound-Effect_youtube.com_channe_lUC8GNHHbLg6ByCN1DZcUjylQvideos.mp3" id="5_kpybi"]
@@ -37,6 +38,15 @@ size = Vector2(32, 32)
 radius = 200.0
 
 [node name="World" type="Node2D" unique_id=163281152]
+script = ExtResource("1_oo54l")
+
+[node name="MusicSystem" parent="." unique_id=1650685233 instance=ExtResource("14_fh13f")]
+
+[node name="JamManager" parent="." unique_id=841948683 instance=ExtResource("11_37qwj")]
+freeform_jam_context_scene = ExtResource("12_navra")
+jamspot_handoff_delay = 2.5
+
+[node name="NPCUnlockManager" parent="." unique_id=113470290 instance=ExtResource("18_lakw3")]
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=2082799229]
 navigation_polygon = SubResource("NavigationPolygon_s3408")
@@ -198,6 +208,12 @@ jam_requirement = 3
 required_jamspot = NodePath("../FountainJamSpot")
 quest_id = "play_fountain_song"
 
+[node name="CommunityBoard" parent="." unique_id=550398943 instance=ExtResource("19_oo54l")]
+position = Vector2(854, -1287)
+
+[node name="House" parent="." unique_id=1834173392 instance=ExtResource("10_0nbtd")]
+position = Vector2(1100, -1117)
+
 [node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("6_ctatt")]
 position = Vector2(-266, -1913)
 primary_song_id = "song_02"
@@ -219,15 +235,13 @@ position = Vector2(869, -978)
 unlocks_player_song = "song_02"
 start_locked = true
 
-[node name="House" parent="." unique_id=1834173392 instance=ExtResource("10_0nbtd")]
-position = Vector2(1100, -1117)
+[node name="LostBass_QuestCollectable" parent="." unique_id=1042241573 instance=ExtResource("21_7iits")]
+position = Vector2(-318, -745)
+item_id = "lost_bass"
 
-[node name="CommunityBoard" parent="." unique_id=550398943 instance=ExtResource("19_oo54l")]
-position = Vector2(854, -1287)
-
-[node name="JamManager" parent="." unique_id=841948683 instance=ExtResource("11_37qwj")]
-freeform_jam_context_scene = ExtResource("12_navra")
-jamspot_handoff_delay = 2.5
+[node name="WaterFlask_QuestCollectable" parent="." unique_id=1393443570 instance=ExtResource("21_7iits")]
+position = Vector2(928, -1902)
+item_id = "water_flask"
 
 [node name="player" parent="." unique_id=685309387 instance=ExtResource("13_luhhm")]
 position = Vector2(326, -1503)
@@ -235,8 +249,6 @@ position = Vector2(326, -1503)
 [node name="Camera2D" type="Camera2D" parent="player" unique_id=1166826738]
 position_smoothing_enabled = true
 position_smoothing_speed = 6.0
-
-[node name="MusicSystem" parent="." unique_id=1650685233 instance=ExtResource("14_fh13f")]
 
 [node name="TouchOverlay" parent="." unique_id=183187612 instance=ExtResource("15_rup4s")]
 touch_mode = 1
@@ -293,14 +305,4 @@ offset_bottom = 100.0
 grow_horizontal = 0
 text = "Debug"
 
-[node name="NPCUnlockManager" parent="." unique_id=113470290 instance=ExtResource("18_lakw3")]
-
 [node name="DialogueBox" parent="." unique_id=178478530 instance=ExtResource("20_2lf6f")]
-
-[node name="LostBass_QuestCollectable" parent="." unique_id=1042241573 instance=ExtResource("21_7iits")]
-position = Vector2(-318, -745)
-item_id = "lost_bass"
-
-[node name="WaterFlask_QuestCollectable" parent="." unique_id=1393443570 instance=ExtResource("21_7iits")]
-position = Vector2(928, -1902)
-item_id = "water_flask"

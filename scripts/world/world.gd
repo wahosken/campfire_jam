@@ -4,18 +4,28 @@ extends Node2D
 @onready var player: CharacterBody2D = $player
 @onready var jam_ui: Control = $CanvasLayer/UI
 
-@onready var start_gate: CanvasLayer = $StartGate
 @onready var jam_manager: Node = $JamManager
 
 
 func _ready() -> void:
+
+	print("WORLD READY")
+
 	jam_ui.setup_ui(player, music_system)
-	start_gate.game_started.connect(_on_game_started)
+
+	call_deferred("_load_save_data")
 
 
 func _process(_delta: float) -> void:
 	jam_ui.update_ui()
 
+
+func _load_save_data() -> void:
+
+	print("WORLD CALLING LOAD_GAME")
+
+	if not SaveManager.current_world_id.is_empty():
+		SaveManager.load_game()
 
 
 func _on_game_started() -> void:

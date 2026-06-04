@@ -79,6 +79,56 @@ func _process(_delta: float) -> void:
 	_update_debug_overlay()
 
 
+func _on_songbook_button_pressed() -> void:
+	open_tab(0)
+
+func _on_journal_button_pressed() -> void:
+	open_tab(1)
+
+func _on_community_button_pressed() -> void:
+	open_tab(2)
+
+func _on_system_button_pressed() -> void:
+	open_tab(3)
+
+
+func _on_save_button_pressed() -> void:
+
+	SaveManager.save_game()
+
+	print("MANUAL SAVE")
+
+
+func _on_return_to_title_button_pressed() -> void:
+
+	SaveManager.save_game()
+
+	SaveManager.save_profile()
+
+	get_tree().paused = false
+
+	get_tree().change_scene_to_file(
+		"res://scenes/title_screen.tscn"
+	)
+
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("pause"):
+		if not _can_pause_now():
+			return
+
+		toggle_pause()
+		get_viewport().set_input_as_handled()
+
+
+func _can_pause_now() -> bool:
+
+	if DialogueManager.is_dialogue_active():
+		return false
+
+	return true
+
+
 func open_tab(tab_index: int) -> void:
 
 	body_tab_container.current_tab = tab_index
@@ -97,35 +147,6 @@ func open_tab(tab_index: int) -> void:
 		3:
 			resume_button.grab_focus()
 
-
-func _on_songbook_button_pressed() -> void:
-	open_tab(0)
-
-func _on_journal_button_pressed() -> void:
-	open_tab(1)
-
-func _on_community_button_pressed() -> void:
-	open_tab(2)
-
-func _on_system_button_pressed() -> void:
-	open_tab(3)
-
-
-func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("pause"):
-		if not _can_pause_now():
-			return
-
-		toggle_pause()
-		get_viewport().set_input_as_handled()
-
-
-func _can_pause_now() -> bool:
-
-	if DialogueManager.is_dialogue_active():
-		return false
-
-	return true
 
 func _handle_touch_press(touch_position: Vector2) -> void:
 	var buttons: Array[Button] = [

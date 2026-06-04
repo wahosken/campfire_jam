@@ -60,10 +60,11 @@ text = "System"
 [node name="BodyTabContainer" type="TabContainer" parent="PanelContainer/VBoxContainer" unique_id=986808846]
 layout_mode = 2
 size_flags_vertical = 3
-current_tab = 0
+current_tab = 3
 tabs_visible = false
 
 [node name="SongbookTab" type="VBoxContainer" parent="PanelContainer/VBoxContainer/BodyTabContainer" unique_id=526278022]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 0
 
@@ -105,7 +106,6 @@ theme_override_font_sizes/italics_font_size = 12
 theme_override_font_sizes/mono_font_size = 12
 
 [node name="SystemTab" type="VBoxContainer" parent="PanelContainer/VBoxContainer/BodyTabContainer" unique_id=1956417957]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 3
 
@@ -114,36 +114,63 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Resume"
 
+[node name="SaveButton" type="Button" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1231602432]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Save"
+
+[node name="ReturnToTitleButton" type="Button" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=338563536]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Return To Title"
+
+[node name="SettingsButton" type="Button" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=757209661]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Settings"
+
+[node name="QuitButton" type="Button" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1995990563]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Quit"
+
 [node name="RestartSceneButton" type="Button" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1109334909]
+visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Restart"
 
 [node name="Label" type="Label" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1851644040]
+visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Volume"
 horizontal_alignment = 1
 
 [node name="VolumeSlider" type="HSlider" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1479561821]
+visible = false
 layout_mode = 2
 
 [node name="MuteButton" type="Button" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1192045965]
+visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Mute"
 
 [node name="TouchArrowsButton" type="Button" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=449643817]
+visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Touch Arrows"
 
 [node name="TouchJoystickButton" type="Button" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=96710952]
+visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Touch Joystick"
 
 [node name="DebugSectionLabel" type="Label" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1197200820]
+visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Debugs"
@@ -151,11 +178,13 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="ShowJamRadiusButton" type="CheckButton" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1352949287]
+visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Show Jam Radius"
 
 [node name="ShowFPSButton" type="CheckButton" parent="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab" unique_id=1950585196]
+visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Show FPS"
@@ -169,3 +198,5 @@ text = "Close"
 [connection signal="pressed" from="PanelContainer/VBoxContainer/Tabs/JournalButton" to="." method="_on_journal_button_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/Tabs/CommunityButton" to="." method="_on_community_button_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/Tabs/SystemButton" to="." method="_on_system_button_pressed"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab/SaveButton" to="." method="_on_save_button_pressed"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/BodyTabContainer/SystemTab/ReturnToTitleButton" to="." method="_on_return_to_title_button_pressed"]
