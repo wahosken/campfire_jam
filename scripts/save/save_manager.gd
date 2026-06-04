@@ -1,12 +1,16 @@
 extends Node
 
 const CHARACTER_FOLDER := "user://characters/"
-
 const WORLD_FOLDER := "user://worlds/"
-
 const PROFILE_PATH := "user://profile.json"
-
 const SAVE_PATH := "user://campfirejam_save.json"
+const AUTOSAVE_FOLDER := "user://autosaves/"
+
+const AUTOSAVE_COOLDOWN := 5.0
+
+var last_autosave_time := 0.0
+
+var is_loading_game := false
 
 var world_data := WorldSaveData.new()
 
@@ -215,6 +219,29 @@ func save_game() -> void:
 	print("GAME SAVED")
 
 
+func create_autosave() -> void:
+
+	if is_loading_game:
+		return
+
+	if current_world_id.is_empty():
+		return
+
+	var current_time := Time.get_unix_time_from_system()
+
+	if current_time - last_autosave_time < AUTOSAVE_COOLDOWN:
+
+		print("AUTOSAVE SKIPPED (COOLDOWN)")
+
+		return
+
+	last_autosave_time = current_time
+
+	save_game()
+
+	print("AUTOSAVE CREATED")
+
+
 func save_character_file() -> void:
 
 	capture_game_state()
@@ -222,64 +249,42 @@ func save_character_file() -> void:
 	if current_character_id.is_empty():
 		return
 
-	var path := get_character_path(
-		current_character_id
-	)
+	var path := get_character_path(current_character_id)
 
 	var data := {}
 
 	if FileAccess.file_exists(path):
 
-		var read_file := FileAccess.open(
-			path,
-			FileAccess.READ
-		)
+		var read_file := FileAccess.open(path,FileAccess.READ)
 
 		if read_file != null:
 
 			var json := JSON.new()
 
-			if json.parse(
-				read_file.get_as_text()
-			) == OK:
+			if json.parse(read_file.get_as_text()) == OK:
 
 				data = json.data
 
 			read_file.close()
 
-	data["last_played"] = \
-		Time.get_unix_time_from_system()
+	data["last_played"] = Time.get_unix_time_from_system()
 
-	data["unlocked_instruments"] = \
-		character_data.unlocked_instruments
+	data["unlocked_instruments"] = character_data.unlocked_instruments
 
-	data["unlocked_songs"] = \
-		character_data.unlocked_songs
+	data["unlocked_songs"] = character_data.unlocked_songs
 
-	data["collected_items"] = \
-		character_data.collected_items
+	data["collected_items"] = character_data.collected_items
 
-	var write_file := FileAccess.open(
-		path,
-		FileAccess.WRITE
-	)
+	var write_file := FileAccess.open(path,FileAccess.WRITE)
 
 	if write_file == null:
 		return
 
-	write_file.store_string(
-		JSON.stringify(
-			data,
-			"\t"
-		)
-	)
+	write_file.store_string(JSON.stringify(data,"\t"))
 
 	write_file.close()
 
-	print(
-		"CHARACTER SAVED:",
-		current_character_id
-	)
+	print("CHARACTER SAVED:",current_character_id)
 
 
 func save_world_file() -> void:
@@ -370,6 +375,8 @@ func is_item_collected(item_id: String) -> bool:
 
 func load_game() -> void:
 
+	is_loading_game = true
+
 	print("LOAD_GAME CALLED")
 
 	if not load_world_file():
@@ -414,6 +421,8 @@ func load_game() -> void:
 	)
 
 	restore_loaded_state()
+
+	is_loading_game = false
 
 	print("GAME LOADED")
 

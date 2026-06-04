@@ -954,6 +954,8 @@ func unlock_npc() -> void:
 					unlocks_player_song
 				)
 
+	SaveManager.create_autosave()
+
 
 func lock_npc() -> void:
 	if dialogue_controller != null:

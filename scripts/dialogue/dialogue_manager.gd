@@ -10,8 +10,11 @@ var dialogue_box = null
 var dialogue_active := false
 
 
-func _ready() -> void:
-	dialogue_box = get_tree().get_first_node_in_group("dialogue_box")
+func get_dialogue_box():
+
+	if dialogue_box == null: dialogue_box = get_tree().get_first_node_in_group("dialogue_box")
+
+	return dialogue_box
 
 
 func start_dialogue(sequence, speaker = null) -> void:
@@ -36,13 +39,15 @@ func show_current_line() -> void:
 		end_dialogue()
 		return
 
-	if dialogue_box == null:
+	var box = get_dialogue_box()
+
+	if box == null:
+
+		print("NO DIALOGUE BOX FOUND")
+
 		return
 
-	dialogue_box.show_line(
-		current_sequence.lines[current_index],
-		current_speaker
-	)
+	box.show_line(current_sequence.lines[current_index],current_speaker)
 
 
 func advance() -> void:
@@ -67,8 +72,9 @@ func end_dialogue() -> void:
 	current_sequence = null
 	current_index = 0
 
-	if dialogue_box != null:
-		dialogue_box.hide()
+	var box = get_dialogue_box()
+
+	if box != null: box.hide()
 
 
 func is_dialogue_active() -> bool:

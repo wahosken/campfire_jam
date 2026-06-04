@@ -147,6 +147,8 @@ func collect_item(item_id: String) -> void:
 
 	collected_items.append(item_id)
 
+	SaveManager.create_autosave()
+
 	print(
 		"COLLECTED ITEM: ",
 		item_id
@@ -189,6 +191,9 @@ func is_instrument_unlocked(instrument_id: String) -> bool:
 
 func unlock_instrument(instrument_id: String) -> void:
 
+	print("UNLOCK INSTRUMENT CALLED FROM:")
+	print_stack()
+
 	if instrument_id.is_empty():
 		return
 
@@ -196,6 +201,8 @@ func unlock_instrument(instrument_id: String) -> void:
 		return
 
 	unlocked_instruments.append(instrument_id)
+
+	SaveManager.create_autosave()
 
 	print("UNLOCKED INSTRUMENT: ", instrument_id)
 
@@ -206,6 +213,9 @@ func is_song_unlocked(song_id: String) -> bool:
 
 func unlock_song(song_id: String) -> void:
 
+	print("UNLOCK SONG CALLED FROM:")
+	print_stack()
+
 	if song_id.is_empty():
 		return
 
@@ -213,6 +223,8 @@ func unlock_song(song_id: String) -> void:
 		return
 
 	unlocked_songs.append(song_id)
+
+	SaveManager.create_autosave()
 
 	print("UNLOCKED SONG: ", song_id)
 

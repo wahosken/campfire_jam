@@ -275,15 +275,16 @@ func _talk_action() -> void:
 			if npc.has_method("toggle_play_song_request"):
 				npc.toggle_play_song_request()
 
-	close()
+	var dialogue: DialogueSequence = npc.get_current_dialogue()
 
-	await get_tree().process_frame
+	if dialogue != null:
 
-	if npc.get_current_dialogue() != null:
 		DialogueManager.start_dialogue(
-			npc.get_current_dialogue(),
+			dialogue,
 			npc
 		)
+
+		close()
 
 
 func _play_action() -> void:

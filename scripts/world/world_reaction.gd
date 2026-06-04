@@ -70,8 +70,7 @@ func restore_completed_state() -> void:
 
 	if target_npc != null:
 
-		if target_npc.has_method("unlock_npc"):
-			target_npc.unlock_npc()
+		if target_npc.has_method("restore_recruited_state"): target_npc.restore_recruited_state()
 
 
 func _startup_refresh() -> void:
