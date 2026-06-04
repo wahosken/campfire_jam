@@ -15,6 +15,8 @@ func open_menu() -> void:
 
 	name_input.clear()
 
+	await get_tree().process_frame
+
 	name_input.grab_focus()
 
 

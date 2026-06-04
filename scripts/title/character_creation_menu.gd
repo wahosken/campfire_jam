@@ -13,7 +13,14 @@ func open_menu() -> void:
 
 	name_input.clear()
 
+	await get_tree().process_frame
+
 	name_input.grab_focus()
+
+	print(
+		"FOCUSED:",
+		name_input.has_focus()
+	)
 
 
 func close_menu() -> void:
