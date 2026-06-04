@@ -3,7 +3,6 @@ extends Node
 const CHARACTER_FOLDER := "user://characters/"
 const WORLD_FOLDER := "user://worlds/"
 const PROFILE_PATH := "user://profile.json"
-const SAVE_PATH := "user://campfirejam_save.json"
 const AUTOSAVE_FOLDER := "user://autosaves/"
 
 const AUTOSAVE_COOLDOWN := 5.0
@@ -27,7 +26,28 @@ func _ready() -> void:
 
 	DirAccess.make_dir_absolute(WORLD_FOLDER)
 
+	DirAccess.make_dir_absolute(AUTOSAVE_FOLDER)
+
 	ensure_profile_exists()
+
+
+func get_timestamp_string() -> String:
+
+	var datetime := \
+		Time.get_datetime_dict_from_system()
+
+	return (
+		"%04d-%02d-%02d_%02d-%02d-%02d"
+		% [
+			datetime.year,
+			datetime.month,
+			datetime.day,
+			datetime.hour,
+			datetime.minute,
+			datetime.second
+		]
+	)
+
 
 func get_character_path(character_id: String) -> String:
 
@@ -39,17 +59,66 @@ func get_world_path(world_id: String) -> String:
 	return WORLD_FOLDER + world_id + ".json"
 
 
-func ensure_profile_exists() -> void:
+func get_world_autosave_folder(world_id: String) -> String:
 
-	if FileAccess.file_exists(PROFILE_PATH):
-		return
+	return (AUTOSAVE_FOLDER + world_id + "/")
 
-	var profile := {
-		"last_world_id": ""
+
+func create_autosave_snapshot() -> void:
+
+	var folder := \
+		get_world_autosave_folder(
+			current_world_id
+		)
+
+	DirAccess.make_dir_absolute(
+		folder
+	)
+
+	var autosave_path := (
+		folder +
+		"autosave_" +
+		get_timestamp_string() +
+		".json"
+	)
+
+	var data := {
+
+		"world_id":
+			current_world_id,
+
+		"world_name":
+			build_world_snapshot().get(
+				"world_name",
+				""
+			),
+
+		"character_id":
+			current_character_id,
+
+		"character_name":
+			build_character_snapshot().get(
+				"character_name",
+				""
+			),
+
+		"created_at":
+			int(
+				Time.get_unix_time_from_system()
+			),
+
+		"display_timestamp":
+			get_timestamp_string(),
+
+		"world_data":
+			build_world_snapshot(),
+
+		"character_data":
+			build_character_snapshot()
 	}
 
 	var file := FileAccess.open(
-		PROFILE_PATH,
+		autosave_path,
 		FileAccess.WRITE
 	)
 
@@ -58,20 +127,43 @@ func ensure_profile_exists() -> void:
 
 	file.store_string(
 		JSON.stringify(
-			profile,
+			data,
 			"\t"
 		)
 	)
 
 	file.close()
 
+	print(
+		"AUTOSAVE SNAPSHOT:",
+		autosave_path
+	)
+
+	prune_old_autosaves(
+		folder
+	)
+
+func ensure_profile_exists() -> void:
+
+	if FileAccess.file_exists(PROFILE_PATH):
+		return
+
+	var profile := {"last_world_id": ""}
+
+	var file := FileAccess.open(PROFILE_PATH,FileAccess.WRITE)
+
+	if file == null:
+		return
+
+	file.store_string(JSON.stringify(profile,"\t"))
+
+	file.close()
+
 
 func create_character(character_name: String) -> String:
 
-	var id := "character_" + str(Time.get_ticks_msec())
+	var id := ("character_" + get_timestamp_string())
 
-	var current_time := \
-		Time.get_unix_time_from_system()
 
 	var character_dict := {
 
@@ -80,8 +172,13 @@ func create_character(character_name: String) -> String:
 		"character_id": id,
 		"character_name": character_name,
 
-		"created_at": current_time,
-		"last_played": current_time,
+		"created_at": int(
+			Time.get_unix_time_from_system()
+		),
+
+		"last_played": int(
+			Time.get_unix_time_from_system()
+		),
 
 		"unlocked_instruments": [
 			"guitar"
@@ -108,9 +205,9 @@ func create_character(character_name: String) -> String:
 
 func create_world(world_name: String) -> String:
 
-	var id := "world_" + str(Time.get_ticks_msec())
+	var id := ("world_" + get_timestamp_string())
 
-	var current_time := Time.get_unix_time_from_system()
+	var current_time := int(Time.get_unix_time_from_system())
 
 	var world_dict := {
 
@@ -239,7 +336,43 @@ func create_autosave() -> void:
 
 	save_game()
 
+	create_autosave_snapshot()
+
 	print("AUTOSAVE CREATED")
+
+
+func prune_old_autosaves(folder: String) -> void:
+
+	var files: Array[String] = []
+
+	var dir := DirAccess.open(folder)
+
+	if dir == null:
+		return
+
+	dir.list_dir_begin()
+
+	var file_name := dir.get_next()
+
+	while file_name != "":
+
+		if file_name.ends_with(".json"):
+
+			files.append(file_name)
+
+		file_name = dir.get_next()
+
+	dir.list_dir_end()
+
+	files.sort()
+
+	while files.size() > 3:
+
+		var oldest: String = files.pop_front()
+
+		DirAccess.remove_absolute(folder + oldest)
+
+		print("REMOVED AUTOSAVE:",oldest)
 
 
 func save_character_file() -> void:
@@ -267,7 +400,7 @@ func save_character_file() -> void:
 
 			read_file.close()
 
-	data["last_played"] = Time.get_unix_time_from_system()
+	data["last_played"] = int(Time.get_unix_time_from_system())
 
 	data["unlocked_instruments"] = character_data.unlocked_instruments
 
@@ -305,8 +438,7 @@ func save_world_file() -> void:
 	if data.is_empty():
 		return
 
-	data["last_played"] = \
-		Time.get_unix_time_from_system()
+	data["last_played"] = int(Time.get_unix_time_from_system())
 
 	data["recruited_npcs"] = \
 		world_data.recruited_npcs
@@ -746,8 +878,9 @@ func set_world_last_character(
 	data["last_character_id"] = \
 		character_id
 
-	data["last_played"] = \
+	data["last_played"] = int(
 		Time.get_unix_time_from_system()
+	)
 
 	var file := FileAccess.open(
 		get_world_path(world_id),
@@ -830,3 +963,71 @@ func start_game(
 	save_profile()
 
 	return true
+
+
+func build_character_snapshot() -> Dictionary:
+
+	var path := get_character_path(
+		current_character_id
+	)
+
+	if not FileAccess.file_exists(path):
+		return {}
+
+	var file := FileAccess.open(
+		path,
+		FileAccess.READ
+	)
+
+	if file == null:
+		return {}
+
+	var json := JSON.new()
+
+	if json.parse(
+		file.get_as_text()
+	) != OK:
+
+		file.close()
+
+		return {}
+
+	var data = json.data
+
+	file.close()
+
+	return data
+
+
+func build_world_snapshot() -> Dictionary:
+
+	var path := get_world_path(
+		current_world_id
+	)
+
+	if not FileAccess.file_exists(path):
+		return {}
+
+	var file := FileAccess.open(
+		path,
+		FileAccess.READ
+	)
+
+	if file == null:
+		return {}
+
+	var json := JSON.new()
+
+	if json.parse(
+		file.get_as_text()
+	) != OK:
+
+		file.close()
+
+		return {}
+
+	var data = json.data
+
+	file.close()
+
+	return data
