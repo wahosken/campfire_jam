@@ -107,7 +107,7 @@ func _on_return_to_title_button_pressed() -> void:
 
 	get_tree().paused = false
 
-	get_tree().change_scene_to_file("res://scenes/title_screen.tscn")
+	get_tree().change_scene_to_file("res://scenes/title/title_screen.tscn")
 
 
 func _input(event: InputEvent) -> void:

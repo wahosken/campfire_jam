@@ -34,9 +34,7 @@ func is_quest_complete(quest_id: String) -> bool:
 	return completed_quests.has(quest_id)
 
 
-func _activate_jamspots_for_quest(
-	quest_id: String
-) -> void:
+func _activate_jamspots_for_quest(quest_id: String) -> void:
 
 	for jamspot in get_tree().get_nodes_in_group("jam_spot"):
 
@@ -69,9 +67,7 @@ func get_quest(quest_id: String) -> QuestData:
 	return null
 
 
-func restore_completed_quests(
-	quest_ids: Array[String]
-) -> void:
+func restore_completed_quests(quest_ids: Array[String]) -> void:
 
 	completed_quests.clear()
 
@@ -86,9 +82,7 @@ func restore_completed_quests(
 			quest_id
 		)
 
-	for reaction in get_tree().get_nodes_in_group(
-		"world_reaction"
-	):
+	for reaction in get_tree().get_nodes_in_group("world_reaction"):
 
 		if reaction == null:
 			continue
@@ -96,9 +90,7 @@ func restore_completed_quests(
 		if not is_instance_valid(reaction):
 			continue
 
-		if not QuestManager.is_quest_complete(
-			reaction.quest_id
-		):
+		if not QuestManager.is_quest_complete(reaction.quest_id):
 			continue
 
 		reaction.restore_completed_state()

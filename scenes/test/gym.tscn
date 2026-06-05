@@ -1,27 +1,29 @@
-[gd_scene format=3 uid="uid://caabunylbva7i"]
+[gd_scene format=3 uid="uid://eciqrs2ckynp"]
 
-[ext_resource type="PackedScene" uid="uid://cuy8oa3i1e11g" path="res://scenes/jam_spot.tscn" id="2_2lf6f"]
-[ext_resource type="AudioStream" uid="uid://bdt0nd08g1i2s" path="res://audio/Fountain-Sound-Effect.mp3" id="3_7iits"]
-[ext_resource type="AudioStream" uid="uid://wnyybsp2f1ks" path="res://audio/Campfire-Sound-Effect_youtube.com_channe_lUC8GNHHbLg6ByCN1DZcUjylQvideos.mp3" id="5_kpybi"]
-[ext_resource type="PackedScene" uid="uid://ch5e2petf0x3t" path="res://scenes/npc_guitar.tscn" id="6_ctatt"]
-[ext_resource type="PackedScene" uid="uid://dgi3bcdtv1vab" path="res://scenes/npc_bass.tscn" id="7_xgqkh"]
-[ext_resource type="PackedScene" uid="uid://drl7f1y3s7a6x" path="res://scenes/npc_harmonica.tscn" id="8_munwf"]
-[ext_resource type="PackedScene" uid="uid://8cj1uwe35wqt" path="res://scenes/npc_mandolin.tscn" id="9_ts3gi"]
-[ext_resource type="PackedScene" uid="uid://80o547y8x4gj" path="res://scenes/house.tscn" id="10_0nbtd"]
-[ext_resource type="PackedScene" uid="uid://c75d3iwksb5lt" path="res://scenes/jam_manager.tscn" id="11_37qwj"]
-[ext_resource type="PackedScene" uid="uid://025hsnsqi3wr" path="res://scenes/freeform_jam_context.tscn" id="12_navra"]
-[ext_resource type="PackedScene" uid="uid://blfnmt5xbykgs" path="res://scenes/player.tscn" id="13_luhhm"]
-[ext_resource type="PackedScene" uid="uid://tu61b7d68xgv" path="res://scenes/music_system.tscn" id="14_fh13f"]
-[ext_resource type="PackedScene" uid="uid://d21e1vvxjrume" path="res://scenes/overlay.tscn" id="15_rup4s"]
-[ext_resource type="Script" uid="uid://cevh1omjrnc6a" path="res://scripts/ui/jam_ui.gd" id="16_4kbfs"]
-[ext_resource type="PackedScene" uid="uid://d1ifhrg7vlxou" path="res://scenes/npc_dialogue_prompt.tscn" id="17_f17e3"]
-[ext_resource type="PackedScene" uid="uid://dtm7ryrpuv7qa" path="res://scenes/start_gate.tscn" id="18_x2olw"]
-[ext_resource type="PackedScene" uid="uid://dlglwi6aqtsgh" path="res://scenes/pause_menu.tscn" id="19_817gm"]
+[ext_resource type="PackedScene" uid="uid://cuy8oa3i1e11g" path="res://scenes/world/jam_spot.tscn" id="1_h7ru6"]
+[ext_resource type="AudioStream" uid="uid://bdt0nd08g1i2s" path="res://audio/Fountain-Sound-Effect.mp3" id="2_p6j5f"]
+[ext_resource type="AudioStream" uid="uid://wnyybsp2f1ks" path="res://audio/Campfire-Sound-Effect_youtube.com_channe_lUC8GNHHbLg6ByCN1DZcUjylQvideos.mp3" id="3_apyjd"]
+[ext_resource type="PackedScene" uid="uid://s724hjaak62t" path="res://scenes/world/world_reaction.tscn" id="4_76gn4"]
+[ext_resource type="PackedScene" uid="uid://ch5e2petf0x3t" path="res://scenes/characters/npc_guitar.tscn" id="5_qjt3c"]
+[ext_resource type="PackedScene" uid="uid://dgi3bcdtv1vab" path="res://scenes/characters/npc_bass.tscn" id="7_osqml"]
+[ext_resource type="PackedScene" uid="uid://drl7f1y3s7a6x" path="res://scenes/characters/npc_harmonica.tscn" id="8_nat86"]
+[ext_resource type="PackedScene" uid="uid://8cj1uwe35wqt" path="res://scenes/characters/npc_mandolin.tscn" id="9_70mwv"]
+[ext_resource type="PackedScene" uid="uid://80o547y8x4gj" path="res://scenes/world/house.tscn" id="10_25i3r"]
+[ext_resource type="PackedScene" uid="uid://c75d3iwksb5lt" path="res://scenes/system/jam_manager.tscn" id="11_tvh26"]
+[ext_resource type="PackedScene" uid="uid://025hsnsqi3wr" path="res://scenes/system/freeform_jam_context.tscn" id="12_ggecr"]
+[ext_resource type="PackedScene" uid="uid://blfnmt5xbykgs" path="res://scenes/characters/player.tscn" id="13_tg6vg"]
+[ext_resource type="PackedScene" uid="uid://tu61b7d68xgv" path="res://scenes/system/music_system.tscn" id="14_i1336"]
+[ext_resource type="PackedScene" uid="uid://d21e1vvxjrume" path="res://scenes/ui/overlay.tscn" id="15_2lbph"]
+[ext_resource type="Script" uid="uid://cevh1omjrnc6a" path="res://scripts/ui/jam_ui.gd" id="16_1frp0"]
+[ext_resource type="PackedScene" uid="uid://d1ifhrg7vlxou" path="res://scenes/ui/npc_dialogue_prompt.tscn" id="17_qkphc"]
+[ext_resource type="PackedScene" uid="uid://dlglwi6aqtsgh" path="res://scenes/ui/pause_menu.tscn" id="19_yfbod"]
+[ext_resource type="PackedScene" uid="uid://cor2o2sb3weio" path="res://scenes/system/npc_unlock_manager.tscn" id="20_10qg0"]
+[ext_resource type="PackedScene" uid="uid://sago7pta8rx" path="res://scenes/ui/dialogue_box.tscn" id="21_fmhdv"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_s3408"]
-vertices = PackedVector2Array(-975.9922, -1617, 1362.9922, -1617, 700.03906, -1203, 354.9297, -1203, 1362, -47.992188, 698.97656, -900, -975, -47, 357.0703, -900)
-polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(2, 1, 4, 5), PackedInt32Array(5, 4, 6, 7), PackedInt32Array(7, 6, 0, 3)])
-outlines = Array[PackedVector2Array]([PackedVector2Array(-986, -1627, 1373, -1627, 1372, -38, -985, -37)])
+vertices = PackedVector2Array(-975.9922, -1617, 3724, -1617, 700.03906, -1203, 354.9297, -1203, -975.0078, -47, 357.0703, -900, 3724, -47, 698.97656, -900)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(4, 0, 3, 5), PackedInt32Array(6, 4, 5, 7), PackedInt32Array(1, 6, 7, 2)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(-986, -1627, 3734, -1627, 3734, -37, -985, -37)])
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_s3408"]
 radius = 400.0
@@ -32,7 +34,7 @@ size = Vector2(61, 62)
 [sub_resource type="CircleShape2D" id="CircleShape2D_bew7y"]
 radius = 400.0
 
-[node name="World" type="Node2D" unique_id=163281152]
+[node name="Gym" type="Node2D" unique_id=163281152]
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=2082799229]
 navigation_polygon = SubResource("NavigationPolygon_s3408")
@@ -50,13 +52,13 @@ anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -986.0
 offset_top = -1627.0
-offset_right = 1373.0
+offset_right = 3734.0
 offset_bottom = -37.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0.19558403, 0.10315802, 1)
 
-[node name="FountainJamSpot" parent="." unique_id=1582202994 instance=ExtResource("2_2lf6f")]
+[node name="FountainJamSpot" parent="." unique_id=1582202994 instance=ExtResource("1_h7ru6")]
 position = Vector2(-423, -544)
 jam_id = "fountain_jam"
 display_name = "Fountain Jam"
@@ -66,7 +68,7 @@ song_id = "song_02"
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="FountainJamSpot/Fountain" unique_id=1806332226]
 position = Vector2(-30, -30)
-stream = ExtResource("3_7iits")
+stream = ExtResource("2_p6j5f")
 volume_db = -3.0
 autoplay = true
 max_distance = 1000.0
@@ -119,14 +121,14 @@ collision_mask = 2
 position = Vector2(4, 8.5)
 shape = SubResource("RectangleShape2D_bew7y")
 
-[node name="CampfireJamSpot" parent="." unique_id=111465224 instance=ExtResource("2_2lf6f")]
+[node name="CampfireJamSpot" parent="." unique_id=111465224 instance=ExtResource("1_h7ru6")]
 position = Vector2(828, -395)
 
 [node name="Node2D" type="Node2D" parent="CampfireJamSpot" unique_id=1183798559]
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="CampfireJamSpot/Node2D" unique_id=788386734]
 position = Vector2(-27, -23)
-stream = ExtResource("5_kpybi")
+stream = ExtResource("3_apyjd")
 volume_db = -3.0
 autoplay = true
 max_distance = 1000.0
@@ -179,109 +181,47 @@ collision_mask = 2
 position = Vector2(3.5, 7)
 shape = SubResource("RectangleShape2D_bew7y")
 
-[node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("6_ctatt")]
-position = Vector2(461, -562)
-debug_npc_state = null
-can_auto_accompany_player = null
-auto_accompany_radius = null
+[node name="Bridge_WorldReaction" parent="." unique_id=323313496 node_paths=PackedStringArray("target_npc", "required_jamspot") instance=ExtResource("4_76gn4")]
+position = Vector2(-45, -1092)
+target_npc = NodePath("../NPC_Guitar")
+unlock_npc_id = "guitar"
+jam_requirement = 3
+required_jamspot = NodePath("../CampfireJamSpot")
+label_text = "Bridge"
+
+[node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("5_qjt3c")]
+position = Vector2(-495, -1135)
 primary_song_id = "song_02"
-follow_speed = null
-follow_min_distance = null
-follow_max_distance = null
-jam_formation_move_speed = null
-jam_formation_min_distance = null
-jam_formation_max_distance = null
-jam_formation_slow_radius = null
-jamspot_formation_stop_distance = null
-jamspot_formation_slow_radius = null
-precise_formation_stop_distance = null
-precise_formation_slow_radius = null
-use_navigation_agent = null
-navigation_target_update_distance = null
-state_change_delay = null
+start_locked = true
 
-[node name="NPC_Bass" parent="." unique_id=718845583 instance=ExtResource("7_xgqkh")]
-position = Vector2(62, -613)
-debug_npc_state = null
-instrument_name = null
-can_auto_accompany_player = null
-auto_accompany_radius = null
-primary_song_id = null
-follow_speed = null
-follow_min_distance = null
-follow_max_distance = null
-jam_formation_move_speed = null
-jam_formation_min_distance = null
-jam_formation_max_distance = null
-jam_formation_slow_radius = null
-jamspot_formation_stop_distance = null
-jamspot_formation_slow_radius = null
-precise_formation_stop_distance = null
-precise_formation_slow_radius = null
-use_navigation_agent = null
-navigation_target_update_distance = null
-state_change_delay = null
+[node name="NPC_Bass" parent="." unique_id=718845583 instance=ExtResource("7_osqml")]
+position = Vector2(1264, -823)
 
-[node name="NPC_Harmonica" parent="." unique_id=1800832853 instance=ExtResource("8_munwf")]
-position = Vector2(653, -528)
-debug_npc_state = null
-can_auto_accompany_player = null
-auto_accompany_radius = null
+[node name="NPC_Harmonica" parent="." unique_id=1800832853 instance=ExtResource("8_nat86")]
+position = Vector2(55, -808)
 primary_song_id = "song_02"
-follow_speed = null
-follow_min_distance = null
-follow_max_distance = null
-jam_formation_move_speed = null
-jam_formation_min_distance = null
-jam_formation_max_distance = null
-jam_formation_slow_radius = null
-jamspot_formation_stop_distance = null
-jamspot_formation_slow_radius = null
-precise_formation_stop_distance = null
-precise_formation_slow_radius = null
-use_navigation_agent = null
-navigation_target_update_distance = null
-state_change_delay = null
 
-[node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("9_ts3gi")]
-position = Vector2(278, -605)
-debug_npc_state = null
-can_auto_accompany_player = null
-auto_accompany_radius = null
-primary_song_id = null
-follow_speed = null
-follow_min_distance = null
-follow_max_distance = null
-jam_formation_move_speed = null
-jam_formation_min_distance = null
-jam_formation_max_distance = null
-jam_formation_slow_radius = null
-jamspot_formation_stop_distance = null
-jamspot_formation_slow_radius = null
-precise_formation_stop_distance = null
-precise_formation_slow_radius = null
-use_navigation_agent = null
-navigation_target_update_distance = null
-state_change_delay = null
+[node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("9_70mwv")]
+position = Vector2(217, -1085)
 
-[node name="House" parent="." unique_id=1834173392 instance=ExtResource("10_0nbtd")]
+[node name="House" parent="." unique_id=1834173392 instance=ExtResource("10_25i3r")]
 position = Vector2(527, -914)
 
-[node name="JamManager" parent="." unique_id=841948683 instance=ExtResource("11_37qwj")]
-freeform_jam_context_scene = ExtResource("12_navra")
+[node name="JamManager" parent="." unique_id=841948683 instance=ExtResource("11_tvh26")]
+freeform_jam_context_scene = ExtResource("12_ggecr")
 jamspot_handoff_delay = 2.5
 
-[node name="player" parent="." unique_id=685309387 instance=ExtResource("13_luhhm")]
-position = Vector2(697, -629)
+[node name="player" parent="." unique_id=685309387 instance=ExtResource("13_tg6vg")]
+position = Vector2(-668, -1122)
 
 [node name="Camera2D" type="Camera2D" parent="player" unique_id=1166826738]
 zoom = Vector2(0.5, 0.5)
 position_smoothing_enabled = true
 position_smoothing_speed = 6.0
 
-[node name="MusicSystem" parent="." unique_id=1650685233 instance=ExtResource("14_fh13f")]
+[node name="MusicSystem" parent="." unique_id=1650685233 instance=ExtResource("14_i1336")]
 
-[node name="TouchOverlay" parent="." unique_id=183187612 instance=ExtResource("15_rup4s")]
+[node name="TouchOverlay" parent="." unique_id=183187612 instance=ExtResource("15_2lbph")]
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=759509068]
 
@@ -290,7 +230,7 @@ layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
-script = ExtResource("16_4kbfs")
+script = ExtResource("16_1frp0")
 
 [node name="HBoxContainer" type="VBoxContainer" parent="CanvasLayer/UI" unique_id=183968562]
 layout_mode = 0
@@ -321,13 +261,10 @@ text = "Featured Instrument:"
 layout_mode = 2
 text = "Interact"
 
-[node name="NPCDialoguePrompt" parent="." unique_id=1416366564 instance=ExtResource("17_f17e3")]
+[node name="NPCDialoguePrompt" parent="." unique_id=1416366564 instance=ExtResource("17_qkphc")]
 
-[node name="StartGate" parent="." unique_id=185219785 instance=ExtResource("18_x2olw")]
-
-[node name="PauseMenu" parent="." unique_id=2135615612 instance=ExtResource("19_817gm")]
+[node name="PauseMenu" parent="." unique_id=2135615612 instance=ExtResource("19_yfbod")]
 touch_overlay_path = NodePath("../TouchOverlay")
-start_gate_path = NodePath("../StartGate")
 
 [node name="DebugOverlay" type="Label" parent="PauseMenu" unique_id=1345672760]
 anchors_preset = 1
@@ -337,3 +274,7 @@ offset_left = -104.0
 offset_bottom = 100.0
 grow_horizontal = 0
 text = "Debug"
+
+[node name="NPCUnlockManager" parent="." unique_id=113470290 instance=ExtResource("20_10qg0")]
+
+[node name="DialogueBox" parent="." unique_id=178478530 instance=ExtResource("21_fmhdv")]

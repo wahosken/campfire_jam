@@ -1,26 +1,25 @@
 [gd_scene format=3 uid="uid://dd0qsoee80q36"]
 
-[ext_resource type="PackedScene" uid="uid://cuy8oa3i1e11g" path="res://scenes/jam_spot.tscn" id="1_jgx34"]
+[ext_resource type="PackedScene" uid="uid://cuy8oa3i1e11g" path="res://scenes/world/jam_spot.tscn" id="1_jgx34"]
 [ext_resource type="AudioStream" uid="uid://bdt0nd08g1i2s" path="res://audio/Fountain-Sound-Effect.mp3" id="2_xraff"]
 [ext_resource type="AudioStream" uid="uid://wnyybsp2f1ks" path="res://audio/Campfire-Sound-Effect_youtube.com_channe_lUC8GNHHbLg6ByCN1DZcUjylQvideos.mp3" id="3_k4g28"]
-[ext_resource type="PackedScene" uid="uid://s724hjaak62t" path="res://scenes/world_reaction.tscn" id="4_artvx"]
-[ext_resource type="PackedScene" uid="uid://ch5e2petf0x3t" path="res://scenes/npc_guitar.tscn" id="5_xytix"]
-[ext_resource type="PackedScene" uid="uid://dgi3bcdtv1vab" path="res://scenes/npc_bass.tscn" id="6_pmutx"]
-[ext_resource type="PackedScene" uid="uid://drl7f1y3s7a6x" path="res://scenes/npc_harmonica.tscn" id="7_xfpq0"]
-[ext_resource type="PackedScene" uid="uid://8cj1uwe35wqt" path="res://scenes/npc_mandolin.tscn" id="8_bgojd"]
-[ext_resource type="PackedScene" uid="uid://80o547y8x4gj" path="res://scenes/house.tscn" id="9_vnjv1"]
-[ext_resource type="PackedScene" uid="uid://c75d3iwksb5lt" path="res://scenes/jam_manager.tscn" id="10_8ls6u"]
-[ext_resource type="PackedScene" uid="uid://025hsnsqi3wr" path="res://scenes/freeform_jam_context.tscn" id="11_j70x7"]
-[ext_resource type="PackedScene" uid="uid://blfnmt5xbykgs" path="res://scenes/player.tscn" id="12_csaqh"]
-[ext_resource type="PackedScene" uid="uid://tu61b7d68xgv" path="res://scenes/music_system.tscn" id="13_3xwqc"]
-[ext_resource type="PackedScene" uid="uid://d21e1vvxjrume" path="res://scenes/overlay.tscn" id="14_w5okn"]
+[ext_resource type="PackedScene" uid="uid://s724hjaak62t" path="res://scenes/world/world_reaction.tscn" id="4_artvx"]
+[ext_resource type="PackedScene" uid="uid://ch5e2petf0x3t" path="res://scenes/characters/npc_guitar.tscn" id="5_xytix"]
+[ext_resource type="PackedScene" uid="uid://dgi3bcdtv1vab" path="res://scenes/characters/npc_bass.tscn" id="6_pmutx"]
+[ext_resource type="PackedScene" uid="uid://drl7f1y3s7a6x" path="res://scenes/characters/npc_harmonica.tscn" id="7_xfpq0"]
+[ext_resource type="PackedScene" uid="uid://8cj1uwe35wqt" path="res://scenes/characters/npc_mandolin.tscn" id="8_bgojd"]
+[ext_resource type="PackedScene" uid="uid://80o547y8x4gj" path="res://scenes/world/house.tscn" id="9_vnjv1"]
+[ext_resource type="PackedScene" uid="uid://c75d3iwksb5lt" path="res://scenes/system/jam_manager.tscn" id="10_8ls6u"]
+[ext_resource type="PackedScene" uid="uid://025hsnsqi3wr" path="res://scenes/system/freeform_jam_context.tscn" id="11_j70x7"]
+[ext_resource type="PackedScene" uid="uid://blfnmt5xbykgs" path="res://scenes/characters/player.tscn" id="12_csaqh"]
+[ext_resource type="PackedScene" uid="uid://tu61b7d68xgv" path="res://scenes/system/music_system.tscn" id="13_3xwqc"]
+[ext_resource type="PackedScene" uid="uid://d21e1vvxjrume" path="res://scenes/ui/overlay.tscn" id="14_w5okn"]
 [ext_resource type="Script" uid="uid://cevh1omjrnc6a" path="res://scripts/ui/jam_ui.gd" id="15_w3n0p"]
-[ext_resource type="PackedScene" uid="uid://d1ifhrg7vlxou" path="res://scenes/npc_dialogue_prompt.tscn" id="16_s0sij"]
-[ext_resource type="PackedScene" uid="uid://dtm7ryrpuv7qa" path="res://scenes/start_gate.tscn" id="17_hshaf"]
-[ext_resource type="PackedScene" uid="uid://dlglwi6aqtsgh" path="res://scenes/pause_menu.tscn" id="18_21oa5"]
-[ext_resource type="PackedScene" uid="uid://cor2o2sb3weio" path="res://scenes/npc_unlock_manager.tscn" id="19_ewth7"]
-[ext_resource type="PackedScene" uid="uid://sago7pta8rx" path="res://scenes/dialogue_box.tscn" id="20_uas7m"]
-[ext_resource type="PackedScene" uid="uid://c3cgstnsdvuoa" path="res://scenes/wall.tscn" id="21_e5xcv"]
+[ext_resource type="PackedScene" uid="uid://d1ifhrg7vlxou" path="res://scenes/ui/npc_dialogue_prompt.tscn" id="16_s0sij"]
+[ext_resource type="PackedScene" uid="uid://dlglwi6aqtsgh" path="res://scenes/ui/pause_menu.tscn" id="18_21oa5"]
+[ext_resource type="PackedScene" uid="uid://cor2o2sb3weio" path="res://scenes/system/npc_unlock_manager.tscn" id="19_ewth7"]
+[ext_resource type="PackedScene" uid="uid://sago7pta8rx" path="res://scenes/ui/dialogue_box.tscn" id="20_uas7m"]
+[ext_resource type="PackedScene" uid="uid://c3cgstnsdvuoa" path="res://scenes/world/wall.tscn" id="21_e5xcv"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_s3408"]
 vertices = PackedVector2Array(1794.0391, -1240, 2133, -1617, 2133, -47, 1792.9609, -944, -1121, -1617.9922, 1460.0391, -1240, -1121.9922, -47, 1458.9609, -944)
@@ -292,11 +291,8 @@ text = "Interact"
 
 [node name="NPCDialoguePrompt" parent="." unique_id=1416366564 instance=ExtResource("16_s0sij")]
 
-[node name="StartGate" parent="." unique_id=185219785 instance=ExtResource("17_hshaf")]
-
 [node name="PauseMenu" parent="." unique_id=2135615612 instance=ExtResource("18_21oa5")]
 touch_overlay_path = NodePath("../TouchOverlay")
-start_gate_path = NodePath("../StartGate")
 
 [node name="DebugOverlay" type="Label" parent="PauseMenu" unique_id=1345672760]
 anchors_preset = 1

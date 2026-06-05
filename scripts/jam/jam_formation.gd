@@ -212,7 +212,7 @@ func get_freeform_position(member: Node2D, leader_position: Vector2) -> Vector2:
 
 
 func get_field_position_for_npc(member: Node2D, formation_members: Array[Node2D]) -> Vector2:
-	# fallback field logic for freeform (simple + stable)
+	# fallback field logic for freeform
 
 	var center: Vector2 = leader.global_position
 
@@ -276,11 +276,7 @@ func get_slot_positions(leader_position: Vector2, follower_count: int) -> Array[
 	return positions
 
 
-func get_slot_position(
-	leader_position: Vector2,
-	follower_index: int,
-	follower_count: int
-) -> Vector2:
+func get_slot_position(leader_position: Vector2,follower_index: int,follower_count: int) -> Vector2:
 	if follower_count <= 0:
 		return leader_position
 
@@ -345,12 +341,7 @@ func debug_print_slots(leader_position: Vector2, follower_count: int) -> void:
 		print("  Slot %s: %s" % [i, positions[i]])
 
 
-func get_valid_slot_position(
-	leader_position: Vector2,
-	follower_index: int,
-	follower_count: int,
-	fallback_position: Vector2
-) -> Vector2:
+func get_valid_slot_position(leader_position: Vector2,follower_index: int,follower_count: int,fallback_position: Vector2) -> Vector2:
 	var ideal_radius: float = get_radius_for_count(follower_count)
 	var ideal_angle: float = get_angle_for_index(follower_index, follower_count)
 
@@ -413,11 +404,7 @@ func get_angle_for_index(follower_index: int, follower_count: int) -> float:
 	return start_angle + angle_step * float(follower_index)
 
 
-func _find_valid_position_at_radius(
-	leader_position: Vector2,
-	ideal_angle: float,
-	radius: float
-) -> Vector2:
+func _find_valid_position_at_radius(leader_position: Vector2,ideal_angle: float,radius: float) -> Vector2:
 	var ideal_position := leader_position + Vector2.RIGHT.rotated(ideal_angle) * radius
 
 	if _is_world_position_valid(ideal_position):

@@ -16,27 +16,18 @@ func _ready() -> void:
 
 func restore_state() -> void:
 
-	print(
-		"CHECKING:",
-		item_id,
-		SaveManager.character_data.collected_items
-	)
+	print("CHECKING:", item_id, SaveManager.character_data.collected_items)
 
 	if SaveManager.is_item_collected(item_id):
 
-		print(
-			"REMOVING:",
-			item_id
-		)
+		print("REMOVING:", item_id)
 
 		queue_free()
 
 
 func interact() -> void:
 
-	var player := get_tree().get_first_node_in_group(
-		"player"
-	)
+	var player := get_tree().get_first_node_in_group("player")
 
 	if player == null:
 		return

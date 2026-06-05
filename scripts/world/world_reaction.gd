@@ -38,6 +38,7 @@ var activated := false
 
 var check_timer := 0.0
 
+
 func _ready() -> void:
 	add_to_group("world_reaction")
 
@@ -46,6 +47,7 @@ func _ready() -> void:
 
 	reaction_area.body_entered.connect(_on_reaction_area_body_entered)
 	reaction_area.body_exited.connect(_on_reaction_area_body_exited)
+
 
 func _process(delta: float) -> void:
 
@@ -159,8 +161,7 @@ func try_activate(song_id: String) -> bool:
 func try_current_player_jam() -> void:
 
 	# JamSpot objectives evaluate continuously.
-	if jam_requirement == JamRequirement.JAMSPOT \
-	or jam_requirement == JamRequirement.SPECIFIC_JAMSPOT:
+	if jam_requirement == JamRequirement.JAMSPOT or jam_requirement == JamRequirement.SPECIFIC_JAMSPOT:
 
 		try_activate("")
 		return

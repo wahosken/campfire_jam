@@ -176,8 +176,6 @@ func _activate_member(member: Node) -> void:
 	if not was_already_active:
 		_start_member_audio(member)
 	else:
-		# JamSpot refreshes call set_member_active(member, true) repeatedly.
-		# Do not restart active audio unless it never actually started.
 		if not _is_member_audio_playing(member):
 			_start_member_audio(member)
 
@@ -570,7 +568,6 @@ func _apply_arrangement_to_member(member: Node, rhythm_counts: Dictionary) -> vo
 	else:
 		match requested_part:
 			"rhythm":
-				# Explicit rhythm request should never be overridden into melody.
 				rhythm_on = true
 				melody_on = false
 			"melody":
@@ -581,7 +578,6 @@ func _apply_arrangement_to_member(member: Node, rhythm_counts: Dictionary) -> vo
 					rhythm_on = true
 					melody_on = false
 			"both":
-				# Both means this NPC is allowed to participate in normal arrangement.
 				if is_featured:
 					rhythm_on = false
 					melody_on = true
@@ -867,7 +863,6 @@ func _member_is_player_carrying_solo(member: Node) -> bool:
 # ------------------------------------------------------------
 
 # JamContext is the authority for what each member is actually playing.
-# It may update member visuals/labels only if this is still that member's current context.
 func _set_member_part(member: Node, part_name: String) -> void:
 	if member == null:
 		return
@@ -880,7 +875,7 @@ func _set_member_part(member: Node, part_name: String) -> void:
 
 	member_parts[member] = part_name
 
-	# Only the member's current JamContext should control its visible/actual part.
+	# Only the member's current JamContext should control its actual part.
 	# This prevents old/stale contexts from setting a transferred NPC to "silent".
 	if "current_jam_context" in member:
 		if member.current_jam_context != null and member.current_jam_context != self:

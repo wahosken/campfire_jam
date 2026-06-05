@@ -24,9 +24,7 @@ func refresh_worlds() -> void:
 
 	world_list.clear()
 
-	var dir := DirAccess.open(
-		SaveManager.WORLD_FOLDER
-	)
+	var dir := DirAccess.open(SaveManager.WORLD_FOLDER)
 
 	if dir == null:
 		return
@@ -39,19 +37,13 @@ func refresh_worlds() -> void:
 
 		if file_name.ends_with(".json"):
 
-			var path := \
-				SaveManager.WORLD_FOLDER + \
-				file_name
+			var path := SaveManager.WORLD_FOLDER + file_name
 
-			var file := FileAccess.open(
-				path,
-				FileAccess.READ
-			)
+			var file := FileAccess.open(path,FileAccess.READ)
 
 			if file != null:
 
-				var json_text := \
-					file.get_as_text()
+				var json_text := file.get_as_text()
 
 				file.close()
 
@@ -61,31 +53,15 @@ func refresh_worlds() -> void:
 
 					var data = json.data
 
-					var world_name := str(
-						data.get(
-							"world_name",
-							"Unknown"
-						)
-					)
+					var world_name := str(data.get("world_name", "Unknown"))
 
-					var world_id := str(
-						data.get(
-							"world_id",
-							""
-						)
-					)
+					var world_id := str(data.get("world_id", ""))
 
-					world_list.add_item(
-						world_name
-					)
+					world_list.add_item(world_name)
 
-					var index := \
-						world_list.item_count - 1
+					var index := world_list.item_count - 1
 
-					world_list.set_item_metadata(
-						index,
-						world_id
-					)
+					world_list.set_item_metadata(index, world_id)
 
 		file_name = dir.get_next()
 
@@ -99,28 +75,18 @@ func _on_back_button_pressed():
 
 func _on_load_button_pressed() -> void:
 
-	var selected := \
-		world_list.get_selected_items()
+	var selected := world_list.get_selected_items()
 
 	if selected.is_empty():
 		return
 
 	var index := selected[0]
 
-	var world_id := str(
-		world_list.get_item_metadata(
-			index
-		)
-	)
+	var world_id := str(world_list.get_item_metadata(index))
 
-	if SaveManager.start_game(
-		world_id,
-		SaveManager.current_character_id
-	):
+	if SaveManager.start_game(world_id, SaveManager.current_character_id):
 
-		get_tree().change_scene_to_file(
-			"res://scenes/world.tscn"
-		)
+		get_tree().change_scene_to_file("res://scenes/world/world.tscn")
 
 
 func _on_delete_button_pressed() -> void:

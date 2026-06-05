@@ -68,21 +68,11 @@ func get_world_autosave_folder(world_id: String) -> String:
 
 func create_autosave_snapshot() -> void:
 
-	var folder := \
-		get_world_autosave_folder(
-			current_world_id
-		)
+	var folder := get_world_autosave_folder(current_world_id)
 
-	DirAccess.make_dir_absolute(
-		folder
-	)
+	DirAccess.make_dir_absolute(folder)
 
-	var autosave_path := (
-		folder +
-		"autosave_" +
-		get_timestamp_string() +
-		".json"
-	)
+	var autosave_path := (folder + "autosave_" + get_timestamp_string() + ".json")
 
 	var data := {
 
@@ -133,6 +123,7 @@ func create_autosave_snapshot() -> void:
 	print("AUTOSAVE SNAPSHOT:",autosave_path)
 
 	prune_old_autosaves(folder)
+
 
 func ensure_profile_exists() -> void:
 
@@ -236,31 +227,20 @@ func create_world(world_name: String) -> String:
 
 	file.close()
 
-	print(
-		"WORLD CREATED:",
-		id
-	)
+	print("WORLD CREATED:", id)
 
 	return id
 
 
 func capture_game_state() -> void:
 
-	var player := get_tree().get_first_node_in_group(
-		"player"
-	)
+	var player := get_tree().get_first_node_in_group("player")
 
 	if player != null:
 
-		print(
-			"CAPTURE INSTRUMENTS:",
-			player.unlocked_instruments
-		)
+		print("CAPTURE INSTRUMENTS:", player.unlocked_instruments)
 
-		print(
-			"CAPTURE SONGS:",
-			player.unlocked_songs
-		)
+		print("CAPTURE SONGS:", player.unlocked_songs)
 
 		character_data.unlocked_instruments = \
 			player.unlocked_instruments.duplicate()
@@ -273,9 +253,7 @@ func capture_game_state() -> void:
 
 	world_data.recruited_npcs.clear()
 
-	for npc in get_tree().get_nodes_in_group(
-		"npc_musician"
-	):
+	for npc in get_tree().get_nodes_in_group("npc_musician"):
 
 		if not is_instance_valid(npc):
 			continue
@@ -286,16 +264,12 @@ func capture_game_state() -> void:
 		if npc.npc_id.is_empty():
 			continue
 
-		world_data.recruited_npcs.append(
-			npc.npc_id
-		)
+		world_data.recruited_npcs.append(npc.npc_id)
 
-	# NEW
 	world_data.completed_quests.clear()
 
 	if QuestManager != null:
-		world_data.completed_quests = \
-			QuestManager.completed_quests.duplicate()
+		world_data.completed_quests = QuestManager.completed_quests.duplicate()
 
 
 func save_game() -> void:
@@ -420,29 +394,20 @@ func save_world_file() -> void:
 	if current_world_id.is_empty():
 		return
 
-	var path := get_world_path(
-		current_world_id
-	)
+	var path := get_world_path(current_world_id)
 
-	var data := get_world_data(
-		current_world_id
-	)
+	var data := get_world_data(current_world_id)
 
 	if data.is_empty():
 		return
 
 	data["last_played"] = int(Time.get_unix_time_from_system())
 
-	data["recruited_npcs"] = \
-		world_data.recruited_npcs
+	data["recruited_npcs"] = world_data.recruited_npcs
 
-	data["completed_quests"] = \
-		world_data.completed_quests
+	data["completed_quests"] = world_data.completed_quests
 
-	var file := FileAccess.open(
-		path,
-		FileAccess.WRITE
-	)
+	var file := FileAccess.open(path, FileAccess.WRITE)
 
 	if file == null:
 		return
@@ -452,35 +417,6 @@ func save_world_file() -> void:
 	file.close()
 
 	print("WORLD SAVED:",current_world_id)
-
-
-func debug_print_save() -> void:
-
-	capture_game_state()
-
-	print("NPCS: ", world_data.recruited_npcs)
-
-	print("QUESTS: ", world_data.completed_quests)
-
-	print("INSTRUMENTS: ",
-		character_data.unlocked_instruments)
-
-	print("SONGS: ",
-		character_data.unlocked_songs)
-
-	print("ITEMS: ",
-		character_data.collected_items)
-
-
-func _input(event):
-
-	if event.is_action_pressed("ui_page_up"):
-
-		debug_print_save()
-		save_game()
-
-	if event.is_action_pressed("ui_caps"):
-		load_game()
 
 
 func is_item_collected(item_id: String) -> bool:
@@ -604,91 +540,53 @@ func load_latest_autosave() -> bool:
 
 	world_data.recruited_npcs.clear()
 
-	for npc_id in world_snapshot.get(
-		"recruited_npcs",
-		[]
-	):
+	for npc_id in world_snapshot.get("recruited_npcs",[]):
 
-		world_data.recruited_npcs.append(
-			str(npc_id)
-		)
+		world_data.recruited_npcs.append(str(npc_id))
 
 	character_data.unlocked_instruments.clear()
 
-	for instrument in character_snapshot.get(
-		"unlocked_instruments",
-		[]
-	):
+	for instrument in character_snapshot.get("unlocked_instruments",[]):
 
-		character_data.unlocked_instruments.append(
-			str(instrument)
-		)
+		character_data.unlocked_instruments.append(str(instrument))
 
 	character_data.unlocked_songs.clear()
 
-	for song in character_snapshot.get(
-		"unlocked_songs",
-		[]
-	):
+	for song in character_snapshot.get("unlocked_songs", []):
 
-		character_data.unlocked_songs.append(
-			str(song)
-		)
+		character_data.unlocked_songs.append(str(song))
 
 	character_data.collected_items.clear()
 
-	for item in character_snapshot.get(
-		"collected_items",
-		[]
-	):
+	for item in character_snapshot.get("collected_items", []):
 
-		character_data.collected_items.append(
-			str(item)
-		)
+		character_data.collected_items.append(str(item))
 
 	return true
 
 
 func restore_loaded_state() -> void:
 
-	# -------------------------
 	# RESTORE QUESTS
-	# -------------------------
-
 	if QuestManager != null:
 
-		QuestManager.restore_completed_quests(
-			world_data.completed_quests
-		)
+		QuestManager.restore_completed_quests(world_data.completed_quests)
 
-	# -------------------------
 	# RESTORE PLAYER
-	# -------------------------
-
-	var player := get_tree().get_first_node_in_group(
-		"player"
-	)
+	var player := get_tree().get_first_node_in_group("player")
 
 	if player != null:
 
-		player.unlocked_instruments = \
-			character_data.unlocked_instruments.duplicate()
+		player.unlocked_instruments = character_data.unlocked_instruments.duplicate()
 
-		player.unlocked_songs = \
-			character_data.unlocked_songs.duplicate()
+		player.unlocked_songs = character_data.unlocked_songs.duplicate()
 
-		player.collected_items = \
-			character_data.collected_items.duplicate()
+		player.collected_items = character_data.collected_items.duplicate()
 
 		print("PLAYER DATA RESTORED")
 
-	# -------------------------
 	# RESTORE WORLD REACTIONS
-	# -------------------------
-
-	for reaction in get_tree().get_nodes_in_group(
-		"world_reaction"
-	):
+	for reaction in get_tree().get_nodes_in_group("world_reaction"):
 
 		if not is_instance_valid(reaction):
 			continue
@@ -696,57 +594,34 @@ func restore_loaded_state() -> void:
 		if reaction.quest_id.is_empty():
 			continue
 
-		if not QuestManager.is_quest_complete(
-			reaction.quest_id
-		):
+		if not QuestManager.is_quest_complete(reaction.quest_id):
 			continue
 
 		reaction.restore_completed_state()
 
-	# -------------------------
 	# RESTORE NPCS
-	# -------------------------
-
-	for npc in get_tree().get_nodes_in_group(
-		"npc_musician"
-	):
+	for npc in get_tree().get_nodes_in_group("npc_musician"):
 
 		if not is_instance_valid(npc):
 			continue
 
-		if not world_data.recruited_npcs.has(
-			npc.npc_id
-		):
+		if not world_data.recruited_npcs.has(npc.npc_id):
 			continue
 
-		print(
-			"RESTORING NPC:",
-			npc.npc_id
-		)
+		print("RESTORING NPC:",npc.npc_id)
 
 		npc.restore_recruited_state()
 
-	# -------------------------
+
 	# RESTORE COLLECTIBLES
-	# -------------------------
+	print("COLLECTIBLES FOUND:", get_tree().get_nodes_in_group("collectible").size())
 
-	print(
-		"COLLECTIBLES FOUND:",
-		get_tree().get_nodes_in_group(
-			"collectible"
-		).size()
-	)
-
-	for collectible in get_tree().get_nodes_in_group(
-		"collectible"
-	):
+	for collectible in get_tree().get_nodes_in_group("collectible"):
 
 		if not is_instance_valid(collectible):
 			continue
 
-		if collectible.has_method(
-			"restore_state"
-		):
+		if collectible.has_method("restore_state"):
 			collectible.restore_state()
 
 
@@ -755,17 +630,12 @@ func load_character_file() -> bool:
 	if current_character_id.is_empty():
 		return false
 
-	var path := get_character_path(
-		current_character_id
-	)
+	var path := get_character_path(current_character_id)
 
 	if not FileAccess.file_exists(path):
 		return false
 
-	var file := FileAccess.open(
-		path,
-		FileAccess.READ
-	)
+	var file := FileAccess.open(path, FileAccess.READ)
 
 	if file == null:
 		return false
@@ -783,38 +653,20 @@ func load_character_file() -> bool:
 
 	character_data.unlocked_instruments.clear()
 
-	for instrument in data.get(
-		"unlocked_instruments",
-		[]
-	):
-		character_data.unlocked_instruments.append(
-			str(instrument)
-		)
+	for instrument in data.get("unlocked_instruments", []):
+		character_data.unlocked_instruments.append(str(instrument))
 
 	character_data.unlocked_songs.clear()
 
-	for song in data.get(
-		"unlocked_songs",
-		[]
-	):
-		character_data.unlocked_songs.append(
-			str(song)
-		)
+	for song in data.get("unlocked_songs", []):
+		character_data.unlocked_songs.append(str(song))
 
 	character_data.collected_items.clear()
 
-	for item in data.get(
-		"collected_items",
-		[]
-	):
-		character_data.collected_items.append(
-			str(item)
-		)
+	for item in data.get("collected_items", []):
+		character_data.collected_items.append(str(item))
 
-	print(
-		"CHARACTER LOADED:",
-		current_character_id
-	)
+	print("CHARACTER LOADED:", current_character_id)
 
 	return true
 
@@ -824,37 +676,22 @@ func load_world_file() -> bool:
 	if current_world_id.is_empty():
 		return false
 
-	var data := get_world_data(
-		current_world_id
-	)
+	var data := get_world_data(current_world_id)
 
 	if data.is_empty():
 		return false
 
 	world_data.completed_quests.clear()
 
-	for quest_id in data.get(
-		"completed_quests",
-		[]
-	):
-		world_data.completed_quests.append(
-			str(quest_id)
-		)
+	for quest_id in data.get("completed_quests", []):
+		world_data.completed_quests.append(str(quest_id))
 
 	world_data.recruited_npcs.clear()
 
-	for npc_id in data.get(
-		"recruited_npcs",
-		[]
-	):
-		world_data.recruited_npcs.append(
-			str(npc_id)
-		)
+	for npc_id in data.get("recruited_npcs", []):
+		world_data.recruited_npcs.append(str(npc_id))
 
-	print(
-		"WORLD LOADED:",
-		current_world_id
-	)
+	print("WORLD LOADED:", current_world_id)
 
 	return true
 
@@ -863,39 +700,24 @@ func save_profile() -> void:
 
 	print("SAVE_PROFILE CALLED")
 
-	var profile := {
-		"last_world_id": current_world_id
-	}
+	var profile := {"last_world_id": current_world_id}
 
-	var file := FileAccess.open(
-		PROFILE_PATH,
-		FileAccess.WRITE
-	)
+	var file := FileAccess.open(PROFILE_PATH, FileAccess.WRITE)
 
 	if file == null:
 		return
 
-	file.store_string(
-		JSON.stringify(
-			profile,
-			"\t"
-		)
-	)
+	file.store_string(JSON.stringify(profile,"\t"))
 
 	file.close()
 
 
 func load_profile() -> void:
 
-	if not FileAccess.file_exists(
-		PROFILE_PATH
-	):
+	if not FileAccess.file_exists(PROFILE_PATH):
 		return
 
-	var file := FileAccess.open(
-		PROFILE_PATH,
-		FileAccess.READ
-	)
+	var file := FileAccess.open(PROFILE_PATH, FileAccess.READ)
 
 	if file == null:
 		return
@@ -911,32 +733,17 @@ func load_profile() -> void:
 
 	var data = json.data
 
-	current_world_id = str(
-		data.get(
-			"last_world_id",
-			""
-		)
-	)
+	current_world_id = str(data.get("last_world_id", ""))
 
 
+func get_world_data(world_id: String) -> Dictionary:
 
-func get_world_data(
-	world_id: String
-) -> Dictionary:
+	var path := get_world_path(world_id)
 
-	var path := get_world_path(
-		world_id
-	)
-
-	if not FileAccess.file_exists(
-		path
-	):
+	if not FileAccess.file_exists(path):
 		return {}
 
-	var file := FileAccess.open(
-		path,
-		FileAccess.READ
-	)
+	var file := FileAccess.open(path, FileAccess.READ)
 
 	if file == null:
 		return {}
@@ -953,39 +760,23 @@ func get_world_data(
 	return json.data
 
 
-func set_world_last_character(
-	world_id: String,
-	character_id: String
-) -> void:
+func set_world_last_character(world_id: String, character_id: String) -> void:
 
-	var data := get_world_data(
-		world_id
-	)
+	var data := get_world_data(world_id)
 
 	if data.is_empty():
 		return
 
-	data["last_character_id"] = \
-		character_id
+	data["last_character_id"] = character_id
 
-	data["last_played"] = int(
-		Time.get_unix_time_from_system()
-	)
+	data["last_played"] = int(Time.get_unix_time_from_system())
 
-	var file := FileAccess.open(
-		get_world_path(world_id),
-		FileAccess.WRITE
-	)
+	var file := FileAccess.open(get_world_path(world_id), FileAccess.WRITE)
 
 	if file == null:
 		return
 
-	file.store_string(
-		JSON.stringify(
-			data,
-			"\t"
-		)
-	)
+	file.store_string(JSON.stringify(data, "\t"))
 
 	file.close()
 
@@ -1004,20 +795,12 @@ func continue_game() -> bool:
 	if current_world_id.is_empty():
 		return false
 
-	var world_dict: Dictionary = \
-		get_world_data(
-			current_world_id
-		)
+	var world_dict: Dictionary = get_world_data(current_world_id)
 
 	if world_dict.is_empty():
 		return false
 
-	current_character_id = str(
-		world_dict.get(
-			"last_character_id",
-			""
-		)
-	)
+	current_character_id = str(world_dict.get("last_character_id", ""))
 
 	print(
 		"CONTINUE GAME"
@@ -1055,26 +838,19 @@ func start_game(world_id: String,character_id: String) -> bool:
 
 func build_character_snapshot() -> Dictionary:
 
-	var path := get_character_path(
-		current_character_id
-	)
+	var path := get_character_path(current_character_id)
 
 	if not FileAccess.file_exists(path):
 		return {}
 
-	var file := FileAccess.open(
-		path,
-		FileAccess.READ
-	)
+	var file := FileAccess.open(path, FileAccess.READ)
 
 	if file == null:
 		return {}
 
 	var json := JSON.new()
 
-	if json.parse(
-		file.get_as_text()
-	) != OK:
+	if json.parse(file.get_as_text()) != OK:
 
 		file.close()
 
@@ -1089,26 +865,19 @@ func build_character_snapshot() -> Dictionary:
 
 func build_world_snapshot() -> Dictionary:
 
-	var path := get_world_path(
-		current_world_id
-	)
+	var path := get_world_path(current_world_id)
 
 	if not FileAccess.file_exists(path):
 		return {}
 
-	var file := FileAccess.open(
-		path,
-		FileAccess.READ
-	)
+	var file := FileAccess.open(path, FileAccess.READ)
 
 	if file == null:
 		return {}
 
 	var json := JSON.new()
 
-	if json.parse(
-		file.get_as_text()
-	) != OK:
+	if json.parse(file.get_as_text()) != OK:
 
 		file.close()
 

@@ -15,24 +15,18 @@ func _on_continue_button_pressed() -> void:
 
 	if SaveManager.continue_game():
 
-		get_tree().change_scene_to_file(
-			"res://scenes/world.tscn"
-		)
+		get_tree().change_scene_to_file("res://scenes/world/world.tscn")
 
 	else:
 
-		print(
-			"NO GAME TO CONTINUE"
-		)
+		print("NO GAME TO CONTINUE")
 
 
 func _on_new_world_button_pressed() -> void:
 
 	if SaveManager.current_character_id.is_empty():
 
-		print(
-			"SELECT A CHARACTER FIRST"
-		)
+		print("SELECT A CHARACTER FIRST")
 
 		return
 
@@ -58,9 +52,7 @@ func refresh_character_list() -> void:
 
 	character_selector.clear()
 
-	var dir := DirAccess.open(
-		SaveManager.CHARACTER_FOLDER
-	)
+	var dir := DirAccess.open(SaveManager.CHARACTER_FOLDER)
 
 	if dir == null:
 		return
@@ -73,19 +65,13 @@ func refresh_character_list() -> void:
 
 		if file_name.ends_with(".json"):
 
-			var path := \
-				SaveManager.CHARACTER_FOLDER + \
-				file_name
+			var path := SaveManager.CHARACTER_FOLDER + file_name
 
-			var file := FileAccess.open(
-				path,
-				FileAccess.READ
-			)
+			var file := FileAccess.open(path, FileAccess.READ)
 
 			if file != null:
 
-				var json_text := \
-					file.get_as_text()
+				var json_text := file.get_as_text()
 
 				file.close()
 
@@ -95,29 +81,15 @@ func refresh_character_list() -> void:
 
 					var data = json.data
 
-					var character_name: String = \
-						data.get(
-							"character_name",
-							"Unknown"
-						)
+					var character_name: String = data.get("character_name", "Unknown")
 
-					var character_id: String = \
-						data.get(
-							"character_id",
-							""
-						)
+					var character_id: String = data.get("character_id", "")
 
-					character_selector.add_item(
-						character_name
-					)
+					character_selector.add_item(character_name)
 
-					var index := \
-						character_selector.item_count - 1
+					var index := character_selector.item_count - 1
 
-					character_selector.set_item_metadata(
-						index,
-						character_id
-					)
+					character_selector.set_item_metadata(index, character_id)
 
 		file_name = dir.get_next()
 
@@ -127,13 +99,9 @@ func refresh_character_list() -> void:
 
 	var found_selection := false
 
-	for i in range(
-		character_selector.item_count
-	):
+	for i in range(character_selector.item_count):
 
-		var id := str(
-			character_selector.get_item_metadata(i)
-		)
+		var id := str(character_selector.get_item_metadata(i))
 
 		if id == SaveManager.current_character_id:
 
@@ -145,49 +113,31 @@ func refresh_character_list() -> void:
 
 	# Otherwise select first character
 
-	if not found_selection \
-		and character_selector.item_count > 0:
+	if not found_selection and character_selector.item_count > 0:
 
 			character_selector.select(0)
 
-			SaveManager.current_character_id = str(
-				character_selector.get_item_metadata(0)
-			)
+			SaveManager.current_character_id = str(character_selector.get_item_metadata(0))
 
-	character_selector.add_item(
-		"Create Character..."
-	)
+	character_selector.add_item("Create Character...")
 
-	var create_index := \
-		character_selector.item_count - 1
+	var create_index := character_selector.item_count - 1
 
-	character_selector.set_item_metadata(
-		create_index,
-		"create_character"
-	)
+	character_selector.set_item_metadata(create_index,"create_character")
 
 func get_selected_character_id() -> String:
 
-	var selected := \
-		character_selector.get_selected()
+	var selected := character_selector.get_selected()
 
 	if selected < 0:
 		return ""
 
-	return str(
-		character_selector.get_item_metadata(
-			selected
-		)
-	)
+	return str(character_selector.get_item_metadata(selected))
 
 
 func _on_character_selector_item_selected(index: int) -> void:
 
-	var value := str(
-		character_selector.get_item_metadata(
-			index
-		)
-	)
+	var value := str(character_selector.get_item_metadata(index))
 
 	if value == "create_character":
 

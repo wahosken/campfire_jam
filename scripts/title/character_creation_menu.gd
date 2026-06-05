@@ -30,25 +30,17 @@ func _on_cancel_button_pressed() -> void:
 
 func _on_create_button_pressed() -> void:
 
-	var character_name := \
-		name_input.text.strip_edges()
+	var character_name := name_input.text.strip_edges()
 
 	if character_name.is_empty():
 		return
 
-	var character_id := \
-		SaveManager.create_character(
-			character_name
-		)
+	var character_id := SaveManager.create_character(character_name)
 
-	SaveManager.current_character_id = \
-		character_id
+	SaveManager.current_character_id = character_id
 
 	var title_screen := get_parent()
 
-	if title_screen.has_method(
-		"refresh_character_list"
-	):
-		title_screen.refresh_character_list()
+	if title_screen.has_method("refresh_character_list"): title_screen.refresh_character_list()
 
 	close_menu()

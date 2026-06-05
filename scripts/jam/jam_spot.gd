@@ -118,10 +118,7 @@ func start_if_auto_enabled() -> void:
 func interact() -> void:
 
 	if not is_unlocked():
-		print(
-			"JAMSPOT LOCKED: ",
-			required_quest_ids
-		)
+		print("JAMSPOT LOCKED: ", required_quest_ids)
 		return
 
 	toggle_jam()

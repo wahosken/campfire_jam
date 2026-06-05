@@ -32,25 +32,17 @@ func _on_cancel_button_pressed() -> void:
 
 func _on_create_button_pressed() -> void:
 
-	var world_name := \
-		name_input.text.strip_edges()
+	var world_name := name_input.text.strip_edges()
 
 	if world_name.is_empty():
 		return
 
-	var world_id: String = \
-		SaveManager.create_world(
-			world_name
-		)
+	var world_id: String = SaveManager.create_world(world_name)
 
-	SaveManager.current_world_id = \
-		world_id
+	SaveManager.current_world_id = world_id
 
 	var title_screen := get_parent()
 
-	if title_screen.has_method(
-		"load_world_list"
-	):
-		title_screen.load_world_list()
+	if title_screen.has_method("load_world_list"): title_screen.load_world_list()
 
 	close_menu()

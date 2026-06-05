@@ -210,9 +210,7 @@ func has_required_item() -> bool:
 	if required_item_id == "":
 		return true
 
-	var player := get_tree().get_first_node_in_group(
-		"player"
-	)
+	var player := get_tree().get_first_node_in_group("player")
 
 	if player == null:
 		return false
@@ -220,9 +218,7 @@ func has_required_item() -> bool:
 	if not player.has_method("has_item"):
 		return false
 
-	return player.has_item(
-		required_item_id
-	)
+	return player.has_item(required_item_id)
 
 
 # ------------------------------------------------------------
@@ -287,9 +283,6 @@ func enable_interaction() -> void:
 
 func is_interaction_temporarily_disabled() -> bool:
 	return interaction_temporarily_disabled
-
-
-
 
 
 # ------------------------------------------------------------

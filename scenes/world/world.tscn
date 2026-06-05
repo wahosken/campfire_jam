@@ -1,42 +1,53 @@
 [gd_scene format=3 uid="uid://caabunylbva7i"]
 
-[ext_resource type="PackedScene" uid="uid://cuy8oa3i1e11g" path="res://scenes/jam_spot.tscn" id="2_2lf6f"]
+[ext_resource type="Script" uid="uid://bihk7de3l3aj2" path="res://scripts/world/world.gd" id="1_oo54l"]
+[ext_resource type="PackedScene" uid="uid://cuy8oa3i1e11g" path="res://scenes/world/jam_spot.tscn" id="2_2lf6f"]
 [ext_resource type="AudioStream" uid="uid://bdt0nd08g1i2s" path="res://audio/Fountain-Sound-Effect.mp3" id="3_7iits"]
 [ext_resource type="AudioStream" uid="uid://wnyybsp2f1ks" path="res://audio/Campfire-Sound-Effect_youtube.com_channe_lUC8GNHHbLg6ByCN1DZcUjylQvideos.mp3" id="5_kpybi"]
-[ext_resource type="Resource" uid="uid://c4qbpqfmo3oao" path="res://dialogue/guitar_dialogue_data.tres" id="6_7iits"]
-[ext_resource type="PackedScene" uid="uid://ch5e2petf0x3t" path="res://scenes/npc_guitar.tscn" id="6_ctatt"]
-[ext_resource type="PackedScene" uid="uid://dgi3bcdtv1vab" path="res://scenes/npc_bass.tscn" id="7_xgqkh"]
-[ext_resource type="PackedScene" uid="uid://drl7f1y3s7a6x" path="res://scenes/npc_harmonica.tscn" id="8_munwf"]
-[ext_resource type="PackedScene" uid="uid://8cj1uwe35wqt" path="res://scenes/npc_mandolin.tscn" id="9_ts3gi"]
-[ext_resource type="PackedScene" uid="uid://80o547y8x4gj" path="res://scenes/house.tscn" id="10_0nbtd"]
-[ext_resource type="PackedScene" uid="uid://c75d3iwksb5lt" path="res://scenes/jam_manager.tscn" id="11_37qwj"]
-[ext_resource type="PackedScene" uid="uid://025hsnsqi3wr" path="res://scenes/freeform_jam_context.tscn" id="12_navra"]
-[ext_resource type="PackedScene" uid="uid://blfnmt5xbykgs" path="res://scenes/player.tscn" id="13_luhhm"]
-[ext_resource type="PackedScene" uid="uid://tu61b7d68xgv" path="res://scenes/music_system.tscn" id="14_fh13f"]
-[ext_resource type="PackedScene" uid="uid://d21e1vvxjrume" path="res://scenes/overlay.tscn" id="15_rup4s"]
+[ext_resource type="PackedScene" uid="uid://ch5e2petf0x3t" path="res://scenes/characters/npc_guitar.tscn" id="6_ctatt"]
+[ext_resource type="PackedScene" uid="uid://dgi3bcdtv1vab" path="res://scenes/characters/npc_bass.tscn" id="7_xgqkh"]
+[ext_resource type="PackedScene" uid="uid://drl7f1y3s7a6x" path="res://scenes/characters/npc_harmonica.tscn" id="8_munwf"]
+[ext_resource type="PackedScene" uid="uid://8cj1uwe35wqt" path="res://scenes/characters/npc_mandolin.tscn" id="9_ts3gi"]
+[ext_resource type="PackedScene" uid="uid://80o547y8x4gj" path="res://scenes/world/house.tscn" id="10_0nbtd"]
+[ext_resource type="PackedScene" uid="uid://c75d3iwksb5lt" path="res://scenes/system/jam_manager.tscn" id="11_37qwj"]
+[ext_resource type="PackedScene" uid="uid://025hsnsqi3wr" path="res://scenes/system/freeform_jam_context.tscn" id="12_navra"]
+[ext_resource type="PackedScene" uid="uid://blfnmt5xbykgs" path="res://scenes/characters/player.tscn" id="13_luhhm"]
+[ext_resource type="PackedScene" uid="uid://tu61b7d68xgv" path="res://scenes/system/music_system.tscn" id="14_fh13f"]
+[ext_resource type="PackedScene" uid="uid://d21e1vvxjrume" path="res://scenes/ui/overlay.tscn" id="15_rup4s"]
 [ext_resource type="Script" uid="uid://cevh1omjrnc6a" path="res://scripts/ui/jam_ui.gd" id="16_4kbfs"]
-[ext_resource type="PackedScene" uid="uid://d1ifhrg7vlxou" path="res://scenes/npc_dialogue_prompt.tscn" id="17_f17e3"]
-[ext_resource type="PackedScene" uid="uid://cor2o2sb3weio" path="res://scenes/npc_unlock_manager.tscn" id="18_lakw3"]
-[ext_resource type="PackedScene" uid="uid://dtm7ryrpuv7qa" path="res://scenes/start_gate.tscn" id="18_x2olw"]
-[ext_resource type="PackedScene" uid="uid://dlglwi6aqtsgh" path="res://scenes/pause_menu.tscn" id="19_817gm"]
-[ext_resource type="PackedScene" uid="uid://s724hjaak62t" path="res://scenes/world_reaction.tscn" id="19_pm21f"]
-[ext_resource type="PackedScene" uid="uid://sago7pta8rx" path="res://scenes/dialogue_box.tscn" id="20_2lf6f"]
+[ext_resource type="PackedScene" uid="uid://d1ifhrg7vlxou" path="res://scenes/ui/npc_dialogue_prompt.tscn" id="17_f17e3"]
+[ext_resource type="PackedScene" uid="uid://cor2o2sb3weio" path="res://scenes/system/npc_unlock_manager.tscn" id="18_lakw3"]
+[ext_resource type="PackedScene" uid="uid://dlglwi6aqtsgh" path="res://scenes/ui/pause_menu.tscn" id="19_817gm"]
+[ext_resource type="PackedScene" uid="uid://cvwoetb5xfwfp" path="res://scenes/world/community_board.tscn" id="19_oo54l"]
+[ext_resource type="PackedScene" uid="uid://s724hjaak62t" path="res://scenes/world/world_reaction.tscn" id="19_pm21f"]
+[ext_resource type="PackedScene" uid="uid://sago7pta8rx" path="res://scenes/ui/dialogue_box.tscn" id="20_2lf6f"]
+[ext_resource type="PackedScene" uid="uid://c2pemq1w77ykf" path="res://scenes/world/quest_collectible.tscn" id="21_7iits"]
+[ext_resource type="PackedScene" uid="uid://uw272x76kce5" path="res://scenes/ui/notification_ui.tscn" id="23_kpybi"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_s3408"]
-vertices = PackedVector2Array(-975.9922, -1617, 3724, -1617, 700.03906, -1203, 354.9297, -1203, -975.0078, -47, 357.0703, -900, 3724, -47, 698.97656, -900)
-polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(4, 0, 3, 5), PackedInt32Array(6, 4, 5, 7), PackedInt32Array(1, 6, 7, 2)])
-outlines = Array[PackedVector2Array]([PackedVector2Array(-986, -1627, 3734, -1627, 3734, -37, -985, -37)])
+vertices = PackedVector2Array(1390, -2185, 1390, -402, 1267, -1107, 1267, -1402, -649, -402, 934, -1107, -649, -2185, 934, -1402)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(2, 1, 4, 5), PackedInt32Array(5, 4, 6, 7), PackedInt32Array(7, 6, 0, 3)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(-659, -2195, 1400, -2195, 1400, -392, -659, -392)])
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_s3408"]
-radius = 400.0
+radius = 200.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bew7y"]
-size = Vector2(61, 62)
+size = Vector2(32, 32)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_bew7y"]
-radius = 400.0
+radius = 200.0
 
 [node name="World" type="Node2D" unique_id=163281152]
+script = ExtResource("1_oo54l")
+
+[node name="MusicSystem" parent="." unique_id=1650685233 instance=ExtResource("14_fh13f")]
+
+[node name="JamManager" parent="." unique_id=841948683 instance=ExtResource("11_37qwj")]
+freeform_jam_context_scene = ExtResource("12_navra")
+jamspot_handoff_delay = 2.5
+
+[node name="NPCUnlockManager" parent="." unique_id=113470290 instance=ExtResource("18_lakw3")]
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=2082799229]
 navigation_polygon = SubResource("NavigationPolygon_s3408")
@@ -44,7 +55,7 @@ navigation_polygon = SubResource("NavigationPolygon_s3408")
 [node name="Polygon2D" type="Polygon2D" parent="NavigationRegion2D" unique_id=1807826442]
 position = Vector2(4.246155, 0)
 scale = Vector2(0.9938462, 1)
-polygon = PackedVector2Array(362.9876, -1193, 690, -1193, 689, -910, 365, -910)
+polygon = PackedVector2Array(945.57275, -1392, 1260.5109, -1392, 1260.5109, -1117, 945.57275, -1117)
 
 [node name="Ground" type="ColorRect" parent="." unique_id=53549327]
 anchors_preset = 8
@@ -52,16 +63,16 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -986.0
-offset_top = -1627.0
-offset_right = 3734.0
-offset_bottom = -37.0
+offset_left = -659.0
+offset_top = -2195.0
+offset_right = 1400.0
+offset_bottom = -392.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0.19558403, 0.10315802, 1)
 
 [node name="FountainJamSpot" parent="." unique_id=1582202994 instance=ExtResource("2_2lf6f")]
-position = Vector2(-423, -544)
+position = Vector2(609, -719)
 jam_id = "fountain_jam"
 display_name = "Fountain Jam"
 song_id = "song_02"
@@ -69,7 +80,6 @@ song_id = "song_02"
 [node name="Fountain" type="Node2D" parent="FountainJamSpot" unique_id=1573152136]
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="FountainJamSpot/Fountain" unique_id=1806332226]
-position = Vector2(-30, -30)
 stream = ExtResource("3_7iits")
 volume_db = -3.0
 autoplay = true
@@ -82,13 +92,14 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -30.0
-offset_top = -25.0
-offset_right = 39.0
-offset_bottom = 40.0
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0.3647059, 0.9137255, 1)
+metadata/_edit_use_anchors_ = true
 
 [node name="Label" type="Label" parent="FountainJamSpot" unique_id=158522758]
 anchors_preset = 8
@@ -102,6 +113,7 @@ offset_right = 91.0
 offset_bottom = 26.25
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_font_sizes/font_size = 8
 text = "Fountain
 Jamspot"
 horizontal_alignment = 1
@@ -120,32 +132,31 @@ collision_layer = 8
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FountainJamSpot/InteractionArea" unique_id=913577813]
-position = Vector2(4, 8.5)
 shape = SubResource("RectangleShape2D_bew7y")
 
 [node name="CampfireJamSpot" parent="." unique_id=111465224 instance=ExtResource("2_2lf6f")]
-position = Vector2(828, -395)
+position = Vector2(326, -1192)
+required_quest_ids = Array[String](["repair_bridge", "play_fountain_song", "find_water_flask", "find_lost_bass"])
 
 [node name="Node2D" type="Node2D" parent="CampfireJamSpot" unique_id=1183798559]
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="CampfireJamSpot/Node2D" unique_id=788386734]
-position = Vector2(-27, -23)
 stream = ExtResource("5_kpybi")
 volume_db = -3.0
 autoplay = true
 max_distance = 1000.0
 attenuation = 0.75
 
-[node name="ColorRect" type="ColorRect" parent="CampfireJamSpot/Node2D" unique_id=1458250979]
+[node name="ColorRect" type="ColorRect" parent="CampfireJamSpot/Node2D" unique_id=1122868684]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -27.0
-offset_top = -23.0
-offset_right = 33.0
-offset_bottom = 37.0
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(1, 0.14509805, 0, 1)
@@ -162,6 +173,7 @@ offset_right = 91.0
 offset_bottom = 26.25
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_font_sizes/font_size = 8
 text = "Campfire
 Jamspot"
 horizontal_alignment = 1
@@ -180,52 +192,67 @@ collision_layer = 8
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CampfireJamSpot/InteractionArea" unique_id=1194296035]
-position = Vector2(3.5, 7)
 shape = SubResource("RectangleShape2D_bew7y")
 
-[node name="Bridge_WorldReaction" parent="." unique_id=323313496 instance=ExtResource("19_pm21f")]
-position = Vector2(-21, -1073)
-unlock_npc_id = "guitar"
-required_song_id = "song_02"
-required_instrument_id = "bass"
-required_musician_count = 2
+[node name="Bridge_WorldReaction" parent="." unique_id=323313496 node_paths=PackedStringArray("target_npc") instance=ExtResource("19_pm21f")]
+position = Vector2(-94, -1775)
+target_npc = NodePath("../NPC_Guitar")
+unlock_npc_id = "npc_guitar"
 label_text = "Bridge"
+quest_id = "repair_bridge"
+
+[node name="Fountain_WorldReaction" parent="." unique_id=1412666453 node_paths=PackedStringArray("target_npc", "required_jamspot") instance=ExtResource("19_pm21f")]
+position = Vector2(1045, -911)
+target_npc = NodePath("../NPC_Mandolin")
+unlock_npc_id = "npc_mandolin"
+jam_requirement = 3
+required_jamspot = NodePath("../FountainJamSpot")
+quest_id = "play_fountain_song"
+
+[node name="CommunityBoard" parent="." unique_id=550398943 instance=ExtResource("19_oo54l")]
+position = Vector2(854, -1287)
+
+[node name="House" parent="." unique_id=1834173392 instance=ExtResource("10_0nbtd")]
+position = Vector2(1100, -1117)
 
 [node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("6_ctatt")]
-position = Vector2(-495, -1135)
+position = Vector2(-266, -1913)
 primary_song_id = "song_02"
-dialogue_data = ExtResource("6_7iits")
-progression_state = 0
 start_locked = true
 
 [node name="NPC_Bass" parent="." unique_id=718845583 instance=ExtResource("7_xgqkh")]
-position = Vector2(942, -495)
+position = Vector2(-108, -916)
+required_item_id = "lost_bass"
+start_locked = true
 
 [node name="NPC_Harmonica" parent="." unique_id=1800832853 instance=ExtResource("8_munwf")]
-position = Vector2(-250, -537)
+position = Vector2(734, -1721)
 primary_song_id = "song_02"
+required_item_id = "water_flask"
+start_locked = true
 
 [node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("9_ts3gi")]
-position = Vector2(217, -1085)
+position = Vector2(869, -978)
+unlocks_player_song = "song_02"
+start_locked = true
 
-[node name="House" parent="." unique_id=1834173392 instance=ExtResource("10_0nbtd")]
-position = Vector2(527, -914)
+[node name="LostBass_QuestCollectable" parent="." unique_id=1042241573 instance=ExtResource("21_7iits")]
+position = Vector2(-318, -745)
+item_id = "lost_bass"
 
-[node name="JamManager" parent="." unique_id=841948683 instance=ExtResource("11_37qwj")]
-freeform_jam_context_scene = ExtResource("12_navra")
-jamspot_handoff_delay = 2.5
+[node name="WaterFlask_QuestCollectable" parent="." unique_id=1393443570 instance=ExtResource("21_7iits")]
+position = Vector2(928, -1902)
+item_id = "water_flask"
 
 [node name="player" parent="." unique_id=685309387 instance=ExtResource("13_luhhm")]
-position = Vector2(-668, -1122)
+position = Vector2(326, -1503)
 
 [node name="Camera2D" type="Camera2D" parent="player" unique_id=1166826738]
-zoom = Vector2(0.5, 0.5)
 position_smoothing_enabled = true
 position_smoothing_speed = 6.0
 
-[node name="MusicSystem" parent="." unique_id=1650685233 instance=ExtResource("14_fh13f")]
-
 [node name="TouchOverlay" parent="." unique_id=183187612 instance=ExtResource("15_rup4s")]
+touch_mode = 1
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=759509068]
 
@@ -267,11 +294,8 @@ text = "Interact"
 
 [node name="NPCDialoguePrompt" parent="." unique_id=1416366564 instance=ExtResource("17_f17e3")]
 
-[node name="StartGate" parent="." unique_id=185219785 instance=ExtResource("18_x2olw")]
-
 [node name="PauseMenu" parent="." unique_id=2135615612 instance=ExtResource("19_817gm")]
 touch_overlay_path = NodePath("../TouchOverlay")
-start_gate_path = NodePath("../StartGate")
 
 [node name="DebugOverlay" type="Label" parent="PauseMenu" unique_id=1345672760]
 anchors_preset = 1
@@ -282,6 +306,6 @@ offset_bottom = 100.0
 grow_horizontal = 0
 text = "Debug"
 
-[node name="NPCUnlockManager" parent="." unique_id=113470290 instance=ExtResource("18_lakw3")]
-
 [node name="DialogueBox" parent="." unique_id=178478530 instance=ExtResource("20_2lf6f")]
+
+[node name="NotificationUI" parent="." unique_id=42852058 instance=ExtResource("23_kpybi")]

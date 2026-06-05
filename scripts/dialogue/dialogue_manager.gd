@@ -41,12 +41,6 @@ func show_current_line() -> void:
 
 	var box = get_dialogue_box()
 
-	if box == null:
-
-		print("NO DIALOGUE BOX FOUND")
-
-		return
-
 	box.show_line(current_sequence.lines[current_index],current_speaker)
 
 
@@ -60,8 +54,6 @@ func advance() -> void:
 
 
 func end_dialogue() -> void:
-
-#	var finished_sequence = current_sequence
 
 	if current_speaker != null:
 		if current_speaker.has_method("advance_after_dialogue"):
