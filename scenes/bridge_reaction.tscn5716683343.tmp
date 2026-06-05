@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://cleud6a1ht4ni"]
+
+[ext_resource type="Script" uid="uid://cyrr24qs3ahpf" path="res://scripts/world_reaction.gd" id="1_65rm0"]
+[ext_resource type="Texture2D" uid="uid://im0s3co4ep8v" path="res://assets/locked_placeholder.png" id="2_65rm0"]
+[ext_resource type="Texture2D" uid="uid://cfg36ba86p8di" path="res://assets/unlocked_placeholder.png" id="3_rcoye"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_65rm0"]
+size = Vector2(64, 64)
+
+[node name="BridgeReaction" type="Node2D" unique_id=323313496]
+script = ExtResource("1_65rm0")
+unlock_npc_id = "mandolin"
+broken_visual = NodePath("BrokenSprite")
+repaired_visual = NodePath("RepairedSprite")
+
+[node name="BrokenSprite" type="Sprite2D" parent="." unique_id=1278027056]
+texture = ExtResource("2_65rm0")
+
+[node name="RepairedSprite" type="Sprite2D" parent="." unique_id=1563550351]
+visible = false
+texture = ExtResource("3_rcoye")
+
+[node name="Area2D" type="Area2D" parent="." unique_id=1746338128]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=1846051628]
+shape = SubResource("RectangleShape2D_65rm0")
+
+[node name="Label" type="Label" parent="." unique_id=460413846]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -25.0
+offset_top = -11.5
+offset_right = 25.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "Bridge"
+horizontal_alignment = 1
+vertical_alignment = 1

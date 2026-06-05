@@ -9,6 +9,8 @@ const AUTOSAVE_COOLDOWN := 5.0
 
 var last_autosave_time := 0.0
 
+var load_from_autosave := false
+
 var is_loading_game := false
 
 var world_data := WorldSaveData.new()
@@ -87,61 +89,50 @@ func create_autosave_snapshot() -> void:
 		"world_id":
 			current_world_id,
 
-		"world_name":
-			build_world_snapshot().get(
-				"world_name",
-				""
-			),
-
 		"character_id":
 			current_character_id,
 
-		"character_name":
-			build_character_snapshot().get(
-				"character_name",
-				""
-			),
-
 		"created_at":
-			int(
-				Time.get_unix_time_from_system()
-			),
+			int(Time.get_unix_time_from_system()),
 
 		"display_timestamp":
 			get_timestamp_string(),
 
-		"world_data":
-			build_world_snapshot(),
+		"world_data": {
 
-		"character_data":
-			build_character_snapshot()
+			"recruited_npcs":
+				world_data.recruited_npcs.duplicate(),
+
+			"completed_quests":
+				world_data.completed_quests.duplicate()
+		},
+
+		"character_data": {
+
+			"unlocked_instruments":
+				character_data.unlocked_instruments.duplicate(),
+
+			"unlocked_songs":
+				character_data.unlocked_songs.duplicate(),
+
+			"collected_items":
+				character_data.collected_items.duplicate()
+		}
 	}
 
-	var file := FileAccess.open(
-		autosave_path,
-		FileAccess.WRITE
-	)
+	var file := FileAccess.open(autosave_path,FileAccess.WRITE)
 
 	if file == null:
 		return
 
 	file.store_string(
-		JSON.stringify(
-			data,
-			"\t"
-		)
-	)
+		JSON.stringify(data,"\t"))
 
 	file.close()
 
-	print(
-		"AUTOSAVE SNAPSHOT:",
-		autosave_path
-	)
+	print("AUTOSAVE SNAPSHOT:",autosave_path)
 
-	prune_old_autosaves(
-		folder
-	)
+	prune_old_autosaves(folder)
 
 func ensure_profile_exists() -> void:
 
@@ -313,7 +304,7 @@ func save_game() -> void:
 
 	save_world_file()
 
-	print("GAME SAVED")
+	NotificationManager.show_notification("Game Saved")
 
 
 func create_autosave() -> void:
@@ -334,9 +325,11 @@ func create_autosave() -> void:
 
 	last_autosave_time = current_time
 
-	save_game()
+	capture_game_state()
 
 	create_autosave_snapshot()
+
+	NotificationManager.show_notification("Autosaved")
 
 	print("AUTOSAVE CREATED")
 
@@ -454,19 +447,11 @@ func save_world_file() -> void:
 	if file == null:
 		return
 
-	file.store_string(
-		JSON.stringify(
-			data,
-			"\t"
-		)
-	)
+	file.store_string(JSON.stringify(data,"\t"))
 
 	file.close()
 
-	print(
-		"WORLD SAVED:",
-		current_world_id
-	)
+	print("WORLD SAVED:",current_world_id)
 
 
 func debug_print_save() -> void:
@@ -500,9 +485,7 @@ func _input(event):
 
 func is_item_collected(item_id: String) -> bool:
 
-	return character_data.collected_items.has(
-		item_id
-	)
+	return character_data.collected_items.has(item_id)
 
 
 func load_game() -> void:
@@ -511,52 +494,159 @@ func load_game() -> void:
 
 	print("LOAD_GAME CALLED")
 
-	if not load_world_file():
+	if load_from_autosave:
 
-		print(
-			"WORLD LOAD FAILED"
-		)
+		if not load_latest_autosave():
 
-		return
+			print("AUTOSAVE LOAD FAILED")
 
-	if not load_character_file():
+			is_loading_game = false
 
-		print(
-			"CHARACTER LOAD FAILED"
-		)
+			return
 
-		return
+	else:
 
-	print(
-		"LOADED QUESTS:",
-		world_data.completed_quests
-	)
+		if not load_world_file():
 
-	print(
-		"LOADED NPCS:",
-		world_data.recruited_npcs
-	)
+			print("WORLD LOAD FAILED")
 
-	print(
-		"LOADED INSTRUMENTS:",
-		character_data.unlocked_instruments
-	)
+			is_loading_game = false
 
-	print(
-		"LOADED SONGS:",
-		character_data.unlocked_songs
-	)
+			return
 
-	print(
-		"LOADED ITEMS:",
-		character_data.collected_items
-	)
+		if not load_character_file():
+
+			print("CHARACTER LOAD FAILED")
+
+			is_loading_game = false
+
+			return
+
+	print("LOADED QUESTS:",world_data.completed_quests)
+
+	print("LOADED NPCS:",world_data.recruited_npcs)
+
+	print("LOADED INSTRUMENTS:",character_data.unlocked_instruments)
+
+	print("LOADED SONGS:",character_data.unlocked_songs)
+
+	print("LOADED ITEMS:",character_data.collected_items)
 
 	restore_loaded_state()
 
 	is_loading_game = false
 
 	print("GAME LOADED")
+
+
+func load_latest_autosave() -> bool:
+
+	var folder := get_world_autosave_folder(current_world_id)
+
+	var dir := DirAccess.open(folder)
+
+	if dir == null:
+		return false
+
+	var files: Array[String] = []
+
+	dir.list_dir_begin()
+
+	var file_name := dir.get_next()
+
+	while file_name != "":
+
+		if file_name.ends_with(".json"):
+
+			files.append(file_name)
+
+		file_name = dir.get_next()
+
+	dir.list_dir_end()
+
+	if files.is_empty():
+		return false
+
+	files.sort()
+
+	var newest_file := files[files.size() - 1]
+
+	var path := folder + newest_file
+
+	var file := FileAccess.open(path,FileAccess.READ)
+
+	if file == null:
+		return false
+
+	var json := JSON.new()
+
+	if json.parse(file.get_as_text()) != OK:
+
+		file.close()
+
+		return false
+
+	var data = json.data
+
+	file.close()
+
+	print("AUTOSAVE LOADED:",newest_file)
+
+	var world_snapshot: Dictionary = data.get("world_data",{})
+
+	var character_snapshot: Dictionary = data.get("character_data",{})
+
+	world_data.completed_quests.clear()
+
+	for quest_id in world_snapshot.get("completed_quests",[]):
+
+		world_data.completed_quests.append(str(quest_id))
+
+	world_data.recruited_npcs.clear()
+
+	for npc_id in world_snapshot.get(
+		"recruited_npcs",
+		[]
+	):
+
+		world_data.recruited_npcs.append(
+			str(npc_id)
+		)
+
+	character_data.unlocked_instruments.clear()
+
+	for instrument in character_snapshot.get(
+		"unlocked_instruments",
+		[]
+	):
+
+		character_data.unlocked_instruments.append(
+			str(instrument)
+		)
+
+	character_data.unlocked_songs.clear()
+
+	for song in character_snapshot.get(
+		"unlocked_songs",
+		[]
+	):
+
+		character_data.unlocked_songs.append(
+			str(song)
+		)
+
+	character_data.collected_items.clear()
+
+	for item in character_snapshot.get(
+		"collected_items",
+		[]
+	):
+
+		character_data.collected_items.append(
+			str(item)
+		)
+
+	return true
 
 
 func restore_loaded_state() -> void:
@@ -943,22 +1033,20 @@ func continue_game() -> bool:
 		current_character_id
 	)
 
+	load_from_autosave = true
+
 	return true
 
 
-func start_game(
-	world_id: String,
-	character_id: String
-) -> bool:
+func start_game(world_id: String,character_id: String) -> bool:
+
+	load_from_autosave = false
 
 	current_world_id = world_id
 
 	current_character_id = character_id
 
-	set_world_last_character(
-		world_id,
-		character_id
-	)
+	set_world_last_character(world_id,character_id)
 
 	save_profile()
 

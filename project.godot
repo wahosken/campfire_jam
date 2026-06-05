@@ -25,6 +25,7 @@ SongLibrary="*uid://c6t4bk6fhp4f2"
 DialogueManager="*uid://bsaebw8nbdkeg"
 SaveManager="*uid://dyy3bwjq216t2"
 QuestManager="*uid://dpp2wc603utrs"
+NotificationManager="*uid://dvqpl2uex1udh"
 
 [display]
 

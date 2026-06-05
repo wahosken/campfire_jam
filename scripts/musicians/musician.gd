@@ -33,13 +33,13 @@ extends CharacterBody2D
 
 @export var primary_song_id := "song_01"
 
-@export var travel_speed := 180.0
+@export var travel_speed := 120.0
 
-@export var follow_speed := 180.0
+@export var follow_speed := 120.0
 @export var follow_min_distance := 56.0
 @export var follow_max_distance := 96.0
 
-@export var jam_formation_move_speed := 180.0
+@export var jam_formation_move_speed := 120.0
 @export var jam_formation_min_distance := 125.0
 @export var jam_formation_max_distance := 150.0
 @export var jam_formation_slow_radius := 140.0
@@ -930,6 +930,8 @@ func unlock_npc() -> void:
 
 	if dialogue_controller != null:
 		dialogue_controller.unlock_npc()
+
+	NotificationManager.show_notification(display_name + " Joined Village")
 
 	if recruit_quest_id != "":
 		QuestManager.complete_quest(recruit_quest_id)

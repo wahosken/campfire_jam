@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
 @export var debug_player_music := false
-@export var speed := 180.0
+@export var speed := 120.0
 @export var jam_attach_grace_time := 0.15
 
 @onready var interaction_area: Area2D = $InteractionArea
@@ -149,15 +149,9 @@ func collect_item(item_id: String) -> void:
 
 	SaveManager.create_autosave()
 
-	print(
-		"COLLECTED ITEM: ",
-		item_id
-	)
+	NotificationManager.show_notification("Found: " + item_id)
 
-	print(
-		"ALL ITEMS: ",
-		collected_items
-	)
+	print("ALL ITEMS: ",collected_items)
 
 	for npc in get_tree().get_nodes_in_group("npc_musician"):
 
@@ -204,7 +198,7 @@ func unlock_instrument(instrument_id: String) -> void:
 
 	SaveManager.create_autosave()
 
-	print("UNLOCKED INSTRUMENT: ", instrument_id)
+	NotificationManager.show_notification(instrument_id.capitalize() + " Unlocked!")
 
 
 func is_song_unlocked(song_id: String) -> bool:
@@ -226,7 +220,7 @@ func unlock_song(song_id: String) -> void:
 
 	SaveManager.create_autosave()
 
-	print("UNLOCKED SONG: ", song_id)
+	NotificationManager.show_notification("Song Learned")
 
 
 func start_or_update_instrument_parts(rhythm: bool, melody: bool) -> void:

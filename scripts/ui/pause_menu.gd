@@ -107,9 +107,7 @@ func _on_return_to_title_button_pressed() -> void:
 
 	get_tree().paused = false
 
-	get_tree().change_scene_to_file(
-		"res://scenes/title_screen.tscn"
-	)
+	get_tree().change_scene_to_file("res://scenes/title_screen.tscn")
 
 
 func _input(event: InputEvent) -> void:
@@ -391,18 +389,14 @@ func refresh_journal() -> void:
 
 func refresh_community() -> void:
 
-	var player := get_tree().get_first_node_in_group(
-		"player"
-	)
+	var player := get_tree().get_first_node_in_group("player")
 
 	if player == null:
 		return
 
 	var recruited_count := 0
 
-	for npc in get_tree().get_nodes_in_group(
-		"npc_musician"
-	):
+	for npc in get_tree().get_nodes_in_group("npc_musician"):
 
 		if not is_instance_valid(npc):
 			continue

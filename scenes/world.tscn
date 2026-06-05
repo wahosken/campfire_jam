@@ -22,6 +22,7 @@
 [ext_resource type="PackedScene" uid="uid://s724hjaak62t" path="res://scenes/world_reaction.tscn" id="19_pm21f"]
 [ext_resource type="PackedScene" uid="uid://sago7pta8rx" path="res://scenes/dialogue_box.tscn" id="20_2lf6f"]
 [ext_resource type="PackedScene" uid="uid://c2pemq1w77ykf" path="res://scenes/quest_collectible.tscn" id="21_7iits"]
+[ext_resource type="PackedScene" uid="uid://uw272x76kce5" path="res://scenes/notification_ui.tscn" id="23_kpybi"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_s3408"]
 vertices = PackedVector2Array(1390, -2185, 1390, -402, 1267, -1107, 1267, -1402, -649, -402, 934, -1107, -649, -2185, 934, -1402)
@@ -306,3 +307,5 @@ grow_horizontal = 0
 text = "Debug"
 
 [node name="DialogueBox" parent="." unique_id=178478530 instance=ExtResource("20_2lf6f")]
+
+[node name="NotificationUI" parent="." unique_id=42852058 instance=ExtResource("23_kpybi")]

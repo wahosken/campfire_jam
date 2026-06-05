@@ -1,0 +1,140 @@
+[gd_scene format=3 uid="uid://caabunylbva7i"]
+
+[ext_resource type="Script" uid="uid://bjhdxj07mhdxx" path="res://scripts/campfire_jam.gd" id="1_qtvd6"]
+[ext_resource type="PackedScene" uid="uid://bhhsnpbtss802" path="res://scenes/campfire.tscn" id="2_dp30u"]
+[ext_resource type="PackedScene" uid="uid://ch5e2petf0x3t" path="res://scenes/npc_guitar.tscn" id="2_q2hrs"]
+[ext_resource type="PackedScene" uid="uid://blfnmt5xbykgs" path="res://scenes/player.tscn" id="3_hiehu"]
+[ext_resource type="PackedScene" uid="uid://dgi3bcdtv1vab" path="res://scenes/npc_bass.tscn" id="3_mcuth"]
+[ext_resource type="PackedScene" uid="uid://drl7f1y3s7a6x" path="res://scenes/npc_harmonica.tscn" id="4_65sn3"]
+[ext_resource type="PackedScene" uid="uid://80o547y8x4gj" path="res://scenes/house.tscn" id="4_mcuth"]
+[ext_resource type="PackedScene" uid="uid://8cj1uwe35wqt" path="res://scenes/npc_mandolin.tscn" id="5_mcuth"]
+[ext_resource type="PackedScene" uid="uid://tu61b7d68xgv" path="res://scenes/music_system.tscn" id="6_wu1ak"]
+[ext_resource type="Script" uid="uid://cevh1omjrnc6a" path="res://scripts/jam_ui.gd" id="7_41670"]
+[ext_resource type="PackedScene" uid="uid://cuy8oa3i1e11g" path="res://scenes/jam_spot.tscn" id="8_gpqwk"]
+[ext_resource type="PackedScene" uid="uid://c75d3iwksb5lt" path="res://scenes/jam_manager.tscn" id="9_ngu8v"]
+[ext_resource type="PackedScene" uid="uid://025hsnsqi3wr" path="res://scenes/freeform_jam_context.tscn" id="10_bew7y"]
+[ext_resource type="PackedScene" uid="uid://d21e1vvxjrume" path="res://scenes/overlay.tscn" id="10_dp30u"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_bew7y"]
+radius = 500.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bew7y"]
+size = Vector2(80, 80)
+
+[node name="campfire_jam" type="Node2D" unique_id=163281152]
+script = ExtResource("1_qtvd6")
+
+[node name="Ground" type="ColorRect" parent="." unique_id=53549327]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -986.0
+offset_top = -1627.0
+offset_right = 1373.0
+offset_bottom = -37.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0.19558403, 0.10315802, 1)
+
+[node name="Campfire" parent="." unique_id=1132795021 instance=ExtResource("2_dp30u")]
+position = Vector2(472, -374)
+
+[node name="CampfireJamSpot" parent="." unique_id=1582202994 instance=ExtResource("8_gpqwk")]
+position = Vector2(469, -381)
+
+[node name="Label" type="Label" parent="CampfireJamSpot" unique_id=1696183836]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -91.0
+offset_top = -26.25
+offset_right = 91.0
+offset_bottom = 26.25
+grow_horizontal = 2
+grow_vertical = 2
+text = "Campfire
+Jamspot"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="JamArea" type="Area2D" parent="CampfireJamSpot" unique_id=804260112]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CampfireJamSpot/JamArea" unique_id=445197964]
+shape = SubResource("CircleShape2D_bew7y")
+
+[node name="InteractionArea" type="Area2D" parent="CampfireJamSpot" unique_id=1262593958 groups=["interactable"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CampfireJamSpot/InteractionArea" unique_id=1194296035]
+position = Vector2(5, 8)
+shape = SubResource("RectangleShape2D_bew7y")
+
+[node name="NPC_Guitar" parent="." unique_id=173912358 instance=ExtResource("2_q2hrs")]
+position = Vector2(305, -371)
+starting_jam_spot_path = NodePath("../CampfireJamSpot")
+
+[node name="NPC_Harmonica" parent="." unique_id=1800832853 instance=ExtResource("4_65sn3")]
+position = Vector2(628, -390)
+starting_jam_spot_path = NodePath("../CampfireJamSpot")
+
+[node name="NPC_Mandolin" parent="." unique_id=2034953610 instance=ExtResource("5_mcuth")]
+position = Vector2(474, -207)
+starting_jam_spot_path = NodePath("../CampfireJamSpot")
+
+[node name="NPC_Bass" parent="." unique_id=718845583 instance=ExtResource("3_mcuth")]
+position = Vector2(-847, -1511)
+
+[node name="House" parent="." unique_id=1834173392 instance=ExtResource("4_mcuth")]
+position = Vector2(527, -914)
+
+[node name="JamManager" parent="." unique_id=841948683 instance=ExtResource("9_ngu8v")]
+freeform_jam_context_scene = ExtResource("10_bew7y")
+
+[node name="player" parent="." unique_id=685309387 instance=ExtResource("3_hiehu")]
+position = Vector2(612, -593)
+
+[node name="Camera2D" type="Camera2D" parent="player" unique_id=1166826738]
+zoom = Vector2(0.5, 0.5)
+position_smoothing_enabled = true
+position_smoothing_speed = 6.0
+
+[node name="MusicSystem" parent="." unique_id=1650685233 instance=ExtResource("6_wu1ak")]
+
+[node name="TouchOverlay" parent="." unique_id=183187612 instance=ExtResource("10_dp30u")]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=759509068]
+
+[node name="UI" type="Control" parent="CanvasLayer" unique_id=1799125354]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("7_41670")
+
+[node name="HBoxContainer" type="VBoxContainer" parent="CanvasLayer/UI" unique_id=183968562]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 131.0
+
+[node name="CurrentInstrumentLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=1934273161]
+layout_mode = 2
+text = "Current instrument:"
+
+[node name="NearbyJamLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=1227413359]
+layout_mode = 2
+text = "Nearby Jam:"
+
+[node name="ActiveInstrumentsLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=759452365]
+layout_mode = 2
+text = "Active Instruments:"
+
+[node name="FeaturedInstrumentLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=640857474]
+layout_mode = 2
+text = "Featured Instrument:"
+
+[node name="InteractPromptLabel" type="Label" parent="CanvasLayer/UI/HBoxContainer" unique_id=530178011]
+layout_mode = 2
+text = "Interact"

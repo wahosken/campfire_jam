@@ -19,6 +19,8 @@ func complete_quest(quest_id: String) -> void:
 
 	completed_quests.append(quest_id)
 
+	NotificationManager.show_notification("Task Complete")
+
 	SaveManager.create_autosave()
 
 	_activate_jamspots_for_quest(quest_id)

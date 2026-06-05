@@ -97,6 +97,9 @@ func activate() -> void:
 
 	update_visuals()
 
+	if label_text != "":
+		NotificationManager.show_notification(label_text)
+
 	if target_npc != null:
 
 		if target_npc.has_method("unlock_npc"):

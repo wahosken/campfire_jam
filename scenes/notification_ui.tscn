@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://uw272x76kce5"]
+
+[ext_resource type="Script" uid="uid://tljpiq6b8xu1" path="res://scripts/ui/notification_ui.gd" id="1_0ml2n"]
+
+[node name="NotificationUI" type="CanvasLayer" unique_id=42852058]
+script = ExtResource("1_0ml2n")
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=2133945711]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="Label" type="Label" parent="PanelContainer" unique_id=1904205205]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+vertical_alignment = 1
