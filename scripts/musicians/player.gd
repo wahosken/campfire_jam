@@ -5,13 +5,15 @@ extends CharacterBody2D
 @export var jam_attach_grace_time := 0.15
 
 @onready var interaction_area: Area2D = $InteractionArea
-@onready var sprite: ColorRect = $ColorRect
+@onready var sprite: Node2D = $Visuals
 @onready var part_label: Label = $PlayerPartLabel
 
 @onready var guitar_audio_source: Node = $PlayerAudioSources/GuitarAudioSource
 @onready var bass_audio_source: Node = $PlayerAudioSources/BassAudioSource
 @onready var harmonica_audio_source: Node = $PlayerAudioSources/HarmonicaAudioSource
 @onready var mandolin_audio_source: Node = $PlayerAudioSources/MandolinAudioSource
+
+@onready var player_animations: Node = $Visuals/PlayerAnimations
 
 const NORMAL_COLOR := Color(1, 1, 1, 1)
 const PLAYING_COLOR := Color(1.25, 1.1, 0.75, 1)
@@ -105,6 +107,7 @@ func _ready() -> void:
 	sprite.scale = NORMAL_SCALE
 
 	_update_part_label()
+	player_animations.hide_instrument()
 
 
 func _physics_process(delta: float) -> void:
@@ -530,6 +533,17 @@ func _handle_movement() -> void:
 
 	input_vector = input_vector.normalized()
 
+	if input_vector != Vector2.ZERO:
+
+		if abs(input_vector.x) >= abs(input_vector.y):
+			player_animations.set_facing_direction(
+				"right" if input_vector.x > 0 else "left"
+			)
+		else:
+			player_animations.set_facing_direction(
+				"down" if input_vector.y > 0 else "up"
+			)
+
 	velocity = input_vector * speed
 	move_and_slide()
 
@@ -678,6 +692,11 @@ func cycle_instrument() -> void:
 		_start_instrument_visuals()
 	else:
 		_stop_instrument_visuals()
+
+	if is_playing_instrument:
+		player_animations.show_instrument(
+			get_current_instrument_id()
+		)
 
 	_update_part_label()
 
@@ -1076,6 +1095,10 @@ func _update_part_label() -> void:
 
 
 func _start_instrument_visuals() -> void:
+	player_animations.show_instrument(
+		get_current_instrument_id()
+	)
+
 	if instrument_visual_tween:
 		instrument_visual_tween.kill()
 		instrument_visual_tween = null
@@ -1105,6 +1128,8 @@ func _start_instrument_visuals() -> void:
 
 
 func _stop_instrument_visuals() -> void:
+	player_animations.hide_instrument()
+
 	if instrument_visual_tween:
 		instrument_visual_tween.kill()
 		instrument_visual_tween = null

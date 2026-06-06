@@ -299,6 +299,7 @@ shape = SubResource("RectangleShape2D_u8vuu")
 script = ExtResource("24_wqk1x")
 
 [node name="CharacterSprite" type="AnimatedSprite2D" parent="Visuals" unique_id=899288333]
+position = Vector2(0, -2)
 sprite_frames = SubResource("SpriteFrames_wqk1x")
 animation = &"down"
 
