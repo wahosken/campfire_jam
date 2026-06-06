@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://i2123kw0ue2g"]
+
+[ext_resource type="Script" uid="uid://cdg74lf5eip02" path="res://scripts/musicians/npc_animations.gd" id="1_6h1pg"]
+
+[node name="NPCAnimations" type="Node" unique_id=411467122]
+script = ExtResource("1_6h1pg")

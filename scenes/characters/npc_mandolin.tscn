@@ -3,14 +3,119 @@
 [ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/musicians/musician.gd" id="1_yt5au"]
 [ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/audio/instrument_audio_source.gd" id="2_3dk46"]
 [ext_resource type="AudioStream" uid="uid://cadhl0f7w4whj" path="res://audio/song 1/song1-007-mandolin_rhythm.wav" id="3_ps8is"]
+[ext_resource type="Texture2D" uid="uid://bibn0o36ly7yi" path="res://assets/Naked_Character.png" id="3_sj2he"]
+[ext_resource type="Texture2D" uid="uid://cg006lslklp17" path="res://assets/Mandolin.png" id="4_32tvl"]
 [ext_resource type="AudioStream" uid="uid://cfsa07ynnm60u" path="res://audio/song 1/song1-008-mandolin_lead.wav" id="4_r3l87"]
 [ext_resource type="AudioStream" uid="uid://di4x51xuio6a1" path="res://audio/song 2/song2-007-mandolin_rhythm.wav" id="5_mgt4s"]
 [ext_resource type="AudioStream" uid="uid://708bjc8fkg1t" path="res://audio/song 2/song2-008-mandolin_lead.wav" id="6_l3r6c"]
-[ext_resource type="PackedScene" uid="uid://cbc1xf2odpyw4" path="res://scenes/npc_task_controller.tscn" id="7_r3l87"]
+[ext_resource type="PackedScene" uid="uid://cbc1xf2odpyw4" path="res://scenes/system/npc_task_controller.tscn" id="7_r3l87"]
 [ext_resource type="Script" uid="uid://twvvm82k05yr" path="res://scripts/musicians/npc_dialogue_controller.gd" id="8_mgt4s"]
 [ext_resource type="Script" uid="uid://opgri4swc804" path="res://scripts/dialogue/dialogue_line.gd" id="9_fiknp"]
 [ext_resource type="Script" uid="uid://dp0aobj5pqnj3" path="res://scripts/dialogue/dialogue_sequence.gd" id="10_6auh4"]
 [ext_resource type="Script" uid="uid://cxymkcbaj7wk2" path="res://scripts/dialogue/npc_dialogue_data.gd" id="11_7neta"]
+[ext_resource type="PackedScene" uid="uid://i2123kw0ue2g" path="res://scenes/characters/npc_animations.tscn" id="15_sj2he"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kmyvj"]
+atlas = ExtResource("3_sj2he")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a2luo"]
+atlas = ExtResource("3_sj2he")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eir2k"]
+atlas = ExtResource("3_sj2he")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_inhyd"]
+atlas = ExtResource("3_sj2he")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_nrj8e"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kmyvj")
+}],
+"loop": true,
+"name": &"down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a2luo")
+}],
+"loop": true,
+"name": &"left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eir2k")
+}],
+"loop": true,
+"name": &"right",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_inhyd")
+}],
+"loop": true,
+"name": &"up",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hdner"]
+atlas = ExtResource("4_32tvl")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_m38kj"]
+atlas = ExtResource("4_32tvl")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_v1y1o"]
+atlas = ExtResource("4_32tvl")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hnvwh"]
+atlas = ExtResource("4_32tvl")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_72885"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hdner")
+}],
+"loop": true,
+"name": &"down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_m38kj")
+}],
+"loop": true,
+"name": &"left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_v1y1o")
+}],
+"loop": true,
+"name": &"right",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hnvwh")
+}],
+"loop": true,
+"name": &"up",
+"speed": 5.0
+}]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fiknp"]
 radius = 8.0
@@ -93,19 +198,22 @@ npc_id = "npc_mandolin"
 unlocks_player_instrument = "mandolin"
 recruit_quest_id = "play_fountain_song"
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -8.0
-offset_top = -16.0
-offset_right = 8.0
-offset_bottom = 16.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.19076231, 0.19076234, 0.19076231, 1)
+[node name="Visuals" type="Node2D" parent="." unique_id=106137743]
+
+[node name="NPCAnimations" parent="Visuals" unique_id=411467122 instance=ExtResource("15_sj2he")]
+
+[node name="CharacterSprite" type="AnimatedSprite2D" parent="Visuals" unique_id=1143076030]
+sprite_frames = SubResource("SpriteFrames_nrj8e")
+animation = &"down"
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Visuals/CharacterSprite" unique_id=581749420]
+root_node = NodePath("../../..")
+
+[node name="InstrumentSprite" type="AnimatedSprite2D" parent="Visuals" unique_id=326484035]
+sprite_frames = SubResource("SpriteFrames_72885")
+animation = &"up"
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Visuals/InstrumentSprite" unique_id=1847340402]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1899097799]
 shape = SubResource("CapsuleShape2D_fiknp")

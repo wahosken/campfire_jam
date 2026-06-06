@@ -59,8 +59,10 @@ extends CharacterBody2D
 
 @onready var navigation_agent: NavigationAgent2D = $NavigationAgent2D
 
+@onready var npc_animations = $Visuals/NPCAnimations
+
 @onready var interaction_area: Area2D = $InteractionArea
-@onready var sprite: ColorRect = $ColorRect
+@onready var sprite: Node2D = $Visuals
 @onready var label: Label = $Label
 @onready var audio_source: Node = $InstrumentAudioSource
 @onready var task_controller: Node = $NPCTaskController
@@ -186,6 +188,9 @@ func _ready() -> void:
 		audio_source.owner_type = "npc"
 
 	_set_visual_idle()
+
+	if npc_animations:
+		npc_animations.hide_instrument()
 
 	if task_controller != null:
 		if task_controller.has_signal("task_changed"):
@@ -1150,6 +1155,16 @@ func _move_toward_world_position(target_position: Vector2, move_speed: float, st
 	if direction.length() <= 0.01:
 		velocity = Vector2.ZERO
 	else:
+
+		if abs(direction.x) >= abs(direction.y):
+			npc_animations.set_facing_direction(
+				"right" if direction.x > 0 else "left"
+			)
+		else:
+			npc_animations.set_facing_direction(
+				"down" if direction.y > 0 else "up"
+			)
+
 		velocity = direction * move_speed
 
 	move_and_slide()
@@ -1408,6 +1423,10 @@ func _update_visual_from_current_part() -> void:
 
 
 func _set_visual_playing() -> void:
+
+	if npc_animations:
+		npc_animations.show_instrument()
+
 	if sprite:
 		sprite.modulate = PLAYING_COLOR
 
@@ -1436,6 +1455,10 @@ func _set_visual_playing() -> void:
 
 
 func _set_visual_idle() -> void:
+
+	if npc_animations:
+		npc_animations.hide_instrument()
+
 	if instrument_visual_tween:
 		instrument_visual_tween.kill()
 		instrument_visual_tween = null

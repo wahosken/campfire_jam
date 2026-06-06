@@ -3,14 +3,119 @@
 [ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/musicians/musician.gd" id="1_njmx8"]
 [ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/audio/instrument_audio_source.gd" id="2_v3fsn"]
 [ext_resource type="AudioStream" uid="uid://cc4y5lg137oam" path="res://audio/song 1/song1-001-guitar_rhythm.wav" id="3_csoos"]
+[ext_resource type="Texture2D" uid="uid://bibn0o36ly7yi" path="res://assets/Naked_Character.png" id="3_uvi53"]
+[ext_resource type="Texture2D" uid="uid://ddhj30h7y2fli" path="res://assets/Guitar.png" id="4_k67aw"]
 [ext_resource type="AudioStream" uid="uid://cir28v33uqdmo" path="res://audio/song 1/song1-002-guitar_lead.wav" id="4_uuwsd"]
 [ext_resource type="AudioStream" uid="uid://x654xn2eyq6f" path="res://audio/song 2/song2-001-guitar_rhythm.wav" id="5_8mojk"]
 [ext_resource type="AudioStream" uid="uid://tmin5vxqlo6m" path="res://audio/song 2/song2-002-guitar_lead.wav" id="6_b1ygu"]
-[ext_resource type="PackedScene" uid="uid://cbc1xf2odpyw4" path="res://scenes/npc_task_controller.tscn" id="7_uuwsd"]
+[ext_resource type="PackedScene" uid="uid://cbc1xf2odpyw4" path="res://scenes/system/npc_task_controller.tscn" id="7_uuwsd"]
 [ext_resource type="Script" uid="uid://twvvm82k05yr" path="res://scripts/musicians/npc_dialogue_controller.gd" id="8_8mojk"]
 [ext_resource type="Script" uid="uid://opgri4swc804" path="res://scripts/dialogue/dialogue_line.gd" id="9_51nrr"]
 [ext_resource type="Script" uid="uid://dp0aobj5pqnj3" path="res://scripts/dialogue/dialogue_sequence.gd" id="10_jqmpd"]
 [ext_resource type="Script" uid="uid://cxymkcbaj7wk2" path="res://scripts/dialogue/npc_dialogue_data.gd" id="11_yk8p0"]
+[ext_resource type="PackedScene" uid="uid://i2123kw0ue2g" path="res://scenes/characters/npc_animations.tscn" id="15_uvi53"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kmyvj"]
+atlas = ExtResource("3_uvi53")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a2luo"]
+atlas = ExtResource("3_uvi53")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eir2k"]
+atlas = ExtResource("3_uvi53")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_inhyd"]
+atlas = ExtResource("3_uvi53")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_u2ddf"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kmyvj")
+}],
+"loop": true,
+"name": &"down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a2luo")
+}],
+"loop": true,
+"name": &"left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eir2k")
+}],
+"loop": true,
+"name": &"right",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_inhyd")
+}],
+"loop": true,
+"name": &"up",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5jukt"]
+atlas = ExtResource("4_k67aw")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vwwfy"]
+atlas = ExtResource("4_k67aw")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dg40j"]
+atlas = ExtResource("4_k67aw")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7xgtv"]
+atlas = ExtResource("4_k67aw")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_53yiw"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5jukt")
+}],
+"loop": true,
+"name": &"down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vwwfy")
+}],
+"loop": true,
+"name": &"left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dg40j")
+}],
+"loop": true,
+"name": &"right",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7xgtv")
+}],
+"loop": true,
+"name": &"up",
+"speed": 5.0
+}]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_51nrr"]
 radius = 8.0
@@ -90,19 +195,22 @@ unlock_id = "guitar"
 npc_id = "npc_guitar"
 recruit_quest_id = "repair_bridge"
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=531501313]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -8.0
-offset_top = -16.0
-offset_right = 8.0
-offset_bottom = 16.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.19076231, 0.19076234, 0.19076231, 1)
+[node name="Visuals" type="Node2D" parent="." unique_id=2008597306]
+
+[node name="NPCAnimations" parent="Visuals" unique_id=411467122 instance=ExtResource("15_uvi53")]
+
+[node name="CharacterSprite" type="AnimatedSprite2D" parent="Visuals" unique_id=1906685234]
+sprite_frames = SubResource("SpriteFrames_u2ddf")
+animation = &"down"
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Visuals/CharacterSprite" unique_id=475619321]
+root_node = NodePath("../../..")
+
+[node name="InstrumentSprite" type="AnimatedSprite2D" parent="Visuals" unique_id=1353023150]
+sprite_frames = SubResource("SpriteFrames_53yiw")
+animation = &"right"
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Visuals/InstrumentSprite" unique_id=1278262379]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1899097799]
 shape = SubResource("CapsuleShape2D_51nrr")
