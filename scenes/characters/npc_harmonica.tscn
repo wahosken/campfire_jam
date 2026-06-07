@@ -3,9 +3,9 @@
 [ext_resource type="Script" uid="uid://bgf1s2htrd28h" path="res://scripts/musicians/musician.gd" id="1_khbeg"]
 [ext_resource type="Script" uid="uid://clv1yeft1ed7k" path="res://scripts/audio/instrument_audio_source.gd" id="2_1qbbg"]
 [ext_resource type="AudioStream" uid="uid://rfdwxfpr6ur1" path="res://audio/song 1/song1-005-harmonica_rhythm.wav" id="3_e5rru"]
-[ext_resource type="Texture2D" uid="uid://bibn0o36ly7yi" path="res://assets/Naked_Character.png" id="3_wim4e"]
+[ext_resource type="Texture2D" uid="uid://ba2kbxbl7ptw0" path="res://assets/characters/character_outlines.png" id="3_gllxq"]
 [ext_resource type="AudioStream" uid="uid://b8jfefgc2no43" path="res://audio/song 1/song1-006-harmonica_lead.wav" id="4_fco0b"]
-[ext_resource type="Texture2D" uid="uid://bxl01l5huc668" path="res://assets/Harmonica.png" id="4_jbqhu"]
+[ext_resource type="Texture2D" uid="uid://bxl01l5huc668" path="res://assets/characters/harmonica.png" id="4_jbqhu"]
 [ext_resource type="AudioStream" uid="uid://dqc34kbx2ly41" path="res://audio/song 2/song2-005-harmonica_rhythm.wav" id="5_y4ir2"]
 [ext_resource type="AudioStream" uid="uid://cijbrfxnev2g3" path="res://audio/song 2/song2-006-harmonica_lead.wav" id="6_1lae6"]
 [ext_resource type="PackedScene" uid="uid://cbc1xf2odpyw4" path="res://scenes/system/npc_task_controller.tscn" id="7_fco0b"]
@@ -15,27 +15,27 @@
 [ext_resource type="Script" uid="uid://cxymkcbaj7wk2" path="res://scripts/dialogue/npc_dialogue_data.gd" id="11_m6heo"]
 [ext_resource type="PackedScene" uid="uid://i2123kw0ue2g" path="res://scenes/characters/npc_animations.tscn" id="15_wim4e"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_kmyvj"]
-atlas = ExtResource("3_wim4e")
+[sub_resource type="AtlasTexture" id="AtlasTexture_wim4e"]
+atlas = ExtResource("3_gllxq")
 region = Rect2(0, 0, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_a2luo"]
-atlas = ExtResource("3_wim4e")
-region = Rect2(64, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_eir2k"]
-atlas = ExtResource("3_wim4e")
+[sub_resource type="AtlasTexture" id="AtlasTexture_jbqhu"]
+atlas = ExtResource("3_gllxq")
 region = Rect2(32, 0, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_inhyd"]
-atlas = ExtResource("3_wim4e")
+[sub_resource type="AtlasTexture" id="AtlasTexture_sr8sf"]
+atlas = ExtResource("3_gllxq")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gt6ft"]
+atlas = ExtResource("3_gllxq")
 region = Rect2(96, 0, 32, 32)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_sr8sf"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_kmyvj")
+"texture": SubResource("AtlasTexture_wim4e")
 }],
 "loop": true,
 "name": &"down",
@@ -43,7 +43,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_a2luo")
+"texture": SubResource("AtlasTexture_jbqhu")
 }],
 "loop": true,
 "name": &"left",
@@ -51,7 +51,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_eir2k")
+"texture": SubResource("AtlasTexture_sr8sf")
 }],
 "loop": true,
 "name": &"right",
@@ -59,26 +59,26 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_inhyd")
+"texture": SubResource("AtlasTexture_gt6ft")
 }],
 "loop": true,
 "name": &"up",
 "speed": 5.0
 }]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_6rclf"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_4liw6"]
 atlas = ExtResource("4_jbqhu")
 region = Rect2(0, 0, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_s0anf"]
-atlas = ExtResource("4_jbqhu")
-region = Rect2(64, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_s1x7u"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_fyier"]
 atlas = ExtResource("4_jbqhu")
 region = Rect2(32, 0, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_c3kfx"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_t61sk"]
+atlas = ExtResource("4_jbqhu")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spj2y"]
 atlas = ExtResource("4_jbqhu")
 region = Rect2(96, 0, 32, 32)
 
@@ -86,7 +86,7 @@ region = Rect2(96, 0, 32, 32)
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_6rclf")
+"texture": SubResource("AtlasTexture_4liw6")
 }],
 "loop": true,
 "name": &"down",
@@ -94,7 +94,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_s0anf")
+"texture": SubResource("AtlasTexture_fyier")
 }],
 "loop": true,
 "name": &"left",
@@ -102,7 +102,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_s1x7u")
+"texture": SubResource("AtlasTexture_t61sk")
 }],
 "loop": true,
 "name": &"right",
@@ -110,7 +110,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_c3kfx")
+"texture": SubResource("AtlasTexture_spj2y")
 }],
 "loop": true,
 "name": &"up",
@@ -118,11 +118,11 @@ animations = [{
 }]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_xemgl"]
-radius = 8.0
-height = 32.0
+radius = 4.0
+height = 26.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_uqgcj"]
-radius = 50.0
+radius = 25.0
 
 [sub_resource type="Resource" id="Resource_xemgl"]
 script = ExtResource("9_xemgl")
@@ -211,11 +211,12 @@ root_node = NodePath("../../..")
 
 [node name="InstrumentSprite" type="AnimatedSprite2D" parent="Visuals" unique_id=596806991]
 sprite_frames = SubResource("SpriteFrames_gt6ft")
-animation = &"right"
+animation = &"down"
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Visuals/InstrumentSprite" unique_id=1579823851]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1899097799]
+position = Vector2(0, 3)
 shape = SubResource("CapsuleShape2D_xemgl")
 
 [node name="InteractionArea" type="Area2D" parent="." unique_id=392024863]
