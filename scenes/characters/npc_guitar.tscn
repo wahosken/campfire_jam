@@ -201,14 +201,14 @@ recruit_quest_id = "repair_bridge"
 
 [node name="CharacterSprite" type="AnimatedSprite2D" parent="Visuals" unique_id=1906685234]
 sprite_frames = SubResource("SpriteFrames_u2ddf")
-animation = &"up"
+animation = &"down"
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Visuals/CharacterSprite" unique_id=475619321]
 root_node = NodePath("../../..")
 
 [node name="InstrumentSprite" type="AnimatedSprite2D" parent="Visuals" unique_id=1353023150]
 sprite_frames = SubResource("SpriteFrames_53yiw")
-animation = &"up"
+animation = &"down"
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Visuals/InstrumentSprite" unique_id=1278262379]
 
